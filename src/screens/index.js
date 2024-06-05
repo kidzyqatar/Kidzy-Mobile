@@ -1,0 +1,16 @@
+export {default as Register} from './Auth/Register';
+export {default as Login} from './Auth/Login';
+export {default as Home} from './Home/home';
+export {default as Categories} from './Categories/categories';
+export {default as Brands} from './Brands/brands';
+export {default as Account} from './Account/account';
+export {default as ProductListing} from './ProductListing/productListing';
+export {default as ProductDetail} from './ProductDetail/productDetail';
+export {default as Orders} from './Account/orders';
+export {default as OrderDetail} from './Account/orderDetail';
+export {default as Wallet} from './Account/wallet';
+export {default as PaymentInformation} from './Account/paymentInformation';
+export {default as Address} from './Account/address';
+export {default as Profile} from './Account/profile';
+export {default as MyCart} from './Cart/myCart';
+export {default as Thankyou} from './Cart/thankyou';
