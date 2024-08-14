@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, {useState, useRef} from 'react';
+import {View, Text, TouchableOpacity, ScrollView, Image} from 'react-native';
 import {
   MasterLayout,
   BackBar,
@@ -11,12 +11,12 @@ import {
   Chip,
 } from '@components';
 
-import { COLORS, SIZES, FONTS } from '@constants/theme';
+import {COLORS, SIZES, FONTS} from '@constants/theme';
 import globalStyles from '@constants/global-styles';
-import { styles } from './styles';
-import { cod, card, tick } from '@constants/icons';
+import {styles} from './styles';
+import {cod, card, tick} from '@constants/icons';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import { Heading, Input } from '@components';
+import {Heading, Input} from '@components';
 import {
   checkedRadio,
   uncheckedRadio,

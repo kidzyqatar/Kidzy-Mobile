@@ -1,10 +1,10 @@
-import { StyleSheet } from 'react-native';
-import { SIZES, COLORS, FONTS } from '@constants/theme';
+import {StyleSheet} from 'react-native';
+import {SIZES, COLORS, FONTS} from '@constants/theme';
 
 export const styles = StyleSheet.create({
-  searchRowLeft: { width: SIZES.eightyFive },
-  searchRowRight: { width: SIZES.fifteen },
-  crossImg: { width: 12, height: 12, resizeMode: 'contain' },
+  searchRowLeft: {width: SIZES.eightyFive},
+  searchRowRight: {width: SIZES.fifteen},
+  crossImg: {width: 12, height: 12, resizeMode: 'contain'},
   selectAgeTxt: {
     marginTop: SIZES.radius,
     color: COLORS.txtGray,
@@ -45,18 +45,23 @@ export const styles = StyleSheet.create({
     borderRadius: SIZES.radius,
     marginRight: SIZES.radius,
   },
-  listingContainer: { alignItems: 'center' },
+  listingContainer: {alignItems: 'center'},
   checkboxRow: {
     flexDirection: 'row',
     marginBottom: SIZES.radius,
     alignItems: 'center',
   },
-  checkboxImg: { width: 20, height: 20, resizeMode: 'contain' },
+  checkboxImg: {width: 20, height: 20, resizeMode: 'contain'},
   checkboxTxt: {
     color: COLORS.black,
     marginLeft: SIZES.base,
     ...FONTS.body4_medium,
   },
-  productBtn: { ...FONTS.body5_bold },
-  btnStyle: { paddingLeft: SIZES.padding, paddingRight: SIZES.padding, borderWidth: 0, height: 40 },
+  productBtn: {...FONTS.body5_bold},
+  btnStyle: {
+    paddingLeft: SIZES.padding,
+    paddingRight: SIZES.padding,
+    borderWidth: 0,
+    height: 40,
+  },
 });

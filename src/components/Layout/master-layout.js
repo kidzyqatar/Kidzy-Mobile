@@ -22,6 +22,7 @@ const MasterLayout = ({
 }) => {
   return (
     <SafeAreaView style={[styles.safeAreaView, {backgroundColor: bgColor}]}>
+      {header && <View style={styles.header}>{header}</View>}
       {scrolling ? (
         <ScrollView
           scrollEnabled={scrolling}
@@ -33,7 +34,7 @@ const MasterLayout = ({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           {/* Main Content */}
-          {children}
+          <View style={{marginTop: header ? 100 : 0}}>{children}</View>
         </ScrollView>
       ) : (
         <View
@@ -50,14 +51,18 @@ const MasterLayout = ({
 };
 
 const styles = StyleSheet.create({
+  header: {
+    position: 'absolute',
+    top: 0,
+    width: '100%',
+    zIndex: 1000,
+  },
+
   container: {
     flex: 1,
     backgroundColor: '#ffffff',
   },
   safeAreaView: {flex: 1},
-  header: {
-    // Your header styles
-  },
   content: {
     flex: 1,
   },

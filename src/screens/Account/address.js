@@ -43,8 +43,11 @@ import ActivityIndicatorOverlay from '../../components/ActivityIndicator/Activit
 import Checkbox from '../../components/Checkbox/Checkbox';
 import {handleReload} from '../../helpers/helper';
 import constants from '../../constants/constants';
+import {useTranslation} from 'react-i18next';
 
 export default function Address() {
+  const {t} = useTranslation();
+
   const dispatch = useDispatch();
   const global = useSelector(state => state.global);
   const refRBSheet = useRef();
@@ -97,7 +100,7 @@ export default function Address() {
           getAddresses();
           handleReload(constants.HARD_RELOAD_FALSE, global.reload, dispatch);
         } else {
-          Alert.alert('Error!', res.message);
+          Alert.alert(t('error'), res.message);
         }
       })
       .catch(err => {
@@ -113,10 +116,9 @@ export default function Address() {
       .then(res => {
         dispatch(setLoader(false));
         if (res.status == 200) {
-          console.log(res.addresses);
           setAddresses(res.data.addresses);
         } else {
-          Alert.alert('Error!', res.message);
+          Alert.alert(t('error'), res.message);
         }
       })
       .catch(err => {
@@ -127,7 +129,7 @@ export default function Address() {
   return (
     <MasterLayout bgColor={COLORS.bgGray} scrolling={false} max={true}>
       <View style={globalStyles.whiteBg}>
-        <BackBar title={'Addresses'} navigateTo={'Account'} />
+        <BackBar title={t('addresses')} navigateTo={'Account'} />
       </View>
       <Spacer />
       <Spacer />
@@ -145,24 +147,25 @@ export default function Address() {
                 <View style={{width: SIZES.ninty}}>
                   <View style={globalStyles.row}>
                     <Phrase
-                      txt={'Address name: '}
+                      txt={t('addressName')}
                       txtStyle={styles.addressNameTitle}
                     />
-                    {/* {item.is_default_billing == 1 ? (
+                    {/* 
+                    {item.is_default_billing == 1 ? (
                       <Chip
-                        status={'Default'}
+                        status={t('default')}
                         bgColor={COLORS.secondary + '1A'}
                         txtColor={COLORS.secondary}
                       />
                     ) : (
                       <Chip
-                        status={'Make Default Address'}
+                        status={t('makeDefaultAddress')}
                         bgColor={COLORS.secondary + '1A'}
                         txtColor={COLORS.secondary}
                       />
-                    )} */}
+                    )}
+                    */}
                   </View>
-
                   <Phrase
                     txt={`${item.first_name} ${item.last_name}, ${item.street}, ${item.city}, ${item.state}`}
                     txtStyle={styles.addressName}
@@ -180,7 +183,7 @@ export default function Address() {
 
       <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
         <MyButton
-          label={'Add New Method'}
+          label={t('addNewAddress')}
           txtColor={COLORS.secondary}
           btnColor={COLORS.secondaryLite}
           borderColor={COLORS.secondaryLite}
@@ -206,37 +209,33 @@ export default function Address() {
         {global.loader ? (
           <ActivityIndicatorOverlay visible={true} />
         ) : (
-          // <View />
           <View
             style={[
               globalStyles.contentContainer,
               {marginHorizontal: SIZES.radius},
             ]}>
             <Heading
-              txt={'Add New Address'}
+              txt={t('addNewAddress')}
               txtStyle={styles.bSheetTopHeading}
             />
             <Spacer />
-            {/* {<AddressForm />} */}
             <>
               <Spacer />
               <Input
-                label={'First Name'}
-                placeholder={'First Name'}
-                // value={firstName}
+                label={t('firstName')}
+                placeholder={t('firstName')}
                 setValue={setFirstName}
               />
               <Spacer />
               <Input
-                label={'Last name'}
-                placeholder={'Last name'}
-                // value={lastName}
+                label={t('lastName')}
+                placeholder={t('lastName')}
                 setValue={setLastName}
               />
               <Spacer />
               <PrefixTextInput
-                label={'Mobile Number'}
-                placeholder={'000-000-000'}
+                label={t('mobileNumber')}
+                placeholder={t('mobilePlaceholder')}
                 prefix={'+974'}
                 value={mobileNumber}
                 maxLength={9}
@@ -244,26 +243,25 @@ export default function Address() {
               />
               <Spacer />
               <Input
-                label={'Street'}
-                placeholder={'Please provide street address'}
+                label={t('street')}
+                placeholder={t('streetPlaceholder')}
                 value={street}
                 setValue={setStreet}
               />
               <Spacer />
-
               <View style={styles.cvvView}>
                 <View style={styles.halfInput}>
                   <Input
-                    label={'City'}
-                    placeholder={'e.g Al Wakra'}
+                    label={t('city')}
+                    placeholder={t('cityPlaceholder')}
                     value={city}
                     setValue={setCity}
                   />
                 </View>
                 <View style={styles.halfInput}>
                   <Input
-                    label={'State/Province/Area'}
-                    placeholder={'e.g Doha'}
+                    label={t('province')}
+                    placeholder={t('provincePlaceholder')}
                     value={province}
                     setValue={setProvince}
                   />
@@ -274,19 +272,18 @@ export default function Address() {
               <Checkbox
                 state={defaultBilling}
                 stateChanger={setDefaultBilling}
-                label={'Mark as Default Billing Address'}
+                label={t('defaultBillingAddress')}
               />
               <Spacer />
               <Checkbox
                 state={defaultShipping}
                 stateChanger={setDefaultShipping}
-                label={'Mark as Default Shipping Address'}
+                label={t('defaultShippingAddress')}
               />
             </>
-
             <View style={[styles.bSheetBottom, {justifyContent: 'center'}]}>
               <MyButton
-                label={'Add Address'}
+                label={t('addAddress')}
                 txtColor={COLORS.white}
                 btnColor={COLORS.secondary}
                 borderColor={COLORS.secondary}

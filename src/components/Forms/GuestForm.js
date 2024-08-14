@@ -23,8 +23,10 @@ import {setCart, setLoader} from '../../store/reducers/global';
 import {useDispatch, useSelector} from 'react-redux';
 import {setCartSessionID} from '../../store/reducers/global';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useTranslation} from 'react-i18next';
 
 const GuestForm = ({closeForm, page = true, completeCart}) => {
+  const {t} = useTranslation();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
   const [email, setEmail] = useState('');
@@ -45,7 +47,7 @@ const GuestForm = ({closeForm, page = true, completeCart}) => {
           extraScrollHeight={70}
           showsVerticalScrollIndicator={false}>
           <Input
-            label={'Email'}
+            label={t('email')}
             placeholder={'olivia@untitledui.com'}
             left={mail}
             isSecure={false}
@@ -54,7 +56,7 @@ const GuestForm = ({closeForm, page = true, completeCart}) => {
           />
           <Spacer />
           <PrefixTextInput
-            label={'Mobile Number'}
+            label={t('mobileNumber')}
             placeholder={'000-000-000'}
             prefix={'+974'}
             value={mobileNumber}
@@ -62,7 +64,7 @@ const GuestForm = ({closeForm, page = true, completeCart}) => {
           />
           <Spacer />
           <MyButton
-            label={'Continue'}
+            label={t('continue')}
             txtColor={COLORS.white}
             icon={forwardArrowWhite}
             iconPosition={'right'}
@@ -86,7 +88,6 @@ const GuestForm = ({closeForm, page = true, completeCart}) => {
               })
                 .then(res => {
                   dispatch(setLoader(false));
-                  console.log('i am called');
                   if (res.status == 200) {
                     // completeCart()
                   } else {
@@ -95,7 +96,6 @@ const GuestForm = ({closeForm, page = true, completeCart}) => {
                 })
                 .catch(err => {
                   dispatch(setLoader(false));
-                  console.log('i am called');
                   console.log(err);
                 });
             }}

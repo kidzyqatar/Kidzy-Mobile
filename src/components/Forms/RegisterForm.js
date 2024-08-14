@@ -30,8 +30,10 @@ import {getData, storeData} from '../../helpers/AsyncStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {handleReload} from '../../helpers/helper';
 import constants from '../../constants/constants';
+import {useTranslation} from 'react-i18next';
 
 const RegisterForm = ({closeForm, page = true, completeCart}) => {
+  const {t} = useTranslation();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
   const [name, setName] = useState('');
@@ -146,7 +148,7 @@ const RegisterForm = ({closeForm, page = true, completeCart}) => {
       .then(res => {
         dispatch(setLoader(false));
         if (res.status == 200) {
-          // console.log('i am called');
+          //
           // completeCart();
         } else {
           Alert.alert('Error!', response.data.message);
@@ -154,7 +156,7 @@ const RegisterForm = ({closeForm, page = true, completeCart}) => {
       })
       .catch(err => {
         dispatch(setLoader(false));
-        console.log('i am called');
+
         console.log(err);
       });
   };
@@ -186,8 +188,8 @@ const RegisterForm = ({closeForm, page = true, completeCart}) => {
           extraScrollHeight={70}
           showsVerticalScrollIndicator={false}>
           <Input
-            label={'Full Name'}
-            placeholder={'Adam Jone'}
+            label={t('fullName')}
+            placeholder={t('Adam Jone')}
             left={user}
             isSecure={false}
             value={name}
@@ -195,7 +197,7 @@ const RegisterForm = ({closeForm, page = true, completeCart}) => {
           />
           <Spacer />
           <Input
-            label={'Email'}
+            label={t('email')}
             placeholder={'olivia@untitledui.com'}
             left={mail}
             isSecure={false}
@@ -204,7 +206,7 @@ const RegisterForm = ({closeForm, page = true, completeCart}) => {
           />
           <Spacer />
           <Input
-            label={'Password'}
+            label={t('password')}
             placeholder={'********'}
             left={lock}
             right={eye}
@@ -214,7 +216,7 @@ const RegisterForm = ({closeForm, page = true, completeCart}) => {
           />
           <Spacer />
           <Input
-            label={'Confirm Password'}
+            label={t('confirmPassword')}
             placeholder={'********'}
             left={lock}
             right={eye}
@@ -224,7 +226,7 @@ const RegisterForm = ({closeForm, page = true, completeCart}) => {
           />
           <Spacer />
           <MyButton
-            label={'Sign Up'}
+            label={t('signup')}
             txtColor={COLORS.white}
             icon={userSimple}
             iconPosition={'right'}
@@ -234,8 +236,8 @@ const RegisterForm = ({closeForm, page = true, completeCart}) => {
           <MyButton
             label={
               <Text style={styles.loginBtnTxt}>
-                Already a member?{' '}
-                <Text style={styles.loginBtnTxtInner}>Login</Text>
+                {t('alreadyAMember')}{' '}
+                <Text style={styles.loginBtnTxtInner}>{t('login')}</Text>
               </Text>
             }
             txtColor={COLORS.black}
@@ -247,7 +249,7 @@ const RegisterForm = ({closeForm, page = true, completeCart}) => {
           />
 
           <MyButton
-            label={'Continue with Google'}
+            label={t('continueWithGoogle')}
             txtColor={COLORS.black}
             btnColor={COLORS.white}
             borderColor={COLORS.black}

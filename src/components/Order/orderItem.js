@@ -1,10 +1,12 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import React from 'react';
-import { Phrase, Chip } from '@components';
-import { COLORS, SIZES, FONTS } from '@constants/theme';
+import {Phrase, Chip} from '@components';
+import {COLORS, SIZES, FONTS} from '@constants/theme';
 import * as RootNavigation from '@navigators/RootNavigation';
+import {useTranslation} from 'react-i18next';
 
-const OrderItem = ({ item }) => {
+const OrderItem = ({item}) => {
+  const {t} = useTranslation();
   let chipBgColor = '';
   let chipTxtColor = '';
   switch (item.status) {
@@ -34,7 +36,7 @@ const OrderItem = ({ item }) => {
             numberOfLines={1}
           />
           <Phrase
-            txt={`Order ID: ${item.id}`}
+            txt={`${t('orderId')}: ${item.id}`}
             txtStyle={styles.orderItemId}
             numberOfLines={1}
           />
@@ -58,9 +60,12 @@ const OrderItem = ({ item }) => {
         <View style={styles.orderItemRightCol}>
           <TouchableOpacity
             onPress={() => {
-              RootNavigation.navigate('OrderDetail', { item: item });
+              RootNavigation.navigate('OrderDetail', {item: item});
             }}>
-            <Phrase txt={'View Details'} txtStyle={styles.orderDetailLinkTxt} />
+            <Phrase
+              txt={t('viewDetails')}
+              txtStyle={styles.orderDetailLinkTxt}
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -81,11 +86,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  orderItemLeftCol: { width: SIZES.sixty },
-  orderItemTitle: { ...FONTS.body5_medium, color: COLORS.black },
-  orderItemId: { ...FONTS.body5, color: COLORS.black },
-  orderItemPrice: { ...FONTS.body5_bold, color: COLORS.black },
-  orderItemRightCol: { width: SIZES.fourty, alignItems: 'flex-end' },
+  orderItemLeftCol: {width: SIZES.sixty},
+  orderItemTitle: {...FONTS.body5_medium, color: COLORS.black},
+  orderItemId: {...FONTS.body5, color: COLORS.black},
+  orderItemPrice: {...FONTS.body5_bold, color: COLORS.black},
+  orderItemRightCol: {width: SIZES.fourty, alignItems: 'flex-end'},
   orderDetailLinkTxt: {
     color: COLORS.secondary,
     ...FONTS.body4_bold,

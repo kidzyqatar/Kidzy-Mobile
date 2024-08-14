@@ -1,8 +1,8 @@
-import { StyleSheet } from 'react-native';
-import { SIZES, FONTS, COLORS } from '@constants/theme';
+import {StyleSheet} from 'react-native';
+import {SIZES, FONTS, COLORS} from '@constants/theme';
 
 export const styles = StyleSheet.create({
-  cartHeading: { ...FONTS.body3_bold },
+  cartHeading: {...FONTS.body3_bold},
   cartTriggerView: {
     flexDirection: 'row',
     width: SIZES.hundred,
@@ -28,12 +28,12 @@ export const styles = StyleSheet.create({
     color: COLORS.black,
     marginRight: SIZES.radius,
   },
-  chevron: { width: 12, resizeMode: 'contain' },
+  chevron: {width: 12, resizeMode: 'contain'},
   triggerRight: {
     width: SIZES.fifty,
     height: 70,
   },
-  continueBtn: { height: 40, width: SIZES.eighty, alignSelf: 'flex-end' },
+  continueBtn: {height: 40, width: SIZES.eighty, alignSelf: 'flex-end'},
   methodContainer: {
     width: SIZES.hundred,
     borderWidth: 1,
@@ -52,16 +52,16 @@ export const styles = StyleSheet.create({
     borderRadius: SIZES.base,
     backgroundColor: COLORS.white,
   },
-  leftView: { width: SIZES.fifteen },
-  midView: { width: SIZES.seventyFive },
-  rightView: { width: SIZES.ten, alignItems: 'flex-end' },
-  tickImage: { width: 15, height: 15, resizeMode: 'contain' },
-  methodImg: { width: 30, height: 30, resizeMode: 'contain' },
-  methodTitle: { color: COLORS.black, ...FONTS.body5 },
-  methodExpiry: { color: COLORS.secondaryUltra, ...FONTS.body5 },
-  methodDefaultTxt: { color: COLORS.black, ...FONTS.body5_bold },
-  bSheetTop: { height: SIZES.ten },
-  bSheetTopHeading: { ...FONTS.h3 },
+  leftView: {width: SIZES.fifteen},
+  midView: {width: SIZES.seventyFive},
+  rightView: {width: SIZES.ten, alignItems: 'flex-end'},
+  tickImage: {width: 15, height: 15, resizeMode: 'contain'},
+  methodImg: {width: 30, height: 30, resizeMode: 'contain'},
+  methodTitle: {color: COLORS.black, ...FONTS.body5},
+  methodExpiry: {color: COLORS.secondaryUltra, ...FONTS.body5},
+  methodDefaultTxt: {color: COLORS.black, ...FONTS.body5_bold},
+  bSheetTop: {height: SIZES.ten},
+  bSheetTopHeading: {...FONTS.h3},
   addPaymentMethodButton: {
     width: SIZES.fourtyFive,
     flexDirection: 'row',
@@ -71,14 +71,14 @@ export const styles = StyleSheet.create({
     padding: SIZES.base,
     borderRadius: SIZES.radius,
   },
-  radioBtn: { width: 20, height: 20, resizeMode: 'contain' },
-  addPaymentMethodButtonTxt: { ...FONTS.body5 },
-  bSheetMid: { height: SIZES.sixty, justifyContent: 'center' },
+  radioBtn: {width: 20, height: 20, resizeMode: 'contain'},
+  addPaymentMethodButtonTxt: {...FONTS.body5},
+  bSheetMid: {height: SIZES.sixty, justifyContent: 'center'},
   cvvView: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  halfInput: { width: '48%' },
+  halfInput: {width: '48%'},
   checkbox: {
     width: 20,
     height: 20,
@@ -103,7 +103,7 @@ export const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginBottom: SIZES.minor,
   },
-  makeDefaultView: { width: SIZES.fifty },
+  makeDefaultView: {width: SIZES.fifty},
 
   calcView: {
     width: SIZES.thirtyFive,
@@ -116,8 +116,8 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
   },
-  calcImg: { width: 15, height: 15, resizeMode: 'contain' },
-  calcTxt: { ...FONTS.body3 },
+  calcImg: {width: 15, height: 15, resizeMode: 'contain'},
+  calcTxt: {...FONTS.body3},
 
   balloonSectionContainer: {
     flexDirection: 'row',
@@ -144,7 +144,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: SIZES.base,
   },
-  logo: { width: 100, height: 70, resizeMode: 'contain', alignSelf: 'center' },
+  logo: {width: 100, height: 70, resizeMode: 'contain', alignSelf: 'center'},
   shadowContainer: {
     backgroundColor: '#fff',
     elevation: 5, // elevation for shadow on Android
@@ -166,14 +166,14 @@ export const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginRight: SIZES.radius,
   },
-  editTxt: { color: COLORS.secondary, ...FONTS.body5_bold },
+  editTxt: {color: COLORS.secondary, ...FONTS.body5_bold},
   balloons: {
     width: 100,
     height: 100,
     resizeMode: 'contain',
     marginRight: SIZES.radius,
   },
-  qty: { ...FONTS.body5, color: COLORS.black },
+  qty: {...FONTS.body5, color: COLORS.black},
   character: {
     height: 100,
     width: 100,
@@ -184,9 +184,9 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SIZES.radius,
   },
-  characterImg: { height: 60, width: 60, resizeMode: 'contain' },
-  labelTxt: { ...FONTS.body5, color: COLORS.txtGray },
-  labelVlue: { ...FONTS.body5, color: COLORS.black },
+  characterImg: {height: 60, width: 60, resizeMode: 'contain'},
+  labelTxt: {...FONTS.body5, color: COLORS.txtGray},
+  labelVlue: {...FONTS.body5, color: COLORS.black},
   thankyouContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -194,8 +194,8 @@ export const styles = StyleSheet.create({
     width: SIZES.ninty,
     alignSelf: 'center',
   },
-  thankyouImgImg: { width: SIZES.seventy, height: 200, resizeMode: 'contain' },
-  thankyouHeading: { ...FONTS.body2_bold, color: COLORS.black },
+  thankyouImgImg: {width: SIZES.seventy, height: 200, resizeMode: 'contain'},
+  thankyouHeading: {...FONTS.body2_bold, color: COLORS.black},
   thankyouContent: {
     ...FONTS.body5,
     textAlign: 'center',

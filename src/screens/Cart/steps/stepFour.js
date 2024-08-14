@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
+import React, {useState, useRef} from 'react';
+import {View, Text, TouchableOpacity, ScrollView, Image} from 'react-native';
 import {
   MasterLayout,
   BackBar,
@@ -12,7 +12,7 @@ import {
   Input,
   PrefixTextInput,
 } from '@components';
-import { COLORS, SIZES, FONTS } from '@constants/theme';
+import {COLORS, SIZES, FONTS} from '@constants/theme';
 import globalStyles from '@constants/global-styles';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import {
@@ -21,10 +21,12 @@ import {
   checked as checkedCheckbox,
   unchecked as uncheckedCheckbox,
 } from '@constants/icons';
-import { cod, card, tick } from '@constants/icons';
-import { styles } from '../styles';
+import {cod, card, tick} from '@constants/icons';
+import {styles} from '../styles';
+import {useTranslation} from 'react-i18next';
 
-const StepFour = ({ }) => {
+const StepFour = ({}) => {
+  const {t} = useTranslation();
   const refRBSheet = useRef();
   const [defaultMethod, setDefaultMethod] = useState(1);
   const [checked, setChecked] = React.useState('card');
@@ -55,7 +57,7 @@ const StepFour = ({ }) => {
             <Image source={cod} style={styles.methodImg} />
           </View>
           <View style={styles.midView}>
-            <Phrase txt={'Cash On Delivery'} txtStyle={styles.methodTitle} />
+            <Phrase txt={t('cashOnDelivery')} txtStyle={styles.methodTitle} />
             <TouchableOpacity
               onPress={() => {
                 if (defaultMethod !== 1) {
@@ -63,7 +65,7 @@ const StepFour = ({ }) => {
                 }
               }}>
               <Phrase
-                txt={defaultMethod == 1 ? 'Default' : 'Set as Default'}
+                txt={defaultMethod == 1 ? t('default') : t('setAsDefault')}
                 txtStyle={styles.methodDefaultTxt}
               />
             </TouchableOpacity>
@@ -135,7 +137,7 @@ const StepFour = ({ }) => {
         <View
           style={[
             globalStyles.contentContainer,
-            { marginHorizontal: SIZES.radius },
+            {marginHorizontal: SIZES.radius},
           ]}>
           <View style={styles.bSheetTop}>
             <Heading

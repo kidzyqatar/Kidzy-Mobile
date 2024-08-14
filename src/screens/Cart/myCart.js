@@ -59,8 +59,10 @@ import {
 import ActivityIndicatorOverlay from '../../components/ActivityIndicator/ActivityIndicatorOverlay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as RootNavigation from '@navigators/RootNavigation';
+import {useTranslation} from 'react-i18next';
 
 const MyCart = () => {
+  const {t} = useTranslation();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
   const [userCart, setUserCart] = useState(global.cart);
@@ -241,7 +243,15 @@ const MyCart = () => {
     console.log(global.cart?.coupon);
 
     if (global.cart?.coupon != null) {
-      discount = grandSum * (global.cart?.coupon.percentage / 100);
+      if (global.cart.coupon.amount) discount = global.cart.coupon.amount;
+
+      if (global.cart.coupon.percentage) {
+        const discountPercentage =
+          grandSum * (global.cart?.coupon.percentage / 100);
+        discount = global.cart.coupon.amount
+          ? Math.min(discountPercentage, global.cart.coupon.amount)
+          : discountPercentage;
+      }
     }
     discount = Number(discount).toFixed(2);
     grandSum = Number(grandSum).toFixed(2);
@@ -389,7 +399,7 @@ const MyCart = () => {
       <View style={globalStyles.whiteBg}>
         {step == 1 ? (
           <BackBar
-            title={title}
+            title={t(title)}
             navigateTo={'Home'}
             right={step == 1 ? true : false}
           />
@@ -399,7 +409,7 @@ const MyCart = () => {
               handleBackPress();
             }}>
             <BackBar
-              title={title}
+              title={t(title)}
               navigateTo={'Home'}
               right={step == 1 ? true : false}
               showCaseView={true}
@@ -441,7 +451,7 @@ const MyCart = () => {
         ]}
         onPress={() => refRBSheet.current.open()}>
         <View style={[styles.triggerLeft]}>
-          <Phrase txt={'Total'} txtStyle={styles.totalTxt} />
+          <Phrase txt={t('total')} txtStyle={styles.totalTxt} />
           <Phrase
             txt={`QAR ${calculations.grandTotal}`}
             txtStyle={styles.priceTxt}
@@ -450,7 +460,7 @@ const MyCart = () => {
         </View>
         <View style={styles.triggerRight}>
           <MyButton
-            label={'Continue'}
+            label={t('continue')}
             txtColor={COLORS.white}
             btnColor={COLORS.primary}
             borderColor={COLORS.primary}
@@ -472,7 +482,7 @@ const MyCart = () => {
         minClosingHeight={0}
         customStyles={{
           wrapper: {
-            backgroundColor: COLORS.black,
+            backgroundColor: 'transparent',
           },
           draggableIcon: {
             backgroundColor: '#000',
@@ -522,7 +532,7 @@ const MyCart = () => {
                     setAuthSheetHeight(600);
                   }}>
                   <Phrase
-                    txt={'Login'}
+                    txt={t('login')}
                     txtStyle={{color: form == 0 ? COLORS.white : COLORS.black}}
                   />
                 </TouchableOpacity>
@@ -540,7 +550,7 @@ const MyCart = () => {
                     setAuthSheetHeight(700);
                   }}>
                   <Phrase
-                    txt={'Register'}
+                    txt={t('register')}
                     txtStyle={{color: form == 1 ? COLORS.white : COLORS.black}}
                   />
                 </TouchableOpacity>
@@ -558,7 +568,7 @@ const MyCart = () => {
                     setAuthSheetHeight(600);
                   }}>
                   <Phrase
-                    txt={'Guest'}
+                    txt={t('guest')}
                     txtStyle={{color: form == 2 ? COLORS.white : COLORS.black}}
                   />
                 </TouchableOpacity>

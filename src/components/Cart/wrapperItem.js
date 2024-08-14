@@ -9,10 +9,10 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import React, { Fragment, useState } from 'react';
+import React, {Fragment, useState} from 'react';
 import globalStyles from '@constants/global-styles';
-import { COLORS, SIZES, FONTS } from '@constants/theme';
-import { Phrase, Hr, Spacer, Input, MyButton } from '@components';
+import {COLORS, SIZES, FONTS} from '@constants/theme';
+import {Phrase, Hr, Spacer, Input, MyButton} from '@components';
 import {
   wrapper1,
   wrapper2,
@@ -20,16 +20,18 @@ import {
   wrapper4,
   customImg,
 } from '@constants/images';
-import { Switch } from 'react-native-paper';
-import { upload, eye, bin, checked, unchecked } from '@constants/icons';
-import { useDispatch, useSelector } from 'react-redux';
-import { launchImageLibrary } from 'react-native-image-picker';
-import { callNonTokenApi, callNonTokenApiMP } from '../../helpers/ApiRequest';
+import {Switch} from 'react-native-paper';
+import {upload, eye, bin, checked, unchecked} from '@constants/icons';
+import {useDispatch, useSelector} from 'react-redux';
+import {launchImageLibrary} from 'react-native-image-picker';
+import {callNonTokenApi, callNonTokenApiMP} from '../../helpers/ApiRequest';
 import config from '../../constants/config';
 import axios from 'axios';
-import { setLoader } from '../../store/reducers/global';
+import {setLoader} from '../../store/reducers/global';
+import {useTranslation} from 'react-i18next';
 
-const WrapperItem = ({ item, getCart }) => {
+const WrapperItem = ({item, getCart}) => {
+  const {t} = useTranslation();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
   const [wrapperSwitch, setWrapperSwitch] = useState(false);
@@ -54,30 +56,36 @@ const WrapperItem = ({ item, getCart }) => {
   const wrappers = global.allWrappers;
 
   const addMessage = async () => {
-    if (to === null) { return }
-    if (from === null) { return }
-    if (msg === null) { return }
-    dispatch(setLoader(true))
+    if (to === null) {
+      return;
+    }
+    if (from === null) {
+      return;
+    }
+    if (msg === null) {
+      return;
+    }
+    dispatch(setLoader(true));
     callNonTokenApi(config.apiName.attachGiftCard, 'POST', {
-      "from": from,
-      "to": to,
-      "message": msg,
-      "copy": copy,
-      "order_item_id": item.id
+      from: from,
+      to: to,
+      message: msg,
+      copy: copy,
+      order_item_id: item.id,
     })
       .then(res => {
         dispatch(setLoader(false));
 
         if (res.status == 200) {
-          getCart()
+          getCart();
         } else {
-          Alert.alert('Error!', res.message)
+          Alert.alert('Error!', res.message);
         }
       })
       .catch(err => {
         dispatch(setLoader(false));
-      })
-  }
+      });
+  };
 
   const openImagePicker = () => {
     const options = {
@@ -88,15 +96,15 @@ const WrapperItem = ({ item, getCart }) => {
       //   skipBackup: true,
       //   path: 'images',
       // }
-    }
+    };
 
-    launchImageLibrary(options, (response) => {
+    launchImageLibrary(options, response => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
       } else if (response.error) {
         console.log('ImagePicker Error: ', response.error);
       } else {
-        console.log(response.assets[0])
+        console.log(response.assets[0]);
         const formData = new FormData();
         // Append selected image to FormData
         formData.append('image', {
@@ -104,46 +112,44 @@ const WrapperItem = ({ item, getCart }) => {
           type: response.assets[0].type,
           name: response.assets[0].fileName,
         });
-        formData.append('order_item_id', item.id)
-        console.log(formData)
+        formData.append('order_item_id', item.id);
+        console.log(formData);
         dispatch(setLoader(true));
         callNonTokenApiMP(config.apiName.attachImage, 'POST', formData)
           .then(res => {
             dispatch(setLoader(false));
-            console.log(res.status, res.status === 200)
+            console.log(res.status, res.status === 200);
             if (res.status == 200) {
               setSelectedCImage(response.assets[0].uri);
-              getCart()
+              getCart();
             } else {
-              Alert.alert('Error!', res.message)
+              Alert.alert('Error!', res.message);
             }
-
           })
           .catch(err => {
             dispatch(setLoader(false));
-          })
+          });
       }
-    })
+    });
   };
 
-  const BottomSheetModal = ({ visible, onClose }) => {
+  const BottomSheetModal = ({visible, onClose}) => {
     if (item.details?.wrapper_id) {
-
       wrappers.map(wrapper => {
         if (wrapper.id == item.details.wrapper_id) {
           setSelectedWrapper(wrapper.full_image);
         }
-      })
+      });
     }
 
     if (item.details?.image_url) {
-      setSelectedCImage(item.details.full_image)
+      setSelectedCImage(item.details.full_image);
     }
 
     if (item.details?.gift_card) {
-      setFrom(item.details.gift_card.from)
-      setTo(item.details.gift_card.to)
-      setMsg(item.details.gift_card.message)
+      setFrom(item.details.gift_card.from);
+      setTo(item.details.gift_card.to);
+      setMsg(item.details.gift_card.message);
     }
 
     return (
@@ -157,15 +163,13 @@ const WrapperItem = ({ item, getCart }) => {
           activeOpacity={1}
           onPress={onClose}>
           <View style={styles.modalContent}>
-            <Image source={{ uri: whichImage }} style={styles.modalImg} />
+            <Image source={{uri: whichImage}} style={styles.modalImg} />
             <MyButton
-              label={'Back'}
+              label={t('back')}
               btnColor={COLORS.secondary}
               borderColor={COLORS.secondary}
               txtColor={COLORS.white}
-              onPress={() => {
-                onClose;
-              }}
+              onPress={onClose}
             />
           </View>
         </TouchableOpacity>
@@ -179,12 +183,18 @@ const WrapperItem = ({ item, getCart }) => {
         <View style={[globalStyles.rowView, styles.tileHeight]}>
           <View style={styles.leftView}>
             <View style={styles.imgView}>
-              <Image source={{ uri: item?.product.full_image }} style={styles.img} />
+              <Image
+                source={{uri: item?.product.full_image}}
+                style={styles.img}
+              />
             </View>
           </View>
           <View style={styles.rightView}>
             <View>
-              <Phrase txt={`${item?.product.name}`} txtStyle={styles.itemTitle} />
+              <Phrase
+                txt={`${item?.product.name}`}
+                txtStyle={styles.itemTitle}
+              />
             </View>
           </View>
         </View>
@@ -192,7 +202,7 @@ const WrapperItem = ({ item, getCart }) => {
 
       <Hr />
       <View style={[globalStyles.rowView, styles.wrapperOption]}>
-        <Phrase txt={'Add Gift Wrapper'} />
+        <Phrase txt={t('Add Gift Wrapper')} />
         <Switch
           value={wrapperSwitch}
           onValueChange={toggleWrapperSwitch}
@@ -205,32 +215,38 @@ const WrapperItem = ({ item, getCart }) => {
             <FlatList
               horizontal={true}
               data={wrappers}
-              renderItem={({ item }) => (
+              renderItem={({item}) => (
                 <React.Fragment key={item.id}>
                   <TouchableOpacity
                     onPress={() => {
-                      console.log(orderItemID)
+                      console.log(orderItemID);
                       const formData = new FormData();
-                      formData.append('wrapper_id', item.id)
-                      formData.append('order_item_id', orderItemID)
+                      formData.append('wrapper_id', item.id);
+                      formData.append('order_item_id', orderItemID);
                       dispatch(setLoader(true));
-                      callNonTokenApiMP(config.apiName.attachWrapper, 'POST', formData)
+                      callNonTokenApiMP(
+                        config.apiName.attachWrapper,
+                        'POST',
+                        formData,
+                      )
                         .then(res => {
                           dispatch(setLoader(false));
-                          console.log(res)
+                          console.log(res);
                           if (res.status == 200) {
                             setSelectedWrapper(item.full_image);
-                            getCart()
+                            getCart();
                           } else {
-                            Alert.alert('Error!', res.message)
+                            Alert.alert('Error!', res.message);
                           }
                         })
                         .catch(err => {
                           dispatch(setLoader(false));
-                        })
-
+                        });
                     }}>
-                    <Image source={{ uri: item.full_image }} style={styles.wrapperImg} />
+                    <Image
+                      source={{uri: item.full_image}}
+                      style={styles.wrapperImg}
+                    />
                   </TouchableOpacity>
                 </React.Fragment>
               )}
@@ -238,7 +254,10 @@ const WrapperItem = ({ item, getCart }) => {
             />
           ) : (
             <View style={globalStyles.rowView}>
-              <Image source={{ uri: selectedWrapper }} style={styles.wrapperImg} />
+              <Image
+                source={{uri: selectedWrapper}}
+                style={styles.wrapperImg}
+              />
               <View style={[globalStyles.rowView]}>
                 <TouchableOpacity
                   style={styles.viewImgContainer}
@@ -260,13 +279,13 @@ const WrapperItem = ({ item, getCart }) => {
           <Spacer />
           {selectedCImage == null ? (
             <>
-              <Phrase txt={'Add Custom Image'} />
+              <Phrase txt={t('addCustomImage')} />
               <Spacer />
               <Phrase
                 txt={
                   <Text style={styles.note}>
-                    Please upload your image to be placed onto the wrapper{' '}
-                    <Text style={styles.noteSimple}>(optional)</Text>
+                    {t('giftWrapperCustomImageUploadText')}{' '}
+                    <Text style={styles.noteSimple}>({t('optional')})</Text>
                   </Text>
                 }
               />
@@ -276,16 +295,13 @@ const WrapperItem = ({ item, getCart }) => {
                 style={styles.uploadContainer}
                 onPress={openImagePicker}>
                 <Image source={upload} style={styles.uploadImg} />
-                <Phrase txt={'Click to upload'} txtStyle={styles.uploadTxt} />
-                <Phrase
-                  txt={'PNG or JPG (max. 1024x1024px)'}
-                  txtStyle={styles.uploadDesc}
-                />
+                <Phrase txt={t('clickToUpload')} txtStyle={styles.uploadTxt} />
+                <Phrase txt={t('pngOrJpg')} txtStyle={styles.uploadDesc} />
               </TouchableOpacity>
             </>
           ) : (
             <View style={globalStyles.rowView}>
-              <Image source={{ uri: selectedCImage }} style={styles.wrapperImg} />
+              <Image source={{uri: selectedCImage}} style={styles.wrapperImg} />
               <View style={[globalStyles.rowView]}>
                 <TouchableOpacity
                   style={styles.viewImgContainer}
@@ -309,7 +325,7 @@ const WrapperItem = ({ item, getCart }) => {
       <Spacer />
       <Hr type={'sm'} />
       <View style={[globalStyles.rowView, styles.wrapperOption]}>
-        <Phrase txt={'Add Gift Card'} />
+        <Phrase txt={t('addGiftCard')} />
         <Switch
           value={cardSwitch}
           onValueChange={toggleCardSwitch}
@@ -319,18 +335,18 @@ const WrapperItem = ({ item, getCart }) => {
       {cardSwitch && (
         <>
           <View style={globalStyles.rowView}>
-            <View style={{ width: SIZES.fourtyFive }}>
+            <View style={{width: SIZES.fourtyFive}}>
               <Input
-                label={'From'}
-                placeholder={'From'}
+                label={t('from')}
+                placeholder={t('from')}
                 value={from}
                 setValue={setFrom}
               />
             </View>
-            <View style={{ width: SIZES.fourtyFive }}>
+            <View style={{width: SIZES.fourtyFive}}>
               <Input
-                label={'To'}
-                placeholder={'To'}
+                label={t('to')}
+                placeholder={t('to')}
                 value={to}
                 setValue={setTo}
               />
@@ -338,8 +354,8 @@ const WrapperItem = ({ item, getCart }) => {
           </View>
           <Spacer />
           <Input
-            label={'Message'}
-            placeholder={'Message'}
+            label={t('message')}
+            placeholder={t('message')}
             value={msg}
             setValue={setMsg}
           />
@@ -354,11 +370,11 @@ const WrapperItem = ({ item, getCart }) => {
                 style={styles.checkbox}
               />
             </TouchableOpacity>
-            <Phrase txt={'Copy message to other items'} />
+            <Phrase txt={t('copyMessageToOtherItems')} />
           </View>
           <Spacer />
           <MyButton
-            label={'Add Message'}
+            label={t('addMessage')}
             txtColor={COLORS.white}
             btnColor={COLORS.secondary}
             borderColor={COLORS.secondary}
@@ -376,8 +392,8 @@ const WrapperItem = ({ item, getCart }) => {
 export default WrapperItem;
 
 const styles = StyleSheet.create({
-  leftView: { width: SIZES.thirty, height: 80 },
-  img: { width: 80, height: 80, resizeMode: 'cover' },
+  leftView: {width: SIZES.thirty, height: 80},
+  img: {width: 80, height: 80, resizeMode: 'cover'},
   rightView: {
     width: SIZES.seventy,
     height: 80,
@@ -395,13 +411,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  tileHeight: { height: 80 },
+  tileHeight: {height: 80},
   wrapperOption: {
     alignItems: 'center',
     marginVertical: SIZES.padding,
   },
-  note: { color: COLORS.black, ...FONTS.body4_bold },
-  noteSimple: { color: COLORS.black, ...FONTS.body4 },
+  note: {color: COLORS.black, ...FONTS.body4_bold},
+  noteSimple: {color: COLORS.black, ...FONTS.body4},
   uploadContainer: {
     height: 150,
     width: SIZES.hundred,
@@ -412,19 +428,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingVertical: SIZES.radius,
   },
-  uploadImg: { width: 40, height: 40, resizeMode: 'contain' },
-  uploadTxt: { ...FONTS.body4_bold, color: COLORS.secondary },
-  uploadDesc: { color: COLORS.txtGray, ...FONTS.body4 },
-  wrapperImg: { height: 100, width: 100, resizeMode: 'contain' },
-  modalImg: { height: 200, width: 200, resizeMode: 'contain' },
+  uploadImg: {width: 40, height: 40, resizeMode: 'contain'},
+  uploadTxt: {...FONTS.body4_bold, color: COLORS.secondary},
+  uploadDesc: {color: COLORS.txtGray, ...FONTS.body4},
+  wrapperImg: {height: 100, width: 100, resizeMode: 'contain'},
+  modalImg: {height: 200, width: 200, resizeMode: 'contain'},
   optionImgView: {
     height: 20,
     width: 20,
     resizeMode: 'contain',
     tintColor: COLORS.secondary,
   },
-  optionImg: { height: 20, width: 20, resizeMode: 'contain' },
-  viewImgContainer: { marginRight: SIZES.radius },
+  optionImg: {height: 20, width: 20, resizeMode: 'contain'},
+  viewImgContainer: {marginRight: SIZES.radius},
   checkbox: {
     width: 20,
     height: 20,

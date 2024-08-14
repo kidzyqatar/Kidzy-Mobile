@@ -30,8 +30,10 @@ import {getData} from '../../helpers/AsyncStorage';
 import {callNonTokenApi} from '../../helpers/ApiRequest';
 import config from '../../constants/config';
 import ActivityIndicatorOverlay from '../../components/ActivityIndicator/ActivityIndicatorOverlay';
+import {useTranslation} from 'react-i18next';
 
 export default function Account() {
+  const {t} = useTranslation();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
   const [profile, setProfile] = useState(global.user);
@@ -118,12 +120,12 @@ export default function Account() {
               padding: SIZES.padding,
             }}>
             <Phrase
-              txt={'Please Sign In to Continue'}
+              txt={t('pleaseSignInToContinue')}
               txtStyle={styles.toolTxt}
             />
 
             <MyButton
-              label={'Login'}
+              label={t('login')}
               txtColor={COLORS.white}
               btnColor={COLORS.secondary}
               borderColor={COLORS.grayLight}
@@ -248,7 +250,7 @@ export default function Account() {
               }}>
               <View style={styles.listItemLeftView}>
                 <Image source={myOrders} style={styles.toolImg} />
-                <Phrase txt={'My Orders'} txtStyle={styles.toolTxt} />
+                <Phrase txt={t('myOrders')} txtStyle={styles.toolTxt} />
               </View>
               <View style={styles.listItemRightView}>
                 <Image source={back} style={styles.forwardImg} />
@@ -263,7 +265,7 @@ export default function Account() {
               }}>
               <View style={styles.listItemLeftView}>
                 <Image source={myWallet} style={styles.toolImg} />
-                <Phrase txt={'Wallet'} txtStyle={styles.toolTxt} />
+                <Phrase txt={t('wallet')} txtStyle={styles.toolTxt} />
               </View>
               <View style={styles.listItemRightView}>
                 <Image source={back} style={styles.forwardImg} />
@@ -278,7 +280,10 @@ export default function Account() {
               }}>
               <View style={styles.listItemLeftView}>
                 <Image source={myPaymentInformation} style={styles.toolImg} />
-                <Phrase txt={'Payment Information'} txtStyle={styles.toolTxt} />
+                <Phrase
+                  txt={t('paymentInformation')}
+                  txtStyle={styles.toolTxt}
+                />
               </View>
               <View style={styles.listItemRightView}>
                 <Image source={back} style={styles.forwardImg} />
@@ -293,7 +298,7 @@ export default function Account() {
               }}>
               <View style={styles.listItemLeftView}>
                 <Image source={myAddress} style={styles.toolImg} />
-                <Phrase txt={'Addresses'} txtStyle={styles.toolTxt} />
+                <Phrase txt={t('addresses')} txtStyle={styles.toolTxt} />
               </View>
               <View style={styles.listItemRightView}>
                 <Image source={back} style={styles.forwardImg} />
@@ -308,7 +313,10 @@ export default function Account() {
               }}>
               <View style={styles.listItemLeftView}>
                 <Image source={myUser} style={styles.toolImg} />
-                <Phrase txt={'Account & Security'} txtStyle={styles.toolTxt} />
+                <Phrase
+                  txt={t('accountAndSecurity')}
+                  txtStyle={styles.toolTxt}
+                />
               </View>
               <View style={styles.listItemRightView}>
                 <Image source={back} style={styles.forwardImg} />
@@ -319,28 +327,28 @@ export default function Account() {
             <Spacer />
             <TouchableOpacity>
               <Phrase
-                txt={'About the app (v1.0)'}
+                txt={t('aboutTheAppV1.0')}
                 txtStyle={{...FONTS.body4, color: COLORS.txtGray}}
               />
             </TouchableOpacity>
             <Spacer />
             <TouchableOpacity>
               <Phrase
-                txt={'Privacy Policy'}
+                txt={t('privacyPolicy')}
                 txtStyle={{...FONTS.body4, color: COLORS.txtGray}}
               />
             </TouchableOpacity>
             <Spacer />
             <TouchableOpacity>
               <Phrase
-                txt={'Terms and Conditions'}
+                txt={t('termsAndConditions')}
                 txtStyle={{...FONTS.body4, color: COLORS.txtGray}}
               />
             </TouchableOpacity>
             <Spacer />
 
             <MyButton
-              label={'Log out'}
+              label={t('logOut')}
               txtColor={COLORS.black}
               btnColor={COLORS.white}
               borderColor={COLORS.grayLight}

@@ -14,12 +14,15 @@ import {COLORS, SIZES, FONTS} from '@constants/theme';
 import globalStyles from '@constants/global-styles';
 import {styles} from './styles';
 import {wallet} from '@constants/icons';
+import {useTranslation} from 'react-i18next';
 
 const Wallet = () => {
+  const {t} = useTranslation();
+
   return (
     <MasterLayout bgColor={COLORS.bgGray} scrolling={false} max={true}>
       <View style={globalStyles.whiteBg}>
-        <BackBar title={'Wallet'} navigateTo={'Account'} />
+        <BackBar title={t('wallet')} navigateTo={'Account'} />
       </View>
       <Spacer />
       <View
@@ -33,7 +36,7 @@ const Wallet = () => {
         />
         <Spacer />
         <Phrase
-          txt={'You Balance'}
+          txt={t('yourBalance')}
           txtStyle={{...FONTS.body4, color: COLORS.black}}
         />
         <Phrase
@@ -42,7 +45,7 @@ const Wallet = () => {
         />
         <Spacer />
         <MyButton
-          label={'Add Funds'}
+          label={t('addFunds')}
           txtColor={COLORS.white}
           btnColor={COLORS.secondary}
           borderColor={COLORS.secondary}

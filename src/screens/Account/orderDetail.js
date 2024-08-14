@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
+import {View, Text, TouchableOpacity, Image, ScrollView} from 'react-native';
 import {
   MasterLayout,
   BackBar,
@@ -9,13 +9,15 @@ import {
   Chip,
   OrderItemVisual,
 } from '@components';
-import { COLORS, SIZES, FONTS } from '@constants/theme';
+import {COLORS, SIZES, FONTS} from '@constants/theme';
 import globalStyles from '@constants/global-styles';
-import { styles } from './styles';
-import { balloons } from '@constants/icons';
+import {styles} from './styles';
+import {balloons} from '@constants/icons';
+import {useTranslation} from 'react-i18next';
 
-const OrderDetail = ({ route }) => {
-  const { item } = route.params;
+const OrderDetail = ({route}) => {
+  const {t} = useTranslation();
+  const {item} = route.params;
   let chipBgColor = '';
   let chipTxtColor = '';
   switch (item?.status) {
@@ -38,13 +40,13 @@ const OrderDetail = ({ route }) => {
   return (
     <MasterLayout bgColor={COLORS.bgGray} scrolling={false} max={true}>
       <View style={globalStyles.whiteBg}>
-        <BackBar title={'Order Details'} navigateTo={'Orders'} />
+        <BackBar title={t('orderDetails')} navigateTo={'Orders'} />
       </View>
       <Spacer />
       <ScrollView scrollEnabled={true} showsVerticalScrollIndicator={false}>
         <View style={globalStyles.whiteBg}>
           <View style={globalStyles.rowView}>
-            <Phrase txt={'Order Status'} txtStyle={styles.smallHeading} />
+            <Phrase txt={t('orderStatus')} txtStyle={styles.smallHeading} />
             <Chip
               status={item?.status}
               bgColor={chipBgColor}
@@ -55,21 +57,24 @@ const OrderDetail = ({ route }) => {
         <Spacer />
 
         <View style={globalStyles.whiteBg}>
-          <Phrase txt={'Order Info'} txtStyle={styles.smallHeading} />
-          <Phrase txt={`Order ID: ${item.id}`} txtStyle={styles.smallInfoTxt} />
+          <Phrase txt={t('orderInfo')} txtStyle={styles.smallHeading} />
           <Phrase
-            txt={`Placed on: ${item.updated_at}`}
+            txt={`${t('orderId')}: ${item.id}`}
             txtStyle={styles.smallInfoTxt}
           />
           <Phrase
-            txt={`Paid on: ${item.updated_at}`}
+            txt={`${t('placedOn')}: ${item.updated_at}`}
+            txtStyle={styles.smallInfoTxt}
+          />
+          <Phrase
+            txt={`${t('paidOn')}: ${item.updated_at}`}
             txtStyle={styles.smallInfoTxt}
           />
         </View>
 
         <Spacer />
         <View style={globalStyles.whiteBg}>
-          <Phrase txt={`Items`} txtStyle={styles.smallHeading} />
+          <Phrase txt={t('items')} txtStyle={styles.smallHeading} />
 
           {item?.order_items.map((elem, index) => {
             return (
@@ -83,54 +88,68 @@ const OrderDetail = ({ route }) => {
         </View>
         <Spacer />
         {/* Special Widget */}
-        {(item.character?.full_image) ? <View style={globalStyles.whiteBg}>
-          <View style={globalStyles.rowView}>
-            <Phrase txt={'Special Delivery'} txtStyle={styles.smallHeading} />
+        {item.character?.full_image ? (
+          <View style={globalStyles.whiteBg}>
+            <View style={globalStyles.rowView}>
+              <Phrase
+                txt={t('specialDelivery')}
+                txtStyle={styles.smallHeading}
+              />
+            </View>
+            <Spacer />
+            <TouchableOpacity
+              style={[
+                styles.character,
+                {
+                  borderWidth: 3,
+                  borderColor: COLORS.secondary,
+                },
+              ]}>
+              <Image
+                source={{uri: item.character.full_image}}
+                style={styles.characterImg}
+              />
+            </TouchableOpacity>
           </View>
-          <Spacer />
-          <TouchableOpacity
-            style={[
-              styles.character,
-              {
-                borderWidth: 3,
-                borderColor: COLORS.secondary,
-              },
-            ]}>
-            <Image source={{ uri: item.character.full_image }} style={styles.characterImg} />
-          </TouchableOpacity>
-        </View> : (null)}
+        ) : null}
 
         {/* Special Widget */}
 
         <Spacer />
 
         {/* Balloon Widget */}
-        {item.balloon_cost > 0 ? <View style={globalStyles.whiteBg}>
-          <View style={globalStyles.rowView}>
-            <Phrase txt={'Balloons'} txtStyle={styles.smallHeading} />
+        {item.balloon_cost > 0 ? (
+          <View style={globalStyles.whiteBg}>
+            <View style={globalStyles.rowView}>
+              <Phrase txt={t('balloons')} txtStyle={styles.smallHeading} />
+            </View>
+            <Spacer />
+            <View
+              style={[globalStyles.rowView, {justifyContent: 'flex-start'}]}>
+              <Image source={balloons} style={styles.balloons} />
+              <Phrase txt={`QAR: ${item.balloon_cost}`} txtStyle={styles.qty} />
+            </View>
           </View>
-          <Spacer />
-          <View style={[globalStyles.rowView, { justifyContent: 'flex-start' }]}>
-            <Image source={balloons} style={styles.balloons} />
-            <Phrase txt={`QAR: ${item.balloon_cost}`} txtStyle={styles.qty} />
-          </View>
-        </View> : (null)}
+        ) : null}
         <Spacer />
         <View style={globalStyles.whiteBg}>
           <View style={globalStyles.rowView}>
-            <Phrase txt={'Total'} txtStyle={styles.smallInfoTxt} />
-            <Phrase txt={`QAR ${item.grand_total}`} txtStyle={styles.totalTxt} />
+            <Phrase txt={t('total')} txtStyle={styles.smallInfoTxt} />
+            <Phrase
+              txt={`QAR ${item.grand_total}`}
+              txtStyle={styles.totalTxt}
+            />
           </View>
           <Hr />
           <Spacer />
           <View style={styles.moreInfo}>
             <View style={[globalStyles.rowView, styles.smallGap]}>
-              <Phrase txt={'Cart Subtotal'} txtStyle={styles.smallInfoTxt} />
+              <Phrase txt={t('cartSubtotal')} txtStyle={styles.smallInfoTxt} />
               <Phrase txt={`QAR ${item.subtotal}`} txtStyle={styles.totalTxt} />
             </View>
             <Hr type={'small'} />
             <View style={[globalStyles.rowView, styles.smallGap]}>
-              <Phrase txt={'Gift Wrapper'} txtStyle={styles.smallInfoTxt} />
+              <Phrase txt={t('giftWrapper')} txtStyle={styles.smallInfoTxt} />
               <Phrase
                 txt={`QAR ${item.wrapper_cost}`}
                 txtStyle={styles.totalTxt}
@@ -138,13 +157,13 @@ const OrderDetail = ({ route }) => {
             </View>
             <Hr type={'small'} />
             <View style={[globalStyles.rowView, styles.smallGap]}>
-              <Phrase txt={'Tax'} txtStyle={styles.smallInfoTxt} />
+              <Phrase txt={t('tax')} txtStyle={styles.smallInfoTxt} />
               <Phrase txt={`QAR ${item.tax}`} txtStyle={styles.totalTxt} />
             </View>
             <Hr type={'small'} />
             <View style={[globalStyles.rowView, styles.smallGap]}>
               <Phrase
-                txt={'Estimated Shipping'}
+                txt={t('estimatedShipping')}
                 txtStyle={styles.smallInfoTxt}
               />
               <Phrase
@@ -154,7 +173,7 @@ const OrderDetail = ({ route }) => {
             </View>
             <Hr type={'small'} />
             <View style={[globalStyles.rowView, styles.smallGap]}>
-              <Phrase txt={'Discount'} txtStyle={styles.smallInfoTxt} />
+              <Phrase txt={t('discount')} txtStyle={styles.smallInfoTxt} />
               <Phrase txt={`QAR ${item.discount}`} txtStyle={styles.totalTxt} />
             </View>
           </View>

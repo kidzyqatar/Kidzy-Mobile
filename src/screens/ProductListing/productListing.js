@@ -6,7 +6,7 @@ import {
   Image,
   Pressable,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   MasterLayout,
   CartBar,
@@ -17,37 +17,41 @@ import {
   ProductWidget,
   Spacer,
 } from '@components';
-import { COLORS, SIZES, FONTS } from '@constants/theme';
+import {COLORS, SIZES, FONTS} from '@constants/theme';
 import globalStyles from '@constants/global-styles';
-import { search, filter, close, checked, unchecked } from '@constants/icons';
-import { styles } from './styles';
-import { product1 } from '@constants/images';
-import { useFocusEffect } from '@react-navigation/native';
+import {search, filter, close, checked, unchecked} from '@constants/icons';
+import {styles} from './styles';
+import {product1} from '@constants/images';
+import {useFocusEffect} from '@react-navigation/native';
 import config from '../../constants/config';
-import { callNonTokenApi } from '../../helpers/ApiRequest';
-import { useDispatch, useSelector } from 'react-redux';
-import { MyButton, SearchTextField } from '../../components';
-import { setLoader } from '../../store/reducers/global';
+import {callNonTokenApi} from '../../helpers/ApiRequest';
+import {useDispatch, useSelector} from 'react-redux';
+import {MyButton, SearchTextField} from '../../components';
+import {setLoader} from '../../store/reducers/global';
+import {useTranslation} from 'react-i18next';
 
-const ProductListing = ({ route }) => {
+const ProductListing = ({route}) => {
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
-  const { namE, slug, type } = route.params;
-  const [searchText, setSearchText] = useState('')
+  const {t} = useTranslation();
+  const {namE, slug, type} = route.params;
+  const [searchText, setSearchText] = useState('');
 
-  const [newArrivals, setNewArrivals] = useState(null)
-  const [name, setName] = useState(namE)
+  const [newArrivals, setNewArrivals] = useState(null);
+  const [name, setName] = useState(namE);
   const [scene, setScene] = useState('Listing');
 
   const [ageFilters, setAgeFilters] = useState(global.allAges);
-  const [categoriesFilters, setCategoriesFilters] = useState(global.allCategories);
+  const [categoriesFilters, setCategoriesFilters] = useState(
+    global.allCategories,
+  );
   const [brandFilters, setBrandFilters] = useState(global.allBrands);
   const [priceFilters, setPriceFilters] = useState(global.allPrices);
 
-  const [ageSF, setAgeSF] = useState([])
-  const [categoriesSF, setCategoriesSF] = useState([])
-  const [brandSF, setBrandSF] = useState([])
-  const [priceSF, setPriceSF] = useState([])
+  const [ageSF, setAgeSF] = useState([]);
+  const [categoriesSF, setCategoriesSF] = useState([]);
+  const [brandSF, setBrandSF] = useState([]);
+  const [priceSF, setPriceSF] = useState([]);
 
   // const [ageFilters, setAgeFilters] = useState([
   //   { title: '1-3', id: '1-3', checked: false },
@@ -88,107 +92,96 @@ const ProductListing = ({ route }) => {
   //   }, []),
   // );
   useEffect(() => {
-    setNewArrivals(null)
-    dispatch(setLoader(true))
+    setNewArrivals(null);
+    dispatch(setLoader(true));
     fetchData();
-
   }, []);
 
   const renderEmptyComponent = () => (
     <View style={styles.emptyContainer}>
-      <Phrase
-        txt={`No Record Found`}
-        txtStyle={styles.filterItemTxt}
-      />
+      <Phrase txt={t(`noRecordFound`)} txtStyle={styles.filterItemTxt} />
     </View>
   );
 
-
   const fetchData = async () => {
-    dispatch(setLoader(true))
-    console.log(`${config.apiName.productList}/${type}/${slug}`)
-    callNonTokenApi(
-      `${config.apiName.productList}/${type}/${slug}`,
-      'GET',
-    )
+    dispatch(setLoader(true));
+    console.log(`${config.apiName.productList}/${type}/${slug}`);
+    callNonTokenApi(`${config.apiName.productList}/${type}/${slug}`, 'GET')
       .then(res => {
-        // console.log(res.products);
-        setNewArrivals(res.data.products)
-        setName(res.data.name)
-        dispatch(setLoader(false))
+        console.log('checkhere', res.data);
+        setNewArrivals(res.data.products);
+        setName(res.data.name);
+        dispatch(setLoader(false));
       })
       .catch(error => {
-        console.log(error)
+        console.log(error);
         // setApiFailModal(true);
       });
   };
 
-  const applyFilters = async () => {
-
-
-  };
+  const applyFilters = async () => {};
 
   const onApplyFilterPressed = (applied = false) => {
-    dispatch(setLoader(true))
+    dispatch(setLoader(true));
 
     if (!applied) {
-      ageFilters.map((item) => {
+      ageFilters.map(item => {
         if (item.checked) {
-          console.log(item.checked)
-          ageSF.push(item.value)
+          console.log(item.checked);
+          ageSF.push(item.value);
         }
-      })
+      });
     }
-    categoriesFilters.map((item) => {
+    categoriesFilters.map(item => {
       if (item.checked) {
-        categoriesSF.push(item.id)
+        categoriesSF.push(item.id);
       }
-    })
+    });
 
-    brandFilters.map((item) => {
+    brandFilters.map(item => {
       if (item.checked) {
-        brandSF.push(item.id)
+        brandSF.push(item.id);
       }
-    })
+    });
 
-    priceFilters.map((item) => {
+    priceFilters.map(item => {
       if (item.checked) {
-        priceSF.push(item.value)
+        priceSF.push(item.value);
       }
-    })
+    });
 
-    console.log(`${config.apiName.search}`, categoriesSF, ageSF, brandSF, priceSF)
-    callNonTokenApi(
+    console.log(
       `${config.apiName.search}`,
-      'POST',
-      {
-        "sortBy": "created_at",
-        "categories": categoriesSF,
-        "brands": brandSF,
-        "ages": ageSF,
-        "prices": priceSF
-      }
-    )
+      categoriesSF,
+      ageSF,
+      brandSF,
+      priceSF,
+    );
+    callNonTokenApi(`${config.apiName.search}`, 'POST', {
+      sortBy: 'created_at',
+      categories: categoriesSF,
+      brands: brandSF,
+      ages: ageSF,
+      prices: priceSF,
+    })
       .then(res => {
         // console.log(res.products);
-        setNewArrivals(res.data.products)
-        dispatch(setLoader(false))
+        setNewArrivals(res.data.products);
+        dispatch(setLoader(false));
         setScene('Listing');
-        setAgeSF([])
-        setCategoriesSF([])
-        setBrandSF([])
-        setPriceSF([])
+        setAgeSF([]);
+        setCategoriesSF([]);
+        setBrandSF([]);
+        setPriceSF([]);
       })
       .catch(error => {
-        dispatch(setLoader(false))
-        console.log(error)
+        dispatch(setLoader(false));
+        console.log(error);
         setScene('Listing');
 
         // setApiFailModal(true);
       });
-  }
-
-
+  };
 
   const handleCheckboxChange = (filterType, index) => {
     switch (filterType) {
@@ -196,7 +189,7 @@ const ProductListing = ({ route }) => {
         let updatedAgeFilters = [...ageFilters];
         updatedAgeFilters[index] = {
           ...updatedAgeFilters[index],
-          checked: !updatedAgeFilters[index].checked
+          checked: !updatedAgeFilters[index].checked,
         };
         setAgeFilters(updatedAgeFilters);
         console.log('Age Filters:', updatedAgeFilters);
@@ -205,7 +198,7 @@ const ProductListing = ({ route }) => {
         const updatedBrandFilters = [...brandFilters];
         updatedBrandFilters[index] = {
           ...updatedBrandFilters[index],
-          checked: !updatedBrandFilters[index].checked
+          checked: !updatedBrandFilters[index].checked,
         };
         setBrandFilters(updatedBrandFilters);
         console.log('Brand Filters:', updatedBrandFilters);
@@ -214,7 +207,7 @@ const ProductListing = ({ route }) => {
         const updatedCategoriesFilters = [...categoriesFilters];
         updatedCategoriesFilters[index] = {
           ...updatedCategoriesFilters[index],
-          checked: !updatedCategoriesFilters[index].checked
+          checked: !updatedCategoriesFilters[index].checked,
         };
         setCategoriesFilters(updatedCategoriesFilters);
         console.log('Categories Filters:', updatedCategoriesFilters);
@@ -223,7 +216,7 @@ const ProductListing = ({ route }) => {
         const updatedPriceFilters = [...priceFilters];
         updatedPriceFilters[index] = {
           ...updatedPriceFilters[index],
-          checked: !updatedPriceFilters[index].checked
+          checked: !updatedPriceFilters[index].checked,
         };
         setPriceFilters(updatedPriceFilters);
         console.log('Price Filters:', updatedPriceFilters);
@@ -233,11 +226,12 @@ const ProductListing = ({ route }) => {
     }
   };
   return (
-    <MasterLayout bgColor={COLORS.bgGray} scrolling={true} max={true}>
-
-
-      {scene == 'Listing' ? (
-        <>
+    <MasterLayout
+      bgColor={COLORS.bgGray}
+      scrolling={true}
+      max={true}
+      header={
+        scene == 'Listing' && (
           <View style={globalStyles.whiteBg}>
             <CartBar title={name} />
             <View style={[globalStyles.rowView, styles.searchRow]}>
@@ -255,7 +249,7 @@ const ProductListing = ({ route }) => {
             </View>
             <Hr />
             <Phrase
-              txt={'Select Age (years):'}
+              txt={t('selectAgeInYears')}
               txtStyle={styles.selectAgeTxt}
             />
             <Spacer />
@@ -263,7 +257,7 @@ const ProductListing = ({ route }) => {
               showsHorizontalScrollIndicator={false}
               horizontal={true}
               data={ageFilters}
-              renderItem={({ item, index }) => (
+              renderItem={({item, index}) => (
                 <React.Fragment key={item.id}>
                   <TouchableOpacity
                     onPress={() => {
@@ -271,17 +265,17 @@ const ProductListing = ({ route }) => {
                       let updatedAgeFilters = [...ageFilters];
                       updatedAgeFilters[index] = {
                         ...updatedAgeFilters[index],
-                        checked: !updatedAgeFilters[index].checked
+                        checked: !updatedAgeFilters[index].checked,
                       };
                       setAgeFilters(updatedAgeFilters);
                       console.log('Age Filters:', updatedAgeFilters);
-                      updatedAgeFilters.map((item) => {
+                      updatedAgeFilters.map(item => {
                         if (item.checked) {
-                          console.log(item.checked)
-                          ageSF.push(item.value)
+                          console.log(item.checked);
+                          ageSF.push(item.value);
                         }
-                      })
-                      onApplyFilterPressed(true)
+                      });
+                      onApplyFilterPressed(true);
                     }}
                     style={[
                       styles.ageItem,
@@ -303,11 +297,15 @@ const ProductListing = ({ route }) => {
               keyExtractor={item => item.id}
             />
           </View>
+        )
+      }>
+      {scene == 'Listing' ? (
+        <View style={{marginTop: 130}}>
           <FlatList
             data={newArrivals}
             scrollEnabled={false}
             numColumns={2}
-            renderItem={({ item }) => (
+            renderItem={({item}) => (
               <React.Fragment key={item.sku}>
                 <ProductWidget item={item} />
               </React.Fragment>
@@ -316,13 +314,12 @@ const ProductListing = ({ route }) => {
             contentContainerStyle={styles.listingContainer}
             ListEmptyComponent={renderEmptyComponent}
           />
-
-        </>
+        </View>
       ) : (
         <>
           <View style={globalStyles.whiteBg}>
             <View style={[globalStyles.rowView]}>
-              <CartBar title={'Filters'} showCart={false} />
+              <CartBar title={t('filters')} showCart={false} />
               <TouchableOpacity
                 onPress={() => {
                   setScene('Listing');
@@ -335,7 +332,7 @@ const ProductListing = ({ route }) => {
           <View
             style={[
               globalStyles.whiteBg,
-              { flexDirection: 'row', flexWrap: 'wrap' },
+              {flexDirection: 'row', flexWrap: 'wrap'},
             ]}>
             {ageFilters.map((item, index) => {
               if (item.checked) {
@@ -418,7 +415,7 @@ const ProductListing = ({ route }) => {
           <Spacer />
           {/* Age Filter */}
           <View style={[globalStyles.whiteBg]}>
-            <CartBar title={'Select Age'} showCart={false} />
+            <CartBar title={t('selectAge')} showCart={false} />
             <Spacer />
             {ageFilters.map((filter, index) => {
               return (
@@ -441,7 +438,7 @@ const ProductListing = ({ route }) => {
           <Spacer />
           {/* Categories Filter */}
           <View style={[globalStyles.whiteBg]}>
-            <CartBar title={'Select Categories'} showCart={false} />
+            <CartBar title={t('selectCategories')} showCart={false} />
             <Spacer />
             {categoriesFilters.map((filter, index) => {
               return (
@@ -464,7 +461,7 @@ const ProductListing = ({ route }) => {
           <Spacer />
           {/* Brands Filter */}
           <View style={[globalStyles.whiteBg]}>
-            <CartBar title={'Select Brands'} showCart={false} />
+            <CartBar title={t('selectBrands')} showCart={false} />
             <Spacer />
             {brandFilters.map((filter, index) => {
               return (
@@ -487,7 +484,7 @@ const ProductListing = ({ route }) => {
           <Spacer />
           {/* Price Filter */}
           <View style={[globalStyles.whiteBg]}>
-            <CartBar title={'Select Price'} showCart={false} />
+            <CartBar title={t('selectPrice')} showCart={false} />
             <Spacer />
             {priceFilters.map((filter, index) => {
               return (
@@ -508,7 +505,7 @@ const ProductListing = ({ route }) => {
           </View>
           {/* Price Filter */}
           <MyButton
-            label={<Text style={styles.productBtn}>Apply Filter</Text>}
+            label={<Text style={styles.productBtn}>{t('applyFilter')}</Text>}
             btnStyle={styles.btnStyle}
             txtColor={COLORS.white}
             btnColor={COLORS.secondary}
@@ -517,7 +514,6 @@ const ProductListing = ({ route }) => {
           />
         </>
       )}
-
     </MasterLayout>
   );
 };
@@ -532,9 +528,6 @@ export default ProductListing;
 //   "ages": ["1-3", "4-7", "13+"],
 //   "prices": [[5,10], [11,25]]
 // }
-
-
-
 
 // const [ageFilters, setAgeFilters] = useState([
 //   {title: 'All', id: 'All', checked: false},
@@ -572,7 +565,6 @@ export default ProductListing;
 //   {title: '11+', id: '11+', checked: false},
 //   {title: '15+', id: '15+', checked: false},
 // ]);
-
 
 // const [ageFilters, setAgeFilters] = useState(global.allAges);
 //   const [categoriesFilters, setCategoriesFilters] = useState(global.allCategories);

@@ -1,14 +1,14 @@
-import { Platform, StyleSheet } from 'react-native';
-import { SIZES, COLORS, FONTS } from '@constants/theme';
+import {Platform, StyleSheet} from 'react-native';
+import {SIZES, COLORS, FONTS} from '@constants/theme';
 
 export default GlobalStyle = StyleSheet.create({
   textInput: {
     width: SIZES.hundred,
     height: 44,
     backgroundColor: COLORS.white,
-    lineHeight: Platform.OS == 'android' ? 44 : 20,
+    lineHeight: 20,
   },
-  textInputOutline: { borderColor: COLORS.grayLight, borderRadius: SIZES.base },
+  textInputOutline: {borderColor: COLORS.grayLight, borderRadius: SIZES.base},
   textInputIcon: {
     width: 15,
     height: 15,
@@ -24,13 +24,13 @@ export default GlobalStyle = StyleSheet.create({
   whiteBg: {
     backgroundColor: COLORS.white,
     padding: SIZES.padding,
-    zIndex: 999
+    zIndex: 999,
   },
   rowView: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    zIndex: 999
+    zIndex: 999,
   },
   row: {
     flexDirection: 'row',
@@ -38,6 +38,6 @@ export default GlobalStyle = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: SIZES.base,
   },
-  spaceAround: { justifyContent: 'space-around' },
-  alignCenter: { alignItems: 'center' },
+  spaceAround: {justifyContent: 'space-around'},
+  alignCenter: {alignItems: 'center'},
 });

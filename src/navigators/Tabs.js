@@ -1,5 +1,5 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {
   Home,
   Categories,
@@ -14,7 +14,7 @@ import {
   Address,
   Profile,
 } from '@screens';
-import { SIZES, COLORS, FONTS } from '@constants/theme';
+import {SIZES, COLORS, FONTS} from '@constants/theme';
 import {
   menuHome,
   menuCategories,
@@ -23,14 +23,16 @@ import {
 } from '@constants/icons';
 
 import * as RootNavigation from './RootNavigation';
-import { Phrase } from '../components';
-import { useDispatch, useSelector } from 'react-redux';
-import { setActiveTab } from '../store/reducers/global';
+import {Phrase} from '../components';
+import {useDispatch, useSelector} from 'react-redux';
+import {setActiveTab} from '../store/reducers/global';
 const Tab = createBottomTabNavigator();
+import {useTranslation} from 'react-i18next';
 
 const Tabs = () => {
   const dispatch = useDispatch();
   const global = useSelector(state => state.global);
+  const {t} = useTranslation();
   const TabBar = () => {
     return (
       <View style={styles.tabContainer}>
@@ -57,7 +59,7 @@ const Tabs = () => {
               color:
                 global?.activeTab == 0 ? COLORS.secondary : COLORS.iconGray,
             }}
-            txt={'Home'}
+            txt={t('home')}
           />
         </Pressable>
         <Pressable
@@ -83,7 +85,7 @@ const Tabs = () => {
               color:
                 global?.activeTab == 1 ? COLORS.secondary : COLORS.iconGray,
             }}
-            txt={'Categories'}
+            txt={t('categories')}
           />
         </Pressable>
         <Pressable
@@ -109,7 +111,7 @@ const Tabs = () => {
               color:
                 global?.activeTab == 2 ? COLORS.secondary : COLORS.iconGray,
             }}
-            txt={'Brands'}
+            txt={t('brands')}
           />
         </Pressable>
         <Pressable
@@ -135,14 +137,14 @@ const Tabs = () => {
               color:
                 global?.activeTab == 3 ? COLORS.secondary : COLORS.iconGray,
             }}
-            txt={'Account'}
+            txt={t('account')}
           />
         </Pressable>
       </View>
     );
   };
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{flex: 1}}>
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
@@ -157,14 +159,34 @@ const Tabs = () => {
         <Tab.Screen name="Home" component={Home} />
         <Tab.Screen name="Categories" component={Categories} />
         <Tab.Screen name="Brands" component={Brands} />
-        <Tab.Screen name="Account" component={Account} options={{ unmountOnBlur: true }} />
-        <Tab.Screen name="ProductListing" component={ProductListing} options={{ unmountOnBlur: true }} />
-        <Tab.Screen name="ProductDetail" component={ProductDetail} options={{ unmountOnBlur: true }} />
-        <Tab.Screen name="Orders" component={Orders} options={{ unmountOnBlur: true }} />
+        <Tab.Screen
+          name="Account"
+          component={Account}
+          options={{unmountOnBlur: true}}
+        />
+        <Tab.Screen
+          name="ProductListing"
+          component={ProductListing}
+          options={{unmountOnBlur: true}}
+        />
+        <Tab.Screen
+          name="ProductDetail"
+          component={ProductDetail}
+          options={{unmountOnBlur: true}}
+        />
+        <Tab.Screen
+          name="Orders"
+          component={Orders}
+          options={{unmountOnBlur: true}}
+        />
         <Tab.Screen name="OrderDetail" component={OrderDetail} />
         <Tab.Screen name="Wallet" component={Wallet} />
         <Tab.Screen name="PaymentInformation" component={PaymentInformation} />
-        <Tab.Screen name="Address" component={Address} options={{ unmountOnBlur: true }} />
+        <Tab.Screen
+          name="Address"
+          component={Address}
+          options={{unmountOnBlur: true}}
+        />
         <Tab.Screen name="Profile" component={Profile} />
       </Tab.Navigator>
     </View>
@@ -180,7 +202,7 @@ const styles = StyleSheet.create({
     height: SIZES.ten,
     backgroundColor: COLORS.white,
     shadowColor: COLORS.gray2,
-    shadowOffset: { width: 1, height: -2 },
+    shadowOffset: {width: 1, height: -2},
     shadowOpacity: 0.4,
     shadowRadius: 4,
     elevation: 5,
@@ -191,7 +213,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  tabIcon: { width: 20, height: 20, resizeMode: 'contain' },
+  tabIcon: {width: 20, height: 20, resizeMode: 'contain'},
   //   tabTxt: {}
 });
 

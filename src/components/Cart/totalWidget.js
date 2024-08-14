@@ -1,18 +1,20 @@
-import { View, Text, StyleSheet, Image } from 'react-native';
+import {View, Text, StyleSheet, Image} from 'react-native';
 import React from 'react';
 import globalStyles from '@constants/global-styles';
-import { COLORS, FONTS, SIZES } from '@constants/theme';
-import { Phrase, Hr, MyButton } from '@components';
-import { chevron } from '@constants/icons';
-import { useSelector } from 'react-redux';
+import {COLORS, FONTS, SIZES} from '@constants/theme';
+import {Phrase, Hr, MyButton} from '@components';
+import {chevron} from '@constants/icons';
+import {useSelector} from 'react-redux';
+import {useTranslation} from 'react-i18next';
 
-const TotalWidget = ({ calculations }) => {
+const TotalWidget = ({calculations}) => {
+  const {t} = useTranslation();
   const global = useSelector(state => state.global);
   return (
     <View>
       <View style={styles.container}>
         <View style={[globalStyles.rowView, styles.row]}>
-          <Phrase txt={'Cart Subtotal'} txtStyle={styles.detailTxt} />
+          <Phrase txt={t('cartSubtotal')} txtStyle={styles.detailTxt} />
           <Phrase
             txt={`QAR ${calculations.subtotal}`}
             txtStyle={styles.priceTxt}
@@ -20,7 +22,7 @@ const TotalWidget = ({ calculations }) => {
         </View>
         <Hr type={'sm'} />
         <View style={[globalStyles.rowView, styles.row]}>
-          <Phrase txt={'Gift Wrapper'} txtStyle={styles.detailTxt} />
+          <Phrase txt={t('giftWrapper')} txtStyle={styles.detailTxt} />
           <Phrase
             txt={`QAR ${calculations.wrapper}`}
             txtStyle={styles.priceTxt}
@@ -28,7 +30,7 @@ const TotalWidget = ({ calculations }) => {
         </View>
         <Hr type={'sm'} />
         <View style={[globalStyles.rowView, styles.row]}>
-          <Phrase txt={'Special Delivery'} txtStyle={styles.detailTxt} />
+          <Phrase txt={t('specialDelivery')} txtStyle={styles.detailTxt} />
           <Phrase
             txt={`QAR ${calculations.specialDelivery}`}
             txtStyle={styles.priceTxt}
@@ -36,7 +38,7 @@ const TotalWidget = ({ calculations }) => {
         </View>
         <Hr type={'sm'} />
         <View style={[globalStyles.rowView, styles.row]}>
-          <Phrase txt={'Balloons'} txtStyle={styles.detailTxt} />
+          <Phrase txt={t('balloons')} txtStyle={styles.detailTxt} />
           <Phrase
             txt={`QAR ${calculations.balloons}`}
             txtStyle={styles.priceTxt}
@@ -44,7 +46,7 @@ const TotalWidget = ({ calculations }) => {
         </View>
         <Hr type={'sm'} />
         <View style={[globalStyles.rowView, styles.row]}>
-          <Phrase txt={'Estimated Shipping'} txtStyle={styles.detailTxt} />
+          <Phrase txt={t('estimatedShipping')} txtStyle={styles.detailTxt} />
           <Phrase
             txt={`QAR ${calculations.shipping}`}
             txtStyle={styles.priceTxt}
@@ -55,8 +57,14 @@ const TotalWidget = ({ calculations }) => {
           <>
             <View style={[globalStyles.rowView, styles.discountContainer]}>
               <View style={styles.discountWidget}>
-                <Phrase txt={`Discount: ${global.cart.coupon.name}`} txtStyle={styles.detailTxt} />
-                <Phrase txt={`-QAR ${calculations.discount}`} txtStyle={styles.priceTxt} />
+                <Phrase
+                  txt={`Discount: ${global.cart.coupon.name}`}
+                  txtStyle={styles.detailTxt}
+                />
+                <Phrase
+                  txt={`-QAR ${calculations.discount}`}
+                  txtStyle={styles.priceTxt}
+                />
               </View>
             </View>
             <Hr type={'sm'} />
@@ -68,16 +76,15 @@ const TotalWidget = ({ calculations }) => {
           style={[globalStyles.whiteBg, styles.cartTriggerView]}
           onPress={() => refRBSheet.current.open()}>
           <View style={[styles.triggerLeft]}>
-            <Phrase txt={'Total'} txtStyle={styles.totalTxt} />
+            <Phrase txt={t('total')} txtStyle={styles.totalTxt} />
             <Phrase
               txt={`QAR ${calculations.grandTotal}`}
               txtStyle={styles.priceTxt}
             />
-            <Image source={chevron} style={styles.chevron} />
           </View>
           <View style={styles.triggerRight}>
             <MyButton
-              label={'Cehckout'}
+              label={t('checkout')}
               txtColor={COLORS.white}
               btnColor={COLORS.primary}
               borderColor={COLORS.primary}
@@ -94,10 +101,10 @@ const TotalWidget = ({ calculations }) => {
 export default TotalWidget;
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: SIZES.padding },
-  detailTxt: { color: COLORS.black, ...FONTS.body4_meduim },
-  priceTxt: { color: COLORS.black, ...FONTS.body4_bold },
-  row: { height: 40 },
+  container: {paddingHorizontal: SIZES.padding},
+  detailTxt: {color: COLORS.black, ...FONTS.body4_meduim},
+  priceTxt: {color: COLORS.black, ...FONTS.body4_bold},
+  row: {height: 40},
   cartTriggerView: {
     flexDirection: 'row',
     width: SIZES.hundred,
@@ -119,12 +126,12 @@ const styles = StyleSheet.create({
     color: COLORS.black,
     marginRight: SIZES.radius,
   },
-  chevron: { width: 12, resizeMode: 'contain' },
+  chevron: {width: 12, resizeMode: 'contain'},
   triggerRight: {
     width: SIZES.fifty,
     height: 60,
   },
-  continueBtn: { height: 40, width: SIZES.eighty, alignSelf: 'flex-end' },
+  continueBtn: {height: 40, width: SIZES.eighty, alignSelf: 'flex-end'},
   discountWidget: {
     backgroundColor: COLORS.primary + '1A',
     width: SIZES.hundred,
@@ -137,5 +144,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  discountContainer: { paddingVertical: SIZES.radius },
+  discountContainer: {paddingVertical: SIZES.radius},
 });

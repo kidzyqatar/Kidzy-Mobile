@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import {
   Text,
   View,
@@ -8,6 +8,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Switch,
 } from 'react-native';
 import {COLORS, SIZES} from '@constants/theme';
 import {
@@ -60,8 +61,14 @@ import {
 } from '../../store/reducers/global';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getData} from '../../helpers/AsyncStorage';
+import {LanguageContext} from '../../store/LanguageContext';
+import {useTranslation} from 'react-i18next';
 
 export default function Home() {
+  const {t} = useTranslation();
+
+  const {language, toggleLanguage} = useContext(LanguageContext);
+
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
 
@@ -221,38 +228,51 @@ export default function Home() {
   };
 
   return (
-    <MasterLayout bgColor={COLORS.bgGray} scrolling={true} max={true}>
-      {/* Menu Bar */}
+    <MasterLayout
+      bgColor={COLORS.bgGray}
+      scrolling={true}
+      max={true}
+      header={
+        <View style={styles.topBar}>
+          <View style={styles.menuBar}>
+            <View style={styles.menuIconImg}>
+              <View style={styles.languageSwitch}>
+                <Text>{language}</Text>
+                <Switch
+                  onValueChange={lang => {
+                    dispatch(setLoader(true));
+                    toggleLanguage(lang);
+                  }}
+                  value={language === 'EN'}
+                  // thumbColor={'#f5dd4b'}
+                />
+              </View>
+            </View>
 
-      <View style={styles.topBar}>
-        <View style={styles.menuBar}>
-          <Image source={menuIcon} style={styles.menuIconImg} />
-          <Image source={whiteLogo} style={styles.menuLogo} />
-          <TouchableOpacity
-            style={styles.cartView}
-            onPress={() => {
-              if (cartCount > 0) {
-                RootNavigation.navigate('MyCart');
-              } else {
-                Alert.alert('Empty cart', 'Please add items to your cart');
-              }
-            }}>
-            <Image source={cart} style={styles.cartViewImage} />
-            <Phrase txt={cartCount} txtStyle={styles.cartViewNumber} />
-          </TouchableOpacity>
+            <Image source={whiteLogo} style={styles.menuLogo} />
+            <TouchableOpacity
+              style={styles.cartView}
+              onPress={() => {
+                if (cartCount > 0) {
+                  RootNavigation.navigate('MyCart');
+                } else {
+                  Alert.alert(t('emptyCart'), t('pleaseAddItemsToYourCart'));
+                }
+              }}>
+              <Image source={cart} style={styles.cartViewImage} />
+
+              <Phrase txt={cartCount} txtStyle={styles.cartViewNumber} />
+            </TouchableOpacity>
+          </View>
+          <SearchTextField />
         </View>
-        <SearchTextField />
-      </View>
-      {/* Menu Bar */}
-
+      }>
       {/* Top Banner */}
       <View style={styles.bannerContainer}>
         <ImageBackground
           source={topBanner}
           style={styles.bannerImg}></ImageBackground>
-        <Text style={styles.bannerText}>
-          {'The All New\nHot Wheels\nRampage\nNow Available'}
-        </Text>
+        <Text style={styles.bannerText}>{t('rampageText')}</Text>
       </View>
       {/* Top Banner */}
 
@@ -260,20 +280,20 @@ export default function Home() {
       {topCategories == null ? null : (
         <View style={styles.contentView}>
           <View style={styles.headingView}>
-            <Heading txt={'Categories'} txtStyle={styles.heading} />
+            <Heading txt={t('categories')} txtStyle={styles.heading} />
             <Pressable onPress={handleCategoryPress}>
-              <Text style={styles.allLink}>View All</Text>
+              <Text style={styles.allLink}>{t('viewAll')}</Text>
             </Pressable>
           </View>
           <View style={styles.headingView}>
             <CategoryWidget
-              name={`Shop for ${topCategories[0].name}`}
+              name={t('shopFor') + topCategories[0].name}
               img={topCategories[0].full_image}
               slug={topCategories[0].slug}
               bgColor={COLORS.secondary}
             />
             <CategoryWidget
-              name={`Shop for ${topCategories[1].name}`}
+              name={t('shopFor') + topCategories[1].name}
               img={topCategories[1].full_image}
               slug={topCategories[0].slug}
               bgColor={COLORS.girls}
@@ -300,9 +320,9 @@ export default function Home() {
       {/* New Arrivals*/}
       <View style={styles.contentView}>
         <View style={styles.headingView}>
-          <Heading txt={'New Arrivals'} txtStyle={styles.heading} />
+          <Heading txt={t('newArrivals')} txtStyle={styles.heading} />
           {/* <Pressable>
-              <Text style={styles.allLink}>View All</Text>
+              <Text style={styles.allLink}>{t('viewAll')}</Text>
             </Pressable> */}
         </View>
         <Spacer />
@@ -324,9 +344,9 @@ export default function Home() {
       {/* Most Selling*/}
       <View style={styles.contentView}>
         <View style={styles.headingView}>
-          <Heading txt={'Most Selling'} txtStyle={styles.heading} />
+          <Heading txt={t('mostSelling')} txtStyle={styles.heading} />
           {/* <Pressable>
-              <Text style={styles.allLink}>View All</Text>
+              <Text style={styles.allLink}>{t('viewAll')}</Text>
             </Pressable> */}
         </View>
         <Spacer />
@@ -347,21 +367,17 @@ export default function Home() {
 
       {/* Medium Banner */}
       <View style={styles.bannerContainer}>
-        <ImageBackground
-          source={mediumBanner}
-          style={styles.bannerImg}></ImageBackground>
-        <Text style={styles.bannerText}>
-          {'All new legos\nnow available\nat Kidzy'}
-        </Text>
+        <Image source={mediumBanner} style={styles.bannerImg} />
+        <Text style={styles.bannerText}>{t('allNewLegoesText')}</Text>
       </View>
       {/* Medium Banner */}
 
       {/* For Boys */}
       <View style={styles.contentView}>
         <View style={styles.headingView}>
-          <Heading txt={'For Boys'} txtStyle={styles.heading} />
+          <Heading txt={t('forBoys')} txtStyle={styles.heading} />
           {/* <Pressable>
-              <Text style={styles.allLink}>View All</Text>
+              <Text style={styles.allLink}>{t('viewAll')}</Text>
             </Pressable> */}
         </View>
         <Spacer />
@@ -383,9 +399,9 @@ export default function Home() {
       {/* For Girls */}
       <View style={styles.contentView}>
         <View style={styles.headingView}>
-          <Heading txt={'For Girls'} txtStyle={styles.heading} />
+          <Heading txt={t('forGirls')} txtStyle={styles.heading} />
           {/* <Pressable>
-              <Text style={styles.allLink}>View All</Text>
+              <Text style={styles.allLink}>{t('viewAll')}</Text>
             </Pressable> */}
         </View>
         <Spacer />
@@ -407,9 +423,9 @@ export default function Home() {
       {/* For Brands */}
       <View style={styles.contentView}>
         <View style={styles.headingView}>
-          <Heading txt={'Brands'} txtStyle={styles.heading} />
+          <Heading txt={t('brands')} txtStyle={styles.heading} />
           <Pressable onPress={handleBrandPress}>
-            <Text style={styles.allLink}>View All</Text>
+            <Text style={styles.allLink}>{t('viewAll')}</Text>
           </Pressable>
         </View>
         <FlatList

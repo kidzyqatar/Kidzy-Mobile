@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, TextInput, Text, StyleSheet} from 'react-native';
+import {View, TextInput, Text, StyleSheet, Platform} from 'react-native';
 import globalStyles from '@constants/global-styles';
 import {COLORS, SIZES, FONTS} from '@constants/theme';
 
@@ -38,8 +38,12 @@ const PrefixTextInput = ({
           setValue={setValue}
           maxLength={maxLength}
           onChangeText={text => {
-            setValue(text);
+            // Filter out non-numeric characters
+            const numericText = text.replace(/[^0-9]/g, '');
+            setValue(numericText);
           }}
+          keyboardType="numeric"
+          textContentType="telephoneNumber"
         />
       </View>
     </>

@@ -62,8 +62,10 @@ import {
   setSentToFriend,
 } from '../../../store/reducers/global';
 import {TextInput} from 'react-native-paper';
+import {useTranslation} from 'react-i18next';
 
 const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
+  const {t} = useTranslation();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
 
@@ -283,14 +285,13 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
 
   const addAddressToCart = async address => {
     dispatch(setLoader(true));
-    console.log('I am called');
+
     callNonTokenApi(config.apiName.addAddressToCart, 'POST', {
       address_id: address.id,
       order_id: global.cart.id,
       type: 'billing',
     })
       .then(res => {
-        console.log('I am called');
         dispatch(setLoader(false));
         if (res.status == 200) {
           console.log(res.data);
@@ -299,7 +300,6 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         }
       })
       .catch(err => {
-        console.log('I am called');
         dispatch(setLoader(false));
         console.log(err);
       });
@@ -331,7 +331,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
       {/* Address Section */}
       <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
         <Phrase
-          txt={'Please Choose Billing Address'}
+          txt={t('pleaseChooseBillingAddress')}
           txtStyle={{...FONTS.body5_bold}}
         />
         <Spacer />
@@ -394,7 +394,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         <Spacer />
 
         <MyButton
-          label={'Add New Address'}
+          label={t('addNewAddress')}
           txtColor={COLORS.secondary}
           btnColor={COLORS.secondaryLite}
           borderColor={COLORS.secondaryLite}
@@ -408,20 +408,20 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
       {/* Send to Friend Section */}
       <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
         <Phrase
-          txt={'Please Choose Shipping Address'}
+          txt={t('pleaseChooseShippingAddress')}
           txtStyle={{...FONTS.body5_bold}}
         />
         <Spacer />
         <Checkbox
           state={sameAsBilling}
           stateChanger={copyBillingAddress}
-          label={'Same as billing address'}
+          label={t('sameAsBillingAddress')}
         />
         <Spacer />
         <Checkbox
           state={sendToFirend}
           stateChanger={copyFriendAddress}
-          label={'Sending it to a friend'}
+          label={t('sendingItToAFriend')}
         />
         {sendToFirend ? (
           <>
@@ -429,31 +429,31 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
             <>
               <Spacer />
               <Input
-                label={`Recepient's First Name`}
-                placeholder={'First Name'}
+                label={t(`recipientFirstName`)}
+                placeholder={t('firstName')}
                 value={s_firstName}
                 setValue={s_setFirstName}
               />
               <Spacer />
               <Input
-                label={'Recepient Last name'}
-                placeholder={'Recepient Last name'}
+                label={t('recipientLastName')}
+                placeholder={t('lastName')}
                 value={s_lastName}
                 setValue={s_setLastName}
               />
               <Spacer />
-              <PrefixTextInput
-                label={'Mobile Number'}
+              {/* <PrefixTextInput
+                label={t('mobileNumber')}
                 placeholder={'000-000-000'}
                 prefix={'+974'}
                 value={s_mobileNumber}
                 maxLength={9}
                 setValue={s_setMobileNumber}
-              />
+              /> */}
               <Spacer />
               <Input
-                label={'Street'}
-                placeholder={'Please provide street address'}
+                label={t('street')}
+                placeholder={t('pleaseProvideStreetAddress')}
                 value={s_street}
                 setValue={s_setStreet}
               />
@@ -462,16 +462,16 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
               <View style={styles.cvvView}>
                 <View style={styles.halfInput}>
                   <Input
-                    label={'City'}
-                    placeholder={'e.g Al Wakra'}
+                    label={t('city')}
+                    placeholder={t('exampleAlWakra')}
                     value={s_city}
                     setValue={s_setCity}
                   />
                 </View>
                 <View style={styles.halfInput}>
                   <Input
-                    label={'State/Province/Area'}
-                    placeholder={'e.g Doha'}
+                    label={t('stateProvinceArea')}
+                    placeholder={t('exampleDoha')}
                     value={s_province}
                     setValue={s_setProvince}
                   />
@@ -480,7 +480,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
             </>
             <Spacer />
             <MyButton
-              label={'Add Address'}
+              label={t('addAddress')}
               txtColor={COLORS.white}
               btnColor={COLORS.secondary}
               borderColor={COLORS.secondary}
@@ -494,7 +494,10 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
       <Spacer />
       {/* Timing Section */}
       <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
-        <Phrase txt={'Delivery Date & Time'} txtStyle={{...FONTS.body5_bold}} />
+        <Phrase
+          txt={t('deliveryDateAndTime')}
+          txtStyle={{...FONTS.body5_bold}}
+        />
         <Spacer />
         <View>
           <TouchableOpacity
@@ -506,8 +509,8 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
           />
 
           <Input
-            label={'Choose Delivery Date'}
-            placeholder={'Select Date'}
+            label={t('chooseDeliveryDate')}
+            placeholder={t('selectDate')}
             value={deliveryDate}
             right={calendar}
             customStyle={{zIndex: 1}}
@@ -525,8 +528,8 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
             }}
           />
           <Input
-            label={'Choose Delivery Time'}
-            placeholder={'Select Time'}
+            label={t('chooseDeliveryTime')}
+            placeholder={t('selectTime')}
             value={deliveryTime.label}
             setValue={setDeliveryTime}
             right={clock}
@@ -539,13 +542,11 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
       {/* Special delivery section */}
       <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
         <Phrase
-          txt={'Special Instructions (Optional)'}
+          txt={t('specialInstructionsOptional')}
           txtStyle={{...FONTS.body5_bold}}
         />
         <Phrase
-          txt={
-            'With our special Delivery we have the option to surprise your kids with a superhero or different kind of character'
-          }
+          txt={t('specialInstructionsText')}
           txtStyle={{
             marginVertical: SIZES.radius,
             ...FONTS.body6,
@@ -597,11 +598,11 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
       {/* Special balloons section */}
       <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
         <Phrase
-          txt={'Add Balloons (Optional)'}
+          txt={t('addBalloonsOptional')}
           txtStyle={{...FONTS.body5_bold}}
         />
         <Phrase
-          txt={'You can add balloons for a small charge'}
+          txt={t('addBalloonsText')}
           txtStyle={{
             marginVertical: SIZES.radius,
             ...FONTS.body6,
@@ -610,7 +611,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         />
         <Spacer />
         <View style={styles.balloonSectionContainer}>
-          <Phrase txt={'Quantity'} txtStyle={{...FONTS.body4}} />
+          <Phrase txt={t('quantity')} txtStyle={{...FONTS.body4}} />
           <View style={styles.calcView}>
             <TouchableOpacity
               onPress={() => {
@@ -654,27 +655,30 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
             globalStyles.contentContainer,
             {marginHorizontal: SIZES.radius},
           ]}>
-          <Heading txt={'Add New Address'} txtStyle={styles.bSheetTopHeading} />
+          <Heading
+            txt={t('addNewAddress')}
+            txtStyle={styles.bSheetTopHeading}
+          />
           <Spacer />
           {/* {<AddressForm />} */}
           <>
             <Spacer />
             <Input
-              label={'First Name'}
-              placeholder={'First Name'}
+              label={t('firstName')}
+              placeholder={t('firstName')}
               // value={firstName}
               setValue={setFirstName}
             />
             <Spacer />
             <Input
-              label={'Last name'}
-              placeholder={'Last name'}
+              label={t('lastName')}
+              placeholder={t('lastName')}
               // value={lastName}
               setValue={setLastName}
             />
             <Spacer />
             <PrefixTextInput
-              label={'Mobile Number'}
+              label={t('mobileNumber')}
               placeholder={'000-000-000'}
               prefix={'+974'}
               value={mobileNumber}
@@ -682,8 +686,8 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
             />
             <Spacer />
             <Input
-              label={'Street'}
-              placeholder={'Please provide street address'}
+              label={t('street')}
+              placeholder={t('pleaseProvideStreetAddress')}
               value={street}
               setValue={setStreet}
             />
@@ -692,16 +696,16 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
             <View style={styles.cvvView}>
               <View style={styles.halfInput}>
                 <Input
-                  label={'City'}
-                  placeholder={'e.g Al Wakra'}
+                  label={t('city')}
+                  placeholder={t('exampleAlWakra')}
                   value={city}
                   setValue={setCity}
                 />
               </View>
               <View style={styles.halfInput}>
                 <Input
-                  label={'State/Province/Area'}
-                  placeholder={'e.g Doha'}
+                  label={t('stateProvinceArea')}
+                  placeholder={t('exampleDoha')}
                   value={province}
                   setValue={setProvince}
                 />
@@ -712,19 +716,19 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
             <Checkbox
               state={defaultBilling}
               stateChanger={setDefaultBilling}
-              label={'Mark as Default Billing Address'}
+              label={t('markAsDefaultBillingAddress')}
             />
             <Spacer />
             <Checkbox
               state={defaultShipping}
               stateChanger={setDefaultShipping}
-              label={'Mark as Default Shipping Address'}
+              label={t('markAsDefaultShippingAddress')}
             />
           </>
 
           <View style={[styles.bSheetBottom, {justifyContent: 'center'}]}>
             <MyButton
-              label={'Add Address'}
+              label={t('addAddress')}
               txtColor={COLORS.white}
               btnColor={COLORS.secondary}
               borderColor={COLORS.secondary}
@@ -830,11 +834,11 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
             style={{width: 100, height: 100, resizeMode: 'contain'}}
           />
           <Phrase
-            txt={'Not adding balloons?'}
+            txt={t('notAddingBalloons')}
             txtStyle={{...FONTS.body4_bold, marginBottom: SIZES.radius}}
           />
           <Phrase
-            txt={'You know you can add balloons to your order as well'}
+            txt={t('notAddingBalloonsText')}
             txtStyle={{
               ...FONTS.body6,
               marginBottom: SIZES.radius,
@@ -842,14 +846,14 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
             }}
           />
           <MyButton
-            label={'No Wait'}
+            label={t('noWait')}
             txtColor={COLORS.white}
             btnColor={COLORS.secondary}
             borderColor={COLORS.secondary}
             onPress={() => refRBSheetBalloon.current.close()}
           />
           <MyButton
-            label={'Skip'}
+            label={t('skip')}
             txtColor={COLORS.black}
             btnColor={COLORS.white}
             borderColor={COLORS.black}

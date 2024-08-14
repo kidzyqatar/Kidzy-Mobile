@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { Icon, TextInput } from 'react-native-paper';
+import {Icon, TextInput} from 'react-native-paper';
 import globalStyles from '@constants/global-styles';
-import { Image, Text, View } from 'react-native';
-import { COLORS } from '@constants/theme';
+import {Image, Text, View} from 'react-native';
+import {COLORS} from '@constants/theme';
 
 const Input = ({
   label = null,
@@ -22,7 +22,7 @@ const Input = ({
       {label !== null && <Text style={globalStyles.label}>{label}</Text>}
 
       <TextInput
-        style={[globalStyles.textInput, { ...customStyle }]}
+        style={[globalStyles.textInput, {...customStyle}]}
         secureTextEntry={secure}
         outlineStyle={globalStyles.textInputOutline}
         mode="outlined"
