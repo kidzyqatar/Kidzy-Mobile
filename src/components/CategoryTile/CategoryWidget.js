@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     // alignItems: 'center',
   },
   leftView: {
-    width: SIZES.fifty,
+    width: SIZES.fourtyFive,
     justifyContent: 'center',
     height: 100,
     paddingLeft: SIZES.radius,
@@ -63,9 +63,9 @@ const styles = StyleSheet.create({
   },
   catImg: {
     width: 120,
-    left: -20,
     bottom: 0,
     height: 100,
+    aspectRatio: 0.8,
     resizeMode: 'contain',
   },
 });
