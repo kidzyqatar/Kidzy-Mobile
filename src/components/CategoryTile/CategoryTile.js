@@ -33,23 +33,27 @@ const CategoryTile = ({item}) => {
 const styles = StyleSheet.create({
   container: {
     width: SIZES.fourtyFive,
-    height: 100,
+    height: 140,
     backgroundColor: COLORS.categoryBackground,
     borderRadius: SIZES.minor,
     padding: SIZES.radius,
     marginHorizontal: SIZES.base,
     marginTop: SIZES.padding,
+    flexDirection: 'row',
   },
   innerContainer: {flexDirection: 'row', justifyContent: 'space-between'},
-  leftView: {width: SIZES.fifty, justifyContent: 'space-between'},
-  txt: {...FONTS.body4_bold},
-  img: {marginBottom: SIZES.radius, width: 15, height: 15},
-  rightView: {width: SIZES.fifty},
+  leftView: {
+    width: SIZES.fifty,
+    justifyContent: 'space-between',
+  },
+  txt: {...FONTS.body4_bold, marginBottom: 5},
+  img: {width: 15, height: 15},
+  rightView: {width: SIZES.fifty, paddingLeft: 10},
   catImg: {
     width: SIZES.hundred,
-    height: 120,
+    height: undefined,
+    aspectRatio: 0.6,
     resizeMode: 'contain',
-    marginTop: -SIZES.padding * 1.5,
   },
 });
 export default CategoryTile;
