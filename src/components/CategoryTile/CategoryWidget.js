@@ -1,24 +1,34 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
 import React from 'react';
-import { SIZES, FONTS, COLORS } from '@constants/theme';
-import { Phrase } from '@components';
-import { category } from '@constants/images';
-import { forwardArrow } from '@constants/icons';
+import {SIZES, FONTS, COLORS} from '@constants/theme';
+import {Phrase} from '@components';
+import {category} from '@constants/images';
+import {forwardArrow} from '@constants/icons';
 import * as RootNavigation from '@navigators/RootNavigation';
 
-const CategoryWidget = ({ name, img, slug, bgColor = 'lime', ...containerStyle }) => {
+const CategoryWidget = ({
+  name,
+  img,
+  slug,
+  bgColor = 'lime',
+  ...containerStyle
+}) => {
   return (
     <TouchableOpacity
-      style={[styles.container, { backgroundColor: bgColor }]}
+      style={[styles.container, {backgroundColor: bgColor}]}
       onPress={() => {
-        RootNavigation.navigate('ProductListing', { namE: name, slug: slug, type: 'category' });
+        RootNavigation.navigate('ProductListing', {
+          namE: name,
+          slug: slug,
+          type: 'category',
+        });
       }}>
       <View style={styles.innerContainer}>
         <View style={styles.leftView}>
           <Phrase txt={name} txtStyle={styles.txt} />
         </View>
         <View style={styles.rightView}>
-          <Image source={{ uri: img }} style={styles.catImg} />
+          <Image source={{uri: img}} style={styles.catImg} />
         </View>
       </View>
     </TouchableOpacity>
@@ -45,7 +55,7 @@ const styles = StyleSheet.create({
     height: 100,
     paddingLeft: SIZES.radius,
   },
-  txt: { ...FONTS.body3_bold, color: COLORS.white },
+  txt: {...FONTS.body3_bold, color: COLORS.white},
   rightView: {
     width: SIZES.fifty,
     justifyContent: 'center',
