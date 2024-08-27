@@ -134,18 +134,6 @@ const WrapperItem = ({item, getCart}) => {
   };
 
   const BottomSheetModal = ({visible, onClose}) => {
-    if (item.details?.wrapper_id) {
-      wrappers.map(wrapper => {
-        if (wrapper.id == item.details.wrapper_id) {
-          setSelectedWrapper(wrapper.full_image);
-        }
-      });
-    }
-
-    if (item.details?.image_url) {
-      setSelectedCImage(item.details.full_image);
-    }
-
     if (item.details?.gift_card) {
       setFrom(item.details.gift_card.from);
       setTo(item.details.gift_card.to);
