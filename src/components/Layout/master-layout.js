@@ -34,7 +34,7 @@ const MasterLayout = ({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           {/* Main Content */}
-          <View style={{marginTop: header ? 100 : 0}}>{children}</View>
+          <View>{children}</View>
         </ScrollView>
       ) : (
         <View
@@ -52,8 +52,6 @@ const MasterLayout = ({
 
 const styles = StyleSheet.create({
   header: {
-    position: 'absolute',
-    top: 0,
     width: '100%',
     zIndex: 1000,
   },
