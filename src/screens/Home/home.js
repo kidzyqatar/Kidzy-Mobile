@@ -227,6 +227,27 @@ export default function Home() {
     // Add your press event handling logic here
   };
 
+  const handleCategoryViewAll = partialSlug => {
+    let category = categories.find(cat => cat.slug.includes(partialSlug));
+    if (!category) {
+      category = topCategories.find(cat => cat.slug.includes(partialSlug));
+    }
+
+    // TODO: Remove this hardcoded check after most-selling category has been added to the homeAPI
+    if (partialSlug === 'most-selling') {
+      category = {
+        name: 'Most Selling',
+        slug: 'category-most-selling',
+      };
+    }
+
+    RootNavigation.navigate('ProductListing', {
+      namE: category.name,
+      slug: category.slug,
+      type: 'category',
+    });
+  };
+
   return (
     <MasterLayout
       bgColor={COLORS.bgGray}
@@ -321,9 +342,9 @@ export default function Home() {
       <View style={styles.contentView}>
         <View style={styles.headingView}>
           <Heading txt={t('newArrivals')} txtStyle={styles.heading} />
-          {/* <Pressable>
-              <Text style={styles.allLink}>{t('viewAll')}</Text>
-            </Pressable> */}
+          <Pressable onPress={() => handleCategoryViewAll('new-arrivals')}>
+            <Text style={styles.allLink}>{t('viewAll')}</Text>
+          </Pressable>
         </View>
         <Spacer />
         <FlatList
@@ -345,9 +366,9 @@ export default function Home() {
       <View style={styles.contentView}>
         <View style={styles.headingView}>
           <Heading txt={t('mostSelling')} txtStyle={styles.heading} />
-          {/* <Pressable>
-              <Text style={styles.allLink}>{t('viewAll')}</Text>
-            </Pressable> */}
+          <Pressable onPress={() => handleCategoryViewAll('most-selling')}>
+            <Text style={styles.allLink}>{t('viewAll')}</Text>
+          </Pressable>
         </View>
         <Spacer />
         <FlatList
@@ -376,9 +397,9 @@ export default function Home() {
       <View style={styles.contentView}>
         <View style={styles.headingView}>
           <Heading txt={t('forBoys')} txtStyle={styles.heading} />
-          {/* <Pressable>
-              <Text style={styles.allLink}>{t('viewAll')}</Text>
-            </Pressable> */}
+          <Pressable onPress={() => handleCategoryViewAll('boys-toys')}>
+            <Text style={styles.allLink}>{t('viewAll')}</Text>
+          </Pressable>
         </View>
         <Spacer />
         <FlatList
@@ -400,9 +421,9 @@ export default function Home() {
       <View style={styles.contentView}>
         <View style={styles.headingView}>
           <Heading txt={t('forGirls')} txtStyle={styles.heading} />
-          {/* <Pressable>
-              <Text style={styles.allLink}>{t('viewAll')}</Text>
-            </Pressable> */}
+          <Pressable onPress={() => handleCategoryViewAll('girls-toys')}>
+            <Text style={styles.allLink}>{t('viewAll')}</Text>
+          </Pressable>
         </View>
         <Spacer />
         <FlatList

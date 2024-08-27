@@ -105,18 +105,32 @@ const ProductListing = ({route}) => {
 
   const fetchData = async () => {
     dispatch(setLoader(true));
-    console.log(`${config.apiName.productList}/${type}/${slug}`);
-    callNonTokenApi(`${config.apiName.productList}/${type}/${slug}`, 'GET')
-      .then(res => {
-        console.log('checkhere', res.data);
-        setNewArrivals(res.data.products);
-        setName(res.data.name);
-        dispatch(setLoader(false));
-      })
-      .catch(error => {
-        console.log(error);
-        // setApiFailModal(true);
-      });
+
+    // TODO: Remove this hardcoded check after most-selling category has been added to the homeAPI
+    if (type === 'category' && slug === 'category-most-selling') {
+      console.log(`${config.apiName.homeAPI}`);
+      callNonTokenApi(`${config.apiName.homeAPI}`, 'GET')
+        .then(res => {
+          setNewArrivals(res.data.mostSelling);
+          dispatch(setLoader(false));
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    } else {
+      console.log(`${config.apiName.productList}/${type}/${slug}`);
+      callNonTokenApi(`${config.apiName.productList}/${type}/${slug}`, 'GET')
+        .then(res => {
+          console.log('checkhere', res.data);
+          setNewArrivals(res.data.products);
+          setName(res.data.name);
+          dispatch(setLoader(false));
+        })
+        .catch(error => {
+          console.log(error);
+          // setApiFailModal(true);
+        });
+    }
   };
 
   const applyFilters = async () => {};
