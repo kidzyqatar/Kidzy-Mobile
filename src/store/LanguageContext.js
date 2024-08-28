@@ -1,6 +1,7 @@
 import React, {createContext, useState, useEffect} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {NativeModules} from 'react-native';
+import {Platform} from 'react-native';
+import RNRestart from 'react-native-restart';
 
 // Create a Context for the language
 export const LanguageContext = createContext();
@@ -33,7 +34,11 @@ export const LanguageProvider = ({children}) => {
     } catch (error) {
       console.error('Failed to save language to storage:', error);
     }
-    NativeModules.DevSettings.reload(); // Reload the app to apply language change
+    if (Platform.OS === 'ios') {
+      RNRestart.Restart();
+    } else {
+      RNRestart.restart();
+    }
   };
 
   return (
