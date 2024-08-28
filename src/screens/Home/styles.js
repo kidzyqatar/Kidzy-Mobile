@@ -1,4 +1,4 @@
-import {StyleSheet} from 'react-native';
+import {StyleSheet, Platform} from 'react-native';
 import {COLORS, SIZES, FONTS} from '@constants/theme';
 
 export default styles = StyleSheet.create({
@@ -6,8 +6,15 @@ export default styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
     width: 30,
+    ...Platform.select({
+      ios: {
+        marginVertical: 5,
+      },
+      android: {
+        marginTop: 10,
+      },
+    }),
   },
   languageText: {
     paddingHorizontal: 5,
