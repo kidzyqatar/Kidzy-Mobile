@@ -84,6 +84,11 @@ export default styles = StyleSheet.create({
   heading: {
     ...FONTS.rocherSmallTitle,
     color: COLORS.primary,
+    paddingVertical: 4,
   },
-  allLink: {color: COLORS.black, ...FONTS.body4_bold},
+  allLink: {
+    color: COLORS.black,
+    ...FONTS.body4_bold,
+    paddingVertical: 8,
+  },
 });
