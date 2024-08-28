@@ -7560,11 +7560,6 @@ react-native-date-picker@^4.4.0:
   resolved "https://registry.npmjs.org/react-native-date-picker/-/react-native-date-picker-4.4.0.tgz"
   integrity sha512-Axx3byihwwhKRLRVjPAr/UaEysapkRcKmjjM8/05UaVm4Q0xDn2RFUcRdy1QAahhRcjLjlVYhepxvU5bdgy7ZQ==
 
-react-native-device-info@^11.1.0:
-  version "11.1.0"
-  resolved "https://registry.npmjs.org/react-native-device-info/-/react-native-device-info-11.1.0.tgz"
-  integrity sha512-hzXJSObJdezEz0hF7MAJ3tGeoesuQWenXXt9mrQR9Mjb8kXpZ09rqSsZ/quNpJdZpQ3rYiFa3/0GFG5KNn9PBg==
-
 react-native-gesture-handler@^2.14.1, "react-native-gesture-handler@>= 1.0.0":
   version "2.14.1"
   resolved "https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-2.14.1.tgz"
