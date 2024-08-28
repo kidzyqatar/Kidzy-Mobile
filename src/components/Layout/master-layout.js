@@ -22,7 +22,10 @@ const MasterLayout = ({
 }) => {
   return (
     <SafeAreaView
-      style={[styles.safeAreaView, {backgroundColor: bgColor}]}
+      style={[
+        styles.safeAreaView,
+        {backgroundColor: bgColor, paddingBottom: max ? 16 : 0},
+      ]}
       edges={['right', 'left', 'top']}>
       {header && <View style={styles.header}>{header}</View>}
       {scrolling ? (
@@ -64,14 +67,6 @@ const styles = StyleSheet.create({
   },
   safeAreaView: {
     flex: 1,
-    ...Platform.select({
-      ios: {
-        marginBottom: 16,
-      },
-      android: {
-        marginBottom: 13,
-      },
-    }),
   },
   content: {
     flex: 1,
