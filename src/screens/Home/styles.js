@@ -92,11 +92,19 @@ export default styles = StyleSheet.create({
   heading: {
     ...FONTS.rocherSmallTitle,
     color: COLORS.primary,
-    paddingVertical: 4,
+    ...Platform.select({
+      ios: {
+        paddingVertical: 16,
+      },
+    }),
   },
   allLink: {
     color: COLORS.black,
     ...FONTS.body4_bold,
-    paddingVertical: 8,
+    ...Platform.select({
+      ios: {
+        paddingVertical: 8,
+      },
+    }),
   },
 });
