@@ -258,14 +258,13 @@ export default function Home() {
           <View style={styles.menuBar}>
             <View style={styles.menuIconImg}>
               <View style={styles.languageSwitch}>
-                <Text>{language}</Text>
+                <Text style={styles.languageText}>{language}</Text>
                 <Switch
                   onValueChange={lang => {
                     dispatch(setLoader(true));
                     toggleLanguage(lang);
                   }}
                   value={language === 'EN'}
-                  // thumbColor={'#f5dd4b'}
                 />
               </View>
             </View>

@@ -7,9 +7,10 @@ export default styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 10,
+    width: 30,
   },
   languageText: {
-    marginHorizontal: 10,
+    paddingHorizontal: 5,
   },
   cartView: {
     width: 50,
