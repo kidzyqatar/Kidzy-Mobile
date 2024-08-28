@@ -1,8 +1,5 @@
 import {StyleSheet} from 'react-native';
 import {SIZES, FONTS, COLORS} from '@constants/theme';
-import {isIPhoneDevice} from '../../helpers/isIPhoneDevice';
-
-const isIPhone = isIPhoneDevice();
 
 export const styles = StyleSheet.create({
   cartHeading: {...FONTS.body3_bold},
@@ -11,7 +8,7 @@ export const styles = StyleSheet.create({
     width: SIZES.hundred,
     height: 80,
     position: 'absolute',
-    bottom: isIPhone ? -35 : 0,
+    bottom: 0,
     alignItems: 'center',
   },
   triggerLeft: {

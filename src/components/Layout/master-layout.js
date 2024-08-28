@@ -21,7 +21,9 @@ const MasterLayout = ({
   max = false,
 }) => {
   return (
-    <SafeAreaView style={[styles.safeAreaView, {backgroundColor: bgColor}]}>
+    <SafeAreaView
+      style={[styles.safeAreaView, {backgroundColor: bgColor}]}
+      edges={['right', 'left', 'top']}>
       {header && <View style={styles.header}>{header}</View>}
       {scrolling ? (
         <ScrollView
@@ -60,7 +62,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
-  safeAreaView: {flex: 1},
+  safeAreaView: {
+    flex: 1,
+    ...Platform.select({
+      ios: {
+        marginBottom: 16,
+      },
+      android: {
+        marginBottom: 13,
+      },
+    }),
+  },
   content: {
     flex: 1,
   },
