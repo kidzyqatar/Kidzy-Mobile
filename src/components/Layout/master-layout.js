@@ -22,10 +22,7 @@ const MasterLayout = ({
 }) => {
   return (
     <SafeAreaView
-      style={[
-        styles.safeAreaView,
-        {backgroundColor: bgColor, paddingBottom: max ? 16 : 0},
-      ]}
+      style={[styles.safeAreaView, {backgroundColor: bgColor}]}
       edges={['right', 'left', 'top']}>
       {header && <View style={styles.header}>{header}</View>}
       {scrolling ? (
@@ -33,7 +30,11 @@ const MasterLayout = ({
           scrollEnabled={scrolling}
           contentContainerStyle={[
             styles.scrollContent,
-            {backgroundColor: bgColor, padding: max ? 0 : 16},
+            {
+              backgroundColor: bgColor,
+              padding: max ? 0 : 16,
+              paddingBottom: 16,
+            },
           ]}
           nestedScrollEnabled={true}
           keyboardShouldPersistTaps="handled"
