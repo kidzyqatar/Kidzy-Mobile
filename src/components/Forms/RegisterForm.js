@@ -81,7 +81,7 @@ const RegisterForm = ({closeForm, page = true, completeCart}) => {
             dispatch(setUser(response.data.user));
             dispatch(setLoader(false));
             bindUser();
-            closeForm('Signup susccessfully');
+            closeForm('Signup successful');
             handleReload(constants.HARD_RELOAD_TRUE, global.reload, dispatch);
             RootNavigation.navigate('Home');
             dispatch(setActiveTab(0));

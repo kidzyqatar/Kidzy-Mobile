@@ -238,7 +238,7 @@ const LoginForm = ({closeForm, page = true, completeCart}) => {
           <MyButton
             label={
               <Text style={styles.loginBtnTxt}>
-                {t('alreadyAMember')}{' '}
+                {t('notAMember')}{' '}
                 <Text style={styles.loginBtnTxtInner}>{t('signup')}</Text>
               </Text>
             }
