@@ -20,6 +20,7 @@ export const COLORS = {
   txtGray: '#667085',
   girls: '#D50075',
   cartBtn: '#E9F6F9',
+  bottomSheetBackground: 'rgba(0, 0, 0, 0.5)',
 };
 
 export const SIZES = {

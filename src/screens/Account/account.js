@@ -143,7 +143,7 @@ export default function Account() {
             minClosingHeight={0}
             customStyles={{
               wrapper: {
-                backgroundColor: COLORS.black,
+                backgroundColor: COLORS.bottomSheetBackground,
               },
               draggableIcon: {
                 backgroundColor: '#000',
