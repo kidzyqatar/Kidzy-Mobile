@@ -121,12 +121,13 @@ const RegisterForm = ({closeForm, toggleForm, page = true, completeCart}) => {
             dispatch(setUser(response.data.user));
             dispatch(setLoader(false));
             bindUser();
-            closeForm('Signup sucessfully');
+            closeForm('Signup sucessful');
             handleReload(constants.HARD_RELOAD_TRUE, global.reload, dispatch);
             RootNavigation.navigate('Home');
             dispatch(setActiveTab(0));
           } else {
             Alert.alert('Error!', response.message);
+            dispatch(setLoader(false));
           }
         })
         .catch(error => {
