@@ -115,19 +115,23 @@ const WrapperItem = ({item, getCart}) => {
         formData.append('order_item_id', item.id);
         console.log(formData);
         dispatch(setLoader(true));
+        setSelectedCImage(response.assets[0].uri);
+
         callNonTokenApiMP(config.apiName.attachImage, 'POST', formData)
           .then(res => {
             dispatch(setLoader(false));
-            console.log(res.status, res.status === 200);
             if (res.status == 200) {
-              setSelectedCImage(response.assets[0].uri);
               getCart();
             } else {
+              setSelectedCImage(null);
+              dispatch(setLoader(false));
               Alert.alert('Error!', res.message);
             }
           })
           .catch(err => {
+            setSelectedCImage(null);
             dispatch(setLoader(false));
+            Alert.alert('Upload failed!');
           });
       }
     });
