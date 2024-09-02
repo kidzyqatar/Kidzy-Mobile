@@ -31,7 +31,7 @@ import {handleReload} from '../../helpers/helper';
 import constants from '../../constants/constants';
 import {useTranslation} from 'react-i18next';
 
-const LoginForm = ({closeForm, page = true, completeCart}) => {
+const LoginForm = ({closeForm, toggleForm, page = true, completeCart}) => {
   const {t} = useTranslation();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
@@ -246,7 +246,7 @@ const LoginForm = ({closeForm, page = true, completeCart}) => {
             btnColor={COLORS.white}
             borderColor={COLORS.black}
             onPress={() => {
-              RootNavigation.navigate('Register');
+              toggleForm();
             }}
           />
 

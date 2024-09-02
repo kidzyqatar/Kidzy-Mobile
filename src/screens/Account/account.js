@@ -52,6 +52,16 @@ export default function Account() {
     // Alert.alert('Error', message)
   };
 
+  const toggleForm = () => {
+    if (form == 0) {
+      setForm(1);
+      setAuthSheetHeight(700);
+    } else {
+      setForm(0);
+      setAuthSheetHeight(600);
+    }
+  };
+
   useEffect(() => {
     console.log('Called in Profile');
   }, [profile]);
@@ -206,6 +216,7 @@ export default function Account() {
                 {form == 0 && (
                   <LoginForm
                     closeForm={closeAuthSheetAndError}
+                    toggleForm={toggleForm}
                     page={false}
                     completeCart={completeCart}
                   />
@@ -213,6 +224,7 @@ export default function Account() {
                 {form == 1 && (
                   <RegisterForm
                     closeForm={closeAuthSheetAndError}
+                    toggleForm={toggleForm}
                     page={false}
                     completeCart={completeCart}
                   />

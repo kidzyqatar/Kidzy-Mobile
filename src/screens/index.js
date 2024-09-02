@@ -1,5 +1,3 @@
-export {default as Register} from './Auth/Register';
-export {default as Login} from './Auth/Login';
 export {default as Home} from './Home/home';
 export {default as Categories} from './Categories/categories';
 export {default as Brands} from './Brands/brands';
