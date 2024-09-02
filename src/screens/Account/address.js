@@ -70,7 +70,6 @@ export default function Address() {
 
   const addAddress = async () => {
     refRBSheet.current.close();
-    dispatch(setLoader(true));
     let params = {
       guest_session_id: global.cart_session_id,
       first_name: firstName,
@@ -85,6 +84,7 @@ export default function Address() {
     if (global.isLoggedIn) {
       params['user_id'] = global.user.id;
     }
+    dispatch(setLoader(true));
     callNonTokenApiAddress(config.apiName.addAddress, 'POST', params)
       .then(res => {
         dispatch(setLoader(false));
@@ -100,6 +100,7 @@ export default function Address() {
           getAddresses();
           handleReload(constants.HARD_RELOAD_FALSE, global.reload, dispatch);
         } else {
+          dispatch(setLoader(false));
           Alert.alert(t('error'), res.message);
         }
       })
@@ -118,6 +119,7 @@ export default function Address() {
         if (res.status == 200) {
           setAddresses(res.data.addresses);
         } else {
+          dispatch(setLoader(false));
           Alert.alert(t('error'), res.message);
         }
       })
@@ -200,7 +202,7 @@ export default function Address() {
         minClosingHeight={0}
         customStyles={{
           wrapper: {
-            backgroundColor: COLORS.black,
+            backgroundColor: COLORS.bottomSheetBackground,
           },
           draggableIcon: {
             backgroundColor: '#000',

@@ -91,7 +91,7 @@ const LoginForm = ({closeForm, toggleForm, page = true, completeCart}) => {
           if (response.status == 200) {
             console.log('I am from inner response', response.data);
             const allow = false;
-            var isDeviceLogin = await getData('is_device_login');
+            const isDeviceLogin = await getData('is_device_login');
             if (!isDeviceLogin) {
               storeData('is_device_login', JSON.stringify(true), () => {});
             }
@@ -132,7 +132,7 @@ const LoginForm = ({closeForm, toggleForm, page = true, completeCart}) => {
           dispatch(setLoader(false));
           if (response.status == 200) {
             const allow = false;
-            var isDeviceLogin = await getData('is_device_login');
+            const isDeviceLogin = await getData('is_device_login');
             if (!isDeviceLogin) {
               storeData('is_device_login', JSON.stringify(true), () => {});
             }

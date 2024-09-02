@@ -26,7 +26,7 @@ import {
   setLoader,
   setUser,
 } from '../../store/reducers/global';
-import {getData} from '../../helpers/AsyncStorage';
+import {getData, removeData} from '../../helpers/AsyncStorage';
 import {callNonTokenApi} from '../../helpers/ApiRequest';
 import config from '../../constants/config';
 import ActivityIndicatorOverlay from '../../components/ActivityIndicator/ActivityIndicatorOverlay';
@@ -62,35 +62,28 @@ export default function Account() {
     }
   };
 
-  useEffect(() => {
-    console.log('Called in Profile');
-  }, [profile]);
+  useEffect(() => {}, [profile]);
 
   const logoutUser = async () => {
-    // dispatch(setIsLoggedIn(false))
-    // RootNavigation.navigate('Home')
-    // dispatch(setActiveTab(0));
-    // return
-    dispatch(setLoader(true));
     const token = await getData('access_token');
-    console.log(token, 'token ');
-    if (token !== '') {
-      callNonTokenApi(config.apiName.logoutUser, 'POST')
-        .then(res => {
-          console.log(res);
-
-          dispatch(setUser(null));
-          setProfile(null);
-          dispatch(setIsLoggedIn(false));
-
-          dispatch(setActiveTab(0));
-          RootNavigation.navigate('Home');
-          dispatch(setLoader(false));
-        })
-        .catch(err => {
-          console.log(err);
-          dispatch(setLoader(false));
-        });
+    console.log('token ', token);
+    if (token === '') {
+      return;
+    }
+    try {
+      dispatch(setLoader(true));
+      const res = callNonTokenApi(config.apiName.logoutUser, 'POST');
+      console.log(res.status);
+      await removeData('is_device_login');
+      dispatch(setUser(null));
+      setProfile(null);
+      dispatch(setIsLoggedIn(false));
+      dispatch(setActiveTab(0));
+      RootNavigation.navigate('Home');
+    } catch (error) {
+      console.log(error);
+    } finally {
+      dispatch(setLoader(false));
     }
   };
 
@@ -110,7 +103,8 @@ export default function Account() {
             setProfile(res.data);
             dispatch(setLoader(false));
           } else {
-            Alert.alert('Error!', res.meesage);
+            dispatch(setLoader(false));
+            Alert.alert('Error!', res.message);
           }
         })
         .catch(err => {

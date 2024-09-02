@@ -157,7 +157,6 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const characters = global.allCharacters;
 
   const addShippingAddress = async () => {
-    dispatch(setLoader(true));
     let params = {
       guest_session_id: global.cart_session_id,
       first_name: s_firstName,
@@ -172,6 +171,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
     if (global.isLoggedIn) {
       params['user_id'] = global.user.id;
     }
+    dispatch(setLoader(true));
     callNonTokenApiAddress(config.apiName.addAddress, 'POST', params)
       .then(res => {
         dispatch(setLoader(false));
@@ -215,7 +215,6 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   };
   const addAddress = async () => {
     refRBSheet.current.close();
-    dispatch(setLoader(true));
     let params = {
       guest_session_id: global.cart_session_id,
       first_name: firstName,
@@ -230,6 +229,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
     if (global.isLoggedIn) {
       params['user_id'] = global.user.id;
     }
+    dispatch(setLoader(true));
     callNonTokenApiAddress(config.apiName.addAddress, 'POST', params)
       .then(res => {
         dispatch(setLoader(false));
@@ -644,7 +644,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         minClosingHeight={0}
         customStyles={{
           wrapper: {
-            backgroundColor: COLORS.black,
+            backgroundColor: COLORS.bottomSheetBackground,
           },
           draggableIcon: {
             backgroundColor: '#000',
@@ -764,7 +764,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         minClosingHeight={0}
         customStyles={{
           wrapper: {
-            backgroundColor: COLORS.black,
+            backgroundColor: COLORS.bottomSheetBackground,
           },
           draggableIcon: {
             backgroundColor: '#000',
@@ -821,7 +821,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         minClosingHeight={0}
         customStyles={{
           wrapper: {
-            backgroundColor: COLORS.black,
+            backgroundColor: COLORS.bottomSheetBackground,
           },
           draggableIcon: {
             backgroundColor: '#000',

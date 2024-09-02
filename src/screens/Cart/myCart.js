@@ -216,7 +216,6 @@ const MyCart = () => {
 
   const calculateTotal = (ballons = 0) => {
     // userCart.
-    console.log('i am called hererererere');
     var total = 0;
     var specialDelivery = 0;
     var wrapperIDs = [];
@@ -500,7 +499,7 @@ const MyCart = () => {
         minClosingHeight={0}
         customStyles={{
           wrapper: {
-            backgroundColor: COLORS.black,
+            backgroundColor: COLORS.bottomSheetBackground,
           },
           draggableIcon: {
             backgroundColor: '#000',

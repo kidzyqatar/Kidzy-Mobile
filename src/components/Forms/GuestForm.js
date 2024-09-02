@@ -71,15 +71,12 @@ const GuestForm = ({closeForm, page = true, completeCart}) => {
             btnColor={COLORS.secondary}
             iconColor={COLORS.white}
             onPress={() => {
-              console.log('i am called', email != null);
               if (email == null) {
                 return;
               }
-              console.log('i am called');
               if (setMobileNumber == null) {
                 return;
               }
-              console.log('i am called');
               dispatch(setLoader(true));
               callNonTokenApi(config.apiName.bindGuestUser, 'POST', {
                 guest_session_id: global.cart_session_id,
