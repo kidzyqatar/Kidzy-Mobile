@@ -101,9 +101,7 @@ export default function Account() {
             console.log(res.data);
             dispatch(setUser(res.data));
             setProfile(res.data);
-            dispatch(setLoader(false));
           } else {
-            dispatch(setLoader(false));
             Alert.alert('Error!', res.message);
           }
         })

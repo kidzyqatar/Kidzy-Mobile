@@ -175,5 +175,6 @@
   "emptyCart": "تفريغ السلة",
   "pleaseAddItemsToYourCart": "يرجى إضافة عناصر إلى سلتك",
   "productDetails": "تفاصيل المنتج",
-  "description": "وصف"
+  "description": "وصف",
+  "serverError": "خطأ في الخادم"
 }

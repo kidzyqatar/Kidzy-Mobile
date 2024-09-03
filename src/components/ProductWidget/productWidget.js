@@ -42,8 +42,8 @@ const ProductWidget = ({item}) => {
             'GET',
           )
             .then(res => {
+              dispatch(setLoader(false));
               if (res.status == 200) {
-                dispatch(setLoader(false));
                 console.log(res.data.cart.order_items.length);
                 console.log('res.data.cart', res.data.cart);
                 dispatch(setCart(res.data.cart));
@@ -57,6 +57,7 @@ const ProductWidget = ({item}) => {
               setApiFailModal(true);
             });
         } else {
+          dispatch(setLoader(false));
           Alert.alert('Error!', res.message);
         }
       })

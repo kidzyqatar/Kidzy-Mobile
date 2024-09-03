@@ -2,7 +2,7 @@ This is a new [**React Native**](https://reactnative.dev) project, bootstrapped 
 
 # Getting Started
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+> **Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
 
 ## Step 1: Start the Metro Server
 
@@ -58,6 +58,22 @@ Now that you have successfully run the app, let's modify it.
 ## Congratulations! :tada:
 
 You've successfully run and modified your React Native App. :partying_face:
+
+## Building debug APK for android
+
+In your root project directory
+
+Make sure you have already directory `android/app/src/main/assets/`, if not create directory, after that create new file and save as `index.android.bundle` and put your file in like this `android/app/src/main/assets/index.android.bundle`. Ignore, if this file already exists.
+
+After that run this
+
+```bash
+npx react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res/`
+
+cd android && ./gradlew assembleDebug
+```
+
+Then you can get apk in `app/build/outputs/apk/debug/app-debug.apk`
 
 ### Now what?
 

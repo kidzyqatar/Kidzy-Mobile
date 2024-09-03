@@ -100,7 +100,6 @@ export default function Address() {
           getAddresses();
           handleReload(constants.HARD_RELOAD_FALSE, global.reload, dispatch);
         } else {
-          dispatch(setLoader(false));
           Alert.alert(t('error'), res.message);
         }
       })
@@ -119,7 +118,6 @@ export default function Address() {
         if (res.status == 200) {
           setAddresses(res.data.addresses);
         } else {
-          dispatch(setLoader(false));
           Alert.alert(t('error'), res.message);
         }
       })

@@ -175,5 +175,6 @@
   "emptyCart": "Empty cart",
   "pleaseAddItemsToYourCart": "Please add items to your cart",
   "productDetails": "Product Details",
-  "description": "Description"
+  "description": "Description",
+  "serverError": "Server Error!"
 }

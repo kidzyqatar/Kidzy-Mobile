@@ -84,6 +84,7 @@ const WrapperItem = ({item, getCart}) => {
       })
       .catch(err => {
         dispatch(setLoader(false));
+        Alert.alert(t('serverError'));
       });
   };
 
@@ -124,14 +125,13 @@ const WrapperItem = ({item, getCart}) => {
               getCart();
             } else {
               setSelectedCImage(null);
-              dispatch(setLoader(false));
               Alert.alert('Error!', res.message);
             }
           })
           .catch(err => {
-            setSelectedCImage(null);
             dispatch(setLoader(false));
-            Alert.alert('Upload failed!');
+            setSelectedCImage(null);
+            Alert.alert(t('serverError'));
           });
       }
     });
@@ -223,7 +223,6 @@ const WrapperItem = ({item, getCart}) => {
                       )
                         .then(res => {
                           dispatch(setLoader(false));
-                          console.log(res);
                           if (res.status == 200) {
                             setSelectedWrapper(item.full_image);
                             getCart();
@@ -233,6 +232,7 @@ const WrapperItem = ({item, getCart}) => {
                         })
                         .catch(err => {
                           dispatch(setLoader(false));
+                          Alert.alert(t('serverError'));
                         });
                     }}>
                     <Image
