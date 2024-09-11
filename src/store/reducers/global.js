@@ -115,10 +115,6 @@ const globalSlice = createSlice({
       return {...state, cart_is_same_as_billing: action.payload};
     },
 
-    setSentToFriend: (state, action) => {
-      return {...state, cart_is_sent_to_friend: action.payload};
-    },
-
     setCartCalculations: (state, action) => {
       return {...state, cart_calculation: action.payload};
     },
@@ -150,7 +146,6 @@ export const {
   setSelectedDeliveryTime,
   setSelectedDeliveryDate,
   setSameAsBillingAddress,
-  setSentToFriend,
   setCartCalculations,
 } = globalSlice.actions;
 export default globalSlice.reducer;

@@ -54,7 +54,6 @@ import {
   setSelectedDeliveryDate,
   setSelectedDeliveryTime,
   setSameAsBillingAddress,
-  setSentToFriend,
 } from '../../store/reducers/global';
 import ActivityIndicatorOverlay from '../../components/ActivityIndicator/ActivityIndicatorOverlay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -184,7 +183,6 @@ const MyCart = () => {
           dispatch(setSelectedDeliveryDate(''));
           dispatch(setSelectedDeliveryTime(''));
           dispatch(setSameAsBillingAddress(false));
-          dispatch(setSentToFriend(false));
 
           RootNavigation.navigate('Thankyou');
         } else {

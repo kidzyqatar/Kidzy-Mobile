@@ -59,7 +59,6 @@ import {
   setSelectedDeliveryDate,
   setSelectedDeliveryTime,
   setSelectedShippingAddress,
-  setSentToFriend,
 } from '../../../store/reducers/global';
 import {TextInput} from 'react-native-paper';
 import {useTranslation} from 'react-i18next';
@@ -75,7 +74,6 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const refRBSheetBalloon = useRef();
 
   const [sameAsBilling, setSameAsBilling] = useState(false);
-  const [sendToFriend, setSendToFriend] = useState(false);
 
   const [calcDate, setCalcDate] = useState(new Date());
   const [deliveryDate, setDeliveryDate] = useState('');
@@ -118,34 +116,16 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   }, []);
 
   useEffect(() => {
-    if (sendToFriend) {
+    if (!sameAsBilling) {
       dispatch(setSelectedShippingAddress(global.cart_shipping_address));
     } else {
       dispatch(setSelectedShippingAddress(global.cart_billing_address));
     }
-    dispatch(setSentToFriend(sendToFriend));
-  }, [sendToFriend]);
+  }, [sameAsBilling]);
 
-  const copyBillingAddress = () => {
+  const toggleSameAsBillingAddress = () => {
     setSameAsBilling(!sameAsBilling);
-    setSendToFriend(!sendToFriend);
-    // if (!sameAsBilling) {
-    //   dispatch(setSelectedShippingAddress(selectedAddress))
-    // } else {
-    //   dispatch(setSelectedShippingAddress(shippingAddress))
-    // }
     dispatch(setSameAsBillingAddress(!sameAsBilling));
-  };
-
-  const copyFriendAddress = () => {
-    setSameAsBilling(!sameAsBilling);
-    setSendToFriend(!sendToFriend);
-    // if (sendToFirend) {
-    //   dispatch(setSelectedShippingAddress(shippingAddress))
-    // } else {
-    //   dispatch(setSelectedShippingAddress(selectedAddress))
-    // }
-    dispatch(setSentToFriend(!sendToFriend));
   };
 
   const characters = global.allCharacters;
@@ -327,6 +307,118 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
     dispatch(setCart(global.cart));
   };
 
+  const BillingAddresses = () => {
+    return (
+      <FlatList
+        data={addresses}
+        renderItem={({item}) => (
+          <View style={[styles.addressContainer]}>
+            <View
+              style={[
+                globalStyles.row,
+                globalStyles.alignCenter,
+                {alignItems: 'flex-start'},
+              ]}>
+              <View style={{width: SIZES.ten}}>
+                <TouchableOpacity
+                  onPress={() => {
+                    dispatch(setSelectedBillingAddress(item));
+                    addAddressToCart(item);
+                  }}>
+                  <Image
+                    source={
+                      global.cart_billing_address?.id === item.id
+                        ? checkedRadio
+                        : uncheckedRadio
+                    }
+                    style={styles.checkbox}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={{width: SIZES.ninty}}>
+                <View style={globalStyles.row}>
+                  <Phrase txt={'Home: '} txtStyle={styles.addressNameTitle} />
+                  {item.is_default_billing ? (
+                    <Chip
+                      status={'Default'}
+                      bgColor={COLORS.secondary + '1A'}
+                      txtColor={COLORS.secondary}
+                    />
+                  ) : null}
+                </View>
+
+                <Phrase
+                  txt={`${item.first_name} ${item.last_name}, ${item.street}, ${item.city}, ${item.state}`}
+                  txtStyle={styles.addressName}
+                />
+                <Phrase
+                  txt={`${item.mobile_number}`}
+                  txtStyle={styles.addressName}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+      />
+    );
+  };
+
+  const ShippingAddresses = () => {
+    return (
+      <FlatList
+        data={addresses}
+        renderItem={({item}) => (
+          <View style={[styles.addressContainer]}>
+            <View
+              style={[
+                globalStyles.row,
+                globalStyles.alignCenter,
+                {alignItems: 'flex-start'},
+              ]}>
+              <View style={{width: SIZES.ten}}>
+                <TouchableOpacity
+                  onPress={() => {
+                    dispatch(setSelectedShippingAddress(item));
+                    addShippingAddressToCart(item);
+                  }}>
+                  <Image
+                    source={
+                      global.cart_shipping_address?.id === item.id
+                        ? checkedRadio
+                        : uncheckedRadio
+                    }
+                    style={styles.checkbox}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={{width: SIZES.ninty}}>
+                <View style={globalStyles.row}>
+                  <Phrase txt={'Home: '} txtStyle={styles.addressNameTitle} />
+                  {item.is_default_shipping ? (
+                    <Chip
+                      status={'Default'}
+                      bgColor={COLORS.secondary + '1A'}
+                      txtColor={COLORS.secondary}
+                    />
+                  ) : null}
+                </View>
+
+                <Phrase
+                  txt={`${item.first_name} ${item.last_name}, ${item.street}, ${item.city}, ${item.state}`}
+                  txtStyle={styles.addressName}
+                />
+                <Phrase
+                  txt={`${item.mobile_number}`}
+                  txtStyle={styles.addressName}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+      />
+    );
+  };
+
   const SendToFriendAddressInput = () => {
     return (
       <RBSheet
@@ -424,118 +516,6 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
     );
   };
 
-  const BillingAddresses = () => {
-    return (
-      <FlatList
-        data={addresses}
-        renderItem={({item}) => (
-          <View style={[styles.addressContainer]}>
-            <View
-              style={[
-                globalStyles.row,
-                globalStyles.alignCenter,
-                {alignItems: 'flex-start'},
-              ]}>
-              <View style={{width: SIZES.ten}}>
-                <TouchableOpacity
-                  onPress={() => {
-                    dispatch(setSelectedBillingAddress(item));
-                    addAddressToCart(item);
-                  }}>
-                  <Image
-                    source={
-                      global.cart_billing_address.id === item.id
-                        ? checkedRadio
-                        : uncheckedRadio
-                    }
-                    style={styles.checkbox}
-                  />
-                </TouchableOpacity>
-              </View>
-              <View style={{width: SIZES.ninty}}>
-                <View style={globalStyles.row}>
-                  <Phrase txt={'Home: '} txtStyle={styles.addressNameTitle} />
-                  {item.is_default_billing ? (
-                    <Chip
-                      status={'Default'}
-                      bgColor={COLORS.secondary + '1A'}
-                      txtColor={COLORS.secondary}
-                    />
-                  ) : null}
-                </View>
-
-                <Phrase
-                  txt={`${item.first_name} ${item.last_name}, ${item.street}, ${item.city}, ${item.state}`}
-                  txtStyle={styles.addressName}
-                />
-                <Phrase
-                  txt={`${item.mobile_number}`}
-                  txtStyle={styles.addressName}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-      />
-    );
-  };
-
-  const ShippingAddresses = () => {
-    return (
-      <FlatList
-        data={addresses}
-        renderItem={({item}) => (
-          <View style={[styles.addressContainer]}>
-            <View
-              style={[
-                globalStyles.row,
-                globalStyles.alignCenter,
-                {alignItems: 'flex-start'},
-              ]}>
-              <View style={{width: SIZES.ten}}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setSelectedShippingAddress(item);
-                    addShippingAddressToCart(item);
-                  }}>
-                  <Image
-                    source={
-                      global.cart_billing_address.id === item.id
-                        ? checkedRadio
-                        : uncheckedRadio
-                    }
-                    style={styles.checkbox}
-                  />
-                </TouchableOpacity>
-              </View>
-              <View style={{width: SIZES.ninty}}>
-                <View style={globalStyles.row}>
-                  <Phrase txt={'Home: '} txtStyle={styles.addressNameTitle} />
-                  {item.is_default_shipping ? (
-                    <Chip
-                      status={'Default'}
-                      bgColor={COLORS.secondary + '1A'}
-                      txtColor={COLORS.secondary}
-                    />
-                  ) : null}
-                </View>
-
-                <Phrase
-                  txt={`${item.first_name} ${item.last_name}, ${item.street}, ${item.city}, ${item.state}`}
-                  txtStyle={styles.addressName}
-                />
-                <Phrase
-                  txt={`${item.mobile_number}`}
-                  txtStyle={styles.addressName}
-                />
-              </View>
-            </View>
-          </View>
-        )}
-      />
-    );
-  };
-
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -571,17 +551,19 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         <Spacer />
         <Checkbox
           state={sameAsBilling}
-          stateChanger={copyBillingAddress}
+          stateChanger={toggleSameAsBillingAddress}
           label={t('sameAsBillingAddress')}
         />
         <Spacer />
         <Checkbox
-          state={sendToFriend}
-          stateChanger={copyFriendAddress}
+          state={!sameAsBilling}
+          stateChanger={toggleSameAsBillingAddress}
           label={t('sendingItToAFriend')}
         />
-        {sendToFriend ? (
+        {!sameAsBilling ? (
           <>
+            <Spacer />
+            <ShippingAddresses />
             <MyButton
               label={t('addNewAddress')}
               txtColor={COLORS.secondary}
