@@ -70,12 +70,12 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const dispatch = useDispatch();
 
   const refRBSheet = useRef();
+  const refRBSheetFriendAddress = useRef();
   const refRBSheetTimings = useRef();
   const refRBSheetBalloon = useRef();
-  const [defaultMethod, setDefaultMethod] = useState(1);
 
   const [sameAsBilling, setSameAsBilling] = useState(false);
-  const [sendToFirend, setSendToFirend] = useState(true);
+  const [sendToFriend, setSendToFriend] = useState(false);
 
   const [calcDate, setCalcDate] = useState(new Date());
   const [deliveryDate, setDeliveryDate] = useState('');
@@ -104,8 +104,6 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const [s_province, s_setProvince] = useState('');
 
   const [addresses, setAddresses] = useState(null);
-  const [selectedAddress, setSelectedAddress] = useState(null);
-  const [shippingAddress, setShippingAddress] = useState(null);
   const [quantityBalloon, setQuantityBalloon] = useState(0);
 
   const deliveryTimes = [
@@ -119,12 +117,18 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
     getAddresses();
   }, []);
 
-  useEffect(() => {}, [addresses]);
+  useEffect(() => {
+    if (sendToFriend) {
+      dispatch(setSelectedShippingAddress(global.cart_shipping_address));
+    } else {
+      dispatch(setSelectedShippingAddress(global.cart_billing_address));
+    }
+    dispatch(setSentToFriend(sendToFriend));
+  }, [sendToFriend]);
 
   const copyBillingAddress = () => {
     setSameAsBilling(!sameAsBilling);
-    setSendToFirend(!sendToFirend);
-    console.log('i am called address same as billing', !sameAsBilling);
+    setSendToFriend(!sendToFriend);
     // if (!sameAsBilling) {
     //   dispatch(setSelectedShippingAddress(selectedAddress))
     // } else {
@@ -135,28 +139,19 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
 
   const copyFriendAddress = () => {
     setSameAsBilling(!sameAsBilling);
-    setSendToFirend(!sendToFirend);
-    console.log('i am called address send to friend', !sendToFirend);
+    setSendToFriend(!sendToFriend);
     // if (sendToFirend) {
     //   dispatch(setSelectedShippingAddress(shippingAddress))
     // } else {
     //   dispatch(setSelectedShippingAddress(selectedAddress))
     // }
-    dispatch(setSentToFriend(!sendToFirend));
+    dispatch(setSentToFriend(!sendToFriend));
   };
-
-  useEffect(() => {
-    if (sendToFirend) {
-      dispatch(setSelectedShippingAddress(shippingAddress));
-    } else {
-      dispatch(setSelectedShippingAddress(selectedAddress));
-    }
-    dispatch(setSentToFriend(sendToFirend));
-  }, [sendToFirend]);
 
   const characters = global.allCharacters;
 
   const addShippingAddress = async () => {
+    refRBSheetFriendAddress.current.close();
     let params = {
       guest_session_id: global.cart_session_id,
       first_name: s_firstName,
@@ -165,8 +160,8 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
       street: s_street,
       city: s_city,
       state: s_province,
-      is_default_shipping: true,
-      is_default_billing: true,
+      is_default_shipping: false,
+      is_default_billing: false,
     };
     if (global.isLoggedIn) {
       params['user_id'] = global.user.id;
@@ -176,12 +171,15 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
       .then(res => {
         dispatch(setLoader(false));
         if (res.status == 200) {
-          console.log(res.data);
-
-          setShippingAddress(res.data.address);
+          s_setFirstName('');
+          s_setLastName('');
+          s_setMobileNumber('');
+          s_setStreet('');
+          s_setCity('');
+          s_setProvince('');
           dispatch(setSelectedShippingAddress(res.data.address));
-          dispatch(setLoader(true));
           addShippingAddressToCart(res.data.address);
+          getAddresses();
         } else {
           Alert.alert('Error!', res.message);
         }
@@ -213,6 +211,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         console.log(err);
       });
   };
+
   const addAddress = async () => {
     refRBSheet.current.close();
     let params = {
@@ -242,6 +241,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
           setProvince('');
           setDefaultShipping(0);
           setDefaultBilling(0);
+          dispatch(setSelectedBillingAddress(res.data.address));
           addAddressToCart(res.data.address);
           getAddresses();
         } else {
@@ -261,18 +261,22 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
       .then(res => {
         dispatch(setLoader(false));
         if (res.status == 200) {
-          console.log(res.data.addresses);
+          const {addresses} = res.data;
           setAddresses(res.data.addresses);
-          if (res.data.addresses.length == 1) {
-            const item = res.data.addresses[0];
-            setDefaultMethod(item.id);
-            setSelectedAddress(item);
-            if (item.is_default_shipping) {
-              setSelectedBillingAddress(item);
-              addShippingAddressToCart(item);
-            }
-            dispatch(setSelectedBillingAddress(item));
-            addAddressToCart(item);
+
+          if (!global.cart_billing_address) {
+            const selectedBilling =
+              addresses.find(x => x.is_default_billing == true) || addresses[0];
+            dispatch(setSelectedBillingAddress(selectedBilling));
+            addAddressToCart(res.data.addresses[0]);
+          }
+
+          if (!global.cart_shipping_address) {
+            const selectedShipping =
+              addresses.find(x => x.is_default_shipping == true) ||
+              addresses[0];
+            dispatch(setSelectedShippingAddress(selectedShipping));
+            addShippingAddressToCart(selectedShipping);
           }
         } else {
           Alert.alert('Error!', res.message);
@@ -323,6 +327,215 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
     dispatch(setCart(global.cart));
   };
 
+  const SendToFriendAddressInput = () => {
+    return (
+      <RBSheet
+        ref={refRBSheetFriendAddress}
+        closeOnDragDown={true}
+        closeOnPressMask={true}
+        dragFromTopOnly={true}
+        height={670}
+        minClosingHeight={0}
+        customStyles={{
+          wrapper: {
+            backgroundColor: COLORS.bottomSheetBackground,
+          },
+          draggableIcon: {
+            backgroundColor: '#000',
+          },
+        }}>
+        <View
+          style={[
+            globalStyles.contentContainer,
+            {marginHorizontal: SIZES.radius},
+          ]}>
+          <Heading
+            txt={t('addNewAddress')}
+            txtStyle={styles.bSheetTopHeading}
+          />
+          <Spacer />
+          {/* {<AddressForm />} */}
+          <>
+            <Spacer />
+            <Input
+              label={t(`recipientFirstName`)}
+              placeholder={t('firstName')}
+              value={s_firstName}
+              setValue={s_setFirstName}
+            />
+            <Spacer />
+            <Input
+              label={t('recipientLastName')}
+              placeholder={t('lastName')}
+              value={s_lastName}
+              setValue={s_setLastName}
+            />
+            <Spacer />
+            <PrefixTextInput
+              label={t('mobileNumber')}
+              placeholder={'000-000-000'}
+              prefix={'+974'}
+              value={s_mobileNumber}
+              maxLength={9}
+              setValue={s_setMobileNumber}
+            />
+            <Spacer />
+            <Input
+              label={t('street')}
+              placeholder={t('pleaseProvideStreetAddress')}
+              value={s_street}
+              setValue={s_setStreet}
+            />
+            <Spacer />
+
+            <View style={styles.cvvView}>
+              <View style={styles.halfInput}>
+                <Input
+                  label={t('city')}
+                  placeholder={t('exampleAlWakra')}
+                  value={s_city}
+                  setValue={s_setCity}
+                />
+              </View>
+              <View style={styles.halfInput}>
+                <Input
+                  label={t('stateProvinceArea')}
+                  placeholder={t('exampleDoha')}
+                  value={s_province}
+                  setValue={s_setProvince}
+                />
+              </View>
+            </View>
+            <Spacer />
+            <Spacer />
+          </>
+
+          <View style={[styles.bSheetBottom, {justifyContent: 'center'}]}>
+            <MyButton
+              label={t('addAddress')}
+              txtColor={COLORS.white}
+              btnColor={COLORS.secondary}
+              borderColor={COLORS.secondary}
+              onPress={addShippingAddress}
+            />
+          </View>
+        </View>
+      </RBSheet>
+    );
+  };
+
+  const BillingAddresses = () => {
+    return (
+      <FlatList
+        data={addresses}
+        renderItem={({item}) => (
+          <View style={[styles.addressContainer]}>
+            <View
+              style={[
+                globalStyles.row,
+                globalStyles.alignCenter,
+                {alignItems: 'flex-start'},
+              ]}>
+              <View style={{width: SIZES.ten}}>
+                <TouchableOpacity
+                  onPress={() => {
+                    dispatch(setSelectedBillingAddress(item));
+                    addAddressToCart(item);
+                  }}>
+                  <Image
+                    source={
+                      global.cart_billing_address.id === item.id
+                        ? checkedRadio
+                        : uncheckedRadio
+                    }
+                    style={styles.checkbox}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={{width: SIZES.ninty}}>
+                <View style={globalStyles.row}>
+                  <Phrase txt={'Home: '} txtStyle={styles.addressNameTitle} />
+                  {item.is_default_billing ? (
+                    <Chip
+                      status={'Default'}
+                      bgColor={COLORS.secondary + '1A'}
+                      txtColor={COLORS.secondary}
+                    />
+                  ) : null}
+                </View>
+
+                <Phrase
+                  txt={`${item.first_name} ${item.last_name}, ${item.street}, ${item.city}, ${item.state}`}
+                  txtStyle={styles.addressName}
+                />
+                <Phrase
+                  txt={`${item.mobile_number}`}
+                  txtStyle={styles.addressName}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+      />
+    );
+  };
+
+  const ShippingAddresses = () => {
+    return (
+      <FlatList
+        data={addresses}
+        renderItem={({item}) => (
+          <View style={[styles.addressContainer]}>
+            <View
+              style={[
+                globalStyles.row,
+                globalStyles.alignCenter,
+                {alignItems: 'flex-start'},
+              ]}>
+              <View style={{width: SIZES.ten}}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedShippingAddress(item);
+                    addShippingAddressToCart(item);
+                  }}>
+                  <Image
+                    source={
+                      global.cart_billing_address.id === item.id
+                        ? checkedRadio
+                        : uncheckedRadio
+                    }
+                    style={styles.checkbox}
+                  />
+                </TouchableOpacity>
+              </View>
+              <View style={{width: SIZES.ninty}}>
+                <View style={globalStyles.row}>
+                  <Phrase txt={'Home: '} txtStyle={styles.addressNameTitle} />
+                  {item.is_default_shipping ? (
+                    <Chip
+                      status={'Default'}
+                      bgColor={COLORS.secondary + '1A'}
+                      txtColor={COLORS.secondary}
+                    />
+                  ) : null}
+                </View>
+
+                <Phrase
+                  txt={`${item.first_name} ${item.last_name}, ${item.street}, ${item.city}, ${item.state}`}
+                  txtStyle={styles.addressName}
+                />
+                <Phrase
+                  txt={`${item.mobile_number}`}
+                  txtStyle={styles.addressName}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+      />
+    );
+  };
+
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -335,64 +548,8 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
           txtStyle={{...FONTS.body5_bold}}
         />
         <Spacer />
-        <FlatList
-          data={addresses}
-          renderItem={({item}) => (
-            <View style={[styles.addressContainer]}>
-              <View
-                style={[
-                  globalStyles.row,
-                  globalStyles.alignCenter,
-                  {alignItems: 'flex-start'},
-                ]}>
-                <View style={{width: SIZES.ten}}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      console.log(item.is_default_billing);
-                      setDefaultMethod(item.id);
-                      setSelectedAddress(item);
-                      if (item.is_default_shipping) {
-                        setSelectedBillingAddress(item);
-                        addShippingAddressToCart(item);
-                      }
-                      dispatch(setSelectedBillingAddress(item));
-                      addAddressToCart(item);
-                    }}>
-                    <Image
-                      source={
-                        defaultMethod == item.id ? checkedRadio : uncheckedRadio
-                      }
-                      style={styles.checkbox}
-                    />
-                  </TouchableOpacity>
-                </View>
-                <View style={{width: SIZES.ninty}}>
-                  <View style={globalStyles.row}>
-                    <Phrase txt={'Home: '} txtStyle={styles.addressNameTitle} />
-                    {defaultMethod == 1 && (
-                      <Chip
-                        status={'Default'}
-                        bgColor={COLORS.secondary + '1A'}
-                        txtColor={COLORS.secondary}
-                      />
-                    )}
-                  </View>
-
-                  <Phrase
-                    txt={`${item.first_name} ${item.last_name}, ${item.street}, ${item.city}, ${item.state}`}
-                    txtStyle={styles.addressName}
-                  />
-                  <Phrase
-                    txt={`${item.mobile_number}`}
-                    txtStyle={styles.addressName}
-                  />
-                </View>
-              </View>
-            </View>
-          )}
-        />
+        <BillingAddresses />
         <Spacer />
-
         <MyButton
           label={t('addNewAddress')}
           txtColor={COLORS.secondary}
@@ -419,73 +576,22 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         />
         <Spacer />
         <Checkbox
-          state={sendToFirend}
+          state={sendToFriend}
           stateChanger={copyFriendAddress}
           label={t('sendingItToAFriend')}
         />
-        {sendToFirend ? (
+        {sendToFriend ? (
           <>
-            <Hr />
-            <>
-              <Spacer />
-              <Input
-                label={t(`recipientFirstName`)}
-                placeholder={t('firstName')}
-                value={s_firstName}
-                setValue={s_setFirstName}
-              />
-              <Spacer />
-              <Input
-                label={t('recipientLastName')}
-                placeholder={t('lastName')}
-                value={s_lastName}
-                setValue={s_setLastName}
-              />
-              <Spacer />
-              {/* <PrefixTextInput
-                label={t('mobileNumber')}
-                placeholder={'000-000-000'}
-                prefix={'+974'}
-                value={s_mobileNumber}
-                maxLength={9}
-                setValue={s_setMobileNumber}
-              /> */}
-              <Spacer />
-              <Input
-                label={t('street')}
-                placeholder={t('pleaseProvideStreetAddress')}
-                value={s_street}
-                setValue={s_setStreet}
-              />
-              <Spacer />
-
-              <View style={styles.cvvView}>
-                <View style={styles.halfInput}>
-                  <Input
-                    label={t('city')}
-                    placeholder={t('exampleAlWakra')}
-                    value={s_city}
-                    setValue={s_setCity}
-                  />
-                </View>
-                <View style={styles.halfInput}>
-                  <Input
-                    label={t('stateProvinceArea')}
-                    placeholder={t('exampleDoha')}
-                    value={s_province}
-                    setValue={s_setProvince}
-                  />
-                </View>
-              </View>
-            </>
-            <Spacer />
             <MyButton
-              label={t('addAddress')}
-              txtColor={COLORS.white}
-              btnColor={COLORS.secondary}
-              borderColor={COLORS.secondary}
-              onPress={addShippingAddress}
+              label={t('addNewAddress')}
+              txtColor={COLORS.secondary}
+              btnColor={COLORS.secondaryLite}
+              borderColor={COLORS.secondaryLite}
+              btnStyle={{width: SIZES.fifty}}
+              icon={addCircle}
+              onPress={() => refRBSheetFriendAddress.current.open()}
             />
+            <SendToFriendAddressInput />
           </>
         ) : null}
       </View>
