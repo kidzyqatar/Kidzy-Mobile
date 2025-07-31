@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {View, Text, TouchableOpacity, ScrollView, Image} from 'react-native';
 import {
   MasterLayout,
@@ -24,14 +24,20 @@ import {
 import {cod, card, tick} from '@constants/icons';
 import {styles} from '../styles';
 import {useTranslation} from 'react-i18next';
+import {useSelector, useDispatch} from 'react-redux';
+import {setPaymentMethod} from '../../../store/reducers/global';
+import {useIsFocused} from '@react-navigation/native';
 
 const StepFour = ({}) => {
   const {t} = useTranslation();
   const refRBSheet = useRef();
-  const [defaultMethod, setDefaultMethod] = useState(1);
+  const [defaultMethod, setDefaultMethod] = useState('cod'); // Changed to string values
   const [checked, setChecked] = React.useState('card');
   const [saveCard, setSaveCard] = React.useState(false);
-
+  const global = useSelector(state => state.global);
+  console.log(global.cart_is_same_as_billing, 'cart_is_same_as_billing1');
+  const dispatch = useDispatch();
+  const isFocused = useIsFocused();
   const [cardNumber, setCardNumber] = useState('');
   const [name, setName] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -39,85 +45,88 @@ const StepFour = ({}) => {
   const [accountNumber, setAccountNumber] = useState('');
   const [accountTitle, setAccountTitle] = useState('');
   const [bankName, setBankName] = useState('');
-
+  useEffect(() => {
+    !global.cart_is_sent_to_friend
+      ? dispatch(setPaymentMethod('cod'))
+      : dispatch(setPaymentMethod('online'));
+    !global.cart_is_sent_to_friend
+      ? setDefaultMethod('cod')
+      : setDefaultMethod('online');
+  }, [isFocused]);
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <Spacer />
       <Spacer />
       <View style={globalStyles.whiteBg}>
+        {!global.cart_is_sent_to_friend && (
+          <View
+            style={[
+              styles.methodContainer,
+              {
+                marginBottom: '2%',
+                backgroundColor:
+                  defaultMethod == 'cod' ? COLORS.secondaryLite : COLORS.white,
+              },
+            ]}>
+            <View style={styles.leftView}>
+              <Image source={cod} style={styles.methodImg} />
+            </View>
+            <View style={styles.midView}>
+              <Phrase txt={t('cashOnDelivery')} txtStyle={styles.methodTitle} />
+              <TouchableOpacity
+                onPress={() => {
+                  setDefaultMethod('cod');
+                  dispatch(setPaymentMethod('cod'));
+                }}>
+                <Phrase
+                  txt={
+                    defaultMethod == 'cod' ? t('default') : t('setAsDefault')
+                  }
+                  txtStyle={styles.methodDefaultTxt}
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.rightView}>
+              {defaultMethod == 'cod' && (
+                <Image source={tick} style={styles.tickImage} />
+              )}
+            </View>
+          </View>
+        )}
         <View
           style={[
             styles.methodContainer,
             {
               backgroundColor:
-                defaultMethod == 1 ? COLORS.secondaryLite : COLORS.white,
+                defaultMethod == 'online' ? COLORS.secondaryLite : COLORS.white,
             },
           ]}>
           <View style={styles.leftView}>
             <Image source={cod} style={styles.methodImg} />
           </View>
           <View style={styles.midView}>
-            <Phrase txt={t('cashOnDelivery')} txtStyle={styles.methodTitle} />
+            <Phrase txt={t('payOnline')} txtStyle={styles.methodTitle} />
             <TouchableOpacity
               onPress={() => {
-                if (defaultMethod !== 1) {
-                  setDefaultMethod(1);
-                }
+                setDefaultMethod('online');
+                dispatch(setPaymentMethod('online'));
               }}>
               <Phrase
-                txt={defaultMethod == 1 ? t('default') : t('setAsDefault')}
+                txt={
+                  defaultMethod == 'online' ? t('default') : t('setAsDefault')
+                }
                 txtStyle={styles.methodDefaultTxt}
               />
             </TouchableOpacity>
           </View>
           <View style={styles.rightView}>
-            {defaultMethod == 1 && (
+            {defaultMethod == 'online' && (
               <Image source={tick} style={styles.tickImage} />
             )}
           </View>
         </View>
-        {/* <Spacer />
-        <View
-          style={[
-            styles.methodContainer,
-            {
-              backgroundColor:
-                defaultMethod == 2 ? COLORS.secondaryLite : COLORS.white,
-            },
-          ]}>
-          <View style={styles.leftView}>
-            <Image source={card} style={styles.methodImg} />
-          </View>
-          <View style={styles.midView}>
-            <Phrase txt={'Visa'} txtStyle={styles.methodTitle} />
-            <Phrase txt={'Expiry 06/2024'} txtStyle={styles.methodExpiry} />
-            <TouchableOpacity
-              onPress={() => {
-                if (defaultMethod !== 2) {
-                  setDefaultMethod(2);
-                }
-              }}>
-              <Phrase
-                txt={defaultMethod == 2 ? 'Default' : 'Set as Default'}
-                txtStyle={styles.methodDefaultTxt}
-              />
-            </TouchableOpacity>
-          </View>
-          <View style={styles.rightView}>
-            {defaultMethod == 2 && (
-              <Image source={tick} style={styles.tickImage} />
-            )}
-          </View>
-        </View>
-        <Spacer />
-        <Spacer /> */}
-        {/* <MyButton
-          label={'Add New Payment Method'}
-          txtColor={COLORS.secondary}
-          btnColor={COLORS.secondaryLite}
-          borderColor={COLORS.secondaryLite}
-          onPress={() => refRBSheet.current.open()}
-        /> */}
+
+        {/* Rest of your code remains the same */}
       </View>
       <RBSheet
         ref={refRBSheet}

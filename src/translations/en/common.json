@@ -92,6 +92,7 @@
   "markAsDefaultBillingAddress": "Mark as Default Billing Address",
   "markAsDefaultShippingAddress": "Mark as Default Shipping Address",
   "cashOnDelivery": "Cash On Delivery",
+  "payOnline": "Pay Online",
   "default": "Default",
   "setAsDefault": "Set as Default",
   "Payment": "Payment",

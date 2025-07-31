@@ -25,6 +25,7 @@ const initialState = {
   cart_shipping_address: null,
   cart_is_same_as_billing: false,
   cart_is_sent_to_friend: false,
+  payment_method: 'cod',
   cart_billing_address: null,
   cart_ballons_count: 0,
   cart_character: null,
@@ -114,6 +115,13 @@ const globalSlice = createSlice({
     setSameAsBillingAddress: (state, action) => {
       return {...state, cart_is_same_as_billing: action.payload};
     },
+    setSendtoFriend: (state, action) => {
+      return {...state, cart_is_sent_to_friend: action.payload};
+    },
+
+    setPaymentMethod: (state, action) => {
+      return {...state, payment_method: action.payload};
+    },
 
     setCartCalculations: (state, action) => {
       return {...state, cart_calculation: action.payload};
@@ -136,9 +144,11 @@ export const {
   setActiveTab,
   setCartSessionID,
   setAllCharacters,
+  setSendtoFriend,
   setBallonCharges,
   setDeliveryCharges,
   setTax,
+  setPaymentMethod,
   setSelectedShippingAddress,
   setSelectedBillingAddress,
   setBallonsCount,

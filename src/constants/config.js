@@ -1,6 +1,6 @@
 export default {
   api: {
-    baseURL: 'https://phplaravel-1193282-4443773.cloudwaysapps.com/api/v1',
+    baseURL: 'https://phplaravel-1473314-5573074.cloudwaysapps.com/api/v1',
   },
   apiName: {
     socialLogin: 'auth/social-login',
@@ -17,9 +17,11 @@ export default {
     search: 'product-search',
     searchTerm: 'product-term-search',
     getCart: 'get-cart',
+    getTimeSlots: 'timeslots',
     addToCart: 'add-to-cart',
     deleteItemFromCart: 'delete-cart',
     completeCart: 'complete-cart',
+    onlinePayment: 'dibsy/initiate',
     bindGuestUser: 'bind-guest',
     bindAutheticatedUser: 'bind-user',
     attachImage: 'attach-image',

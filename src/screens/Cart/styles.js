@@ -43,6 +43,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     height: 80,
     alignItems: 'center',
+    
   },
   addressContainer: {
     width: SIZES.hundred,

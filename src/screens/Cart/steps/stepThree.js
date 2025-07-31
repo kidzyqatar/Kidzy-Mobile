@@ -43,6 +43,9 @@ import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
 import {formatDate} from '../../../helpers/helper';
 import {useDispatch, useSelector} from 'react-redux';
+import {Dimensions} from 'react-native';
+
+const {height: screenHeight} = Dimensions.get('window');
 import {
   callNonTokenApi,
   callNonTokenApiAddress,
@@ -59,9 +62,11 @@ import {
   setSelectedDeliveryDate,
   setSelectedDeliveryTime,
   setSelectedShippingAddress,
+  setSendtoFriend,
 } from '../../../store/reducers/global';
 import {TextInput} from 'react-native-paper';
 import {useTranslation} from 'react-i18next';
+import {useIsFocused} from '@react-navigation/native';
 
 const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const {t} = useTranslation();
@@ -72,7 +77,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const refRBSheetFriendAddress = useRef();
   const refRBSheetTimings = useRef();
   const refRBSheetBalloon = useRef();
-
+  const isFocused = useIsFocused();
   const [sameAsBilling, setSameAsBilling] = useState(false);
 
   const [calcDate, setCalcDate] = useState(new Date());
@@ -104,17 +109,26 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const [addresses, setAddresses] = useState(null);
   const [quantityBalloon, setQuantityBalloon] = useState(0);
 
-  const deliveryTimes = [
-    {label: '12:00am - 03:00pm', value: '03:00:00'},
-    {label: '03:00pm - 06:00pm', value: '06:00:00'},
-    {label: '06:00pm - 09:00pm', value: '09:00:00'},
-    {label: '09:00pm - 12:00am', value: '12:00:00'},
-  ];
-
+  const [deliveryTimes, setDeliveryTimes] = useState([]);
   useEffect(() => {
-    getAddresses();
-  }, []);
+    if (isFocused) {
+      dispatch(setSelectedDeliveryDate(''));
+      setDeliveryDate('');
+      getTimeSlotsCapacity();
+    }
+  }, [isFocused]);
+  useEffect(() => {
+    if (isFocused) {
+      dispatch(setSelectedDeliveryTime(''));
+      setDeliveryTime('');
 
+      getTimeSlotsCapacity();
+    }
+  }, [global?.cart_delivery_date]);
+  useEffect(() => {
+    isFocused && getAddresses();
+  }, [isFocused]);
+  console.log(deliveryTimes, 'deliveryTimes');
   useEffect(() => {
     if (!sameAsBilling) {
       dispatch(setSelectedShippingAddress(global.cart_shipping_address));
@@ -126,6 +140,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const toggleSameAsBillingAddress = () => {
     setSameAsBilling(!sameAsBilling);
     dispatch(setSameAsBillingAddress(!sameAsBilling));
+    dispatch(setSendtoFriend(sameAsBilling));
   };
 
   const characters = global.allCharacters;
@@ -170,10 +185,19 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         dispatch(setLoader(false));
       });
   };
-
+  const hasCategory10OutDoor = () => {
+    return global?.cart?.order_items.some(item =>
+      item?.product?.categories?.some(category => category == '10'),
+    );
+  };
+  const hasCategory15Party = () => {
+    return global?.cart?.order_items.some(item =>
+      item?.product?.categories?.some(category => category == '15'),
+    );
+  };
   const addShippingAddressToCart = async address => {
     callNonTokenApi(config.apiName.addAddressToCart, 'POST', {
-      address_id: address.id,
+      address_id: address?.id,
       order_id: global.cart.id,
       type: 'shipping',
     })
@@ -191,7 +215,68 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         console.log(err);
       });
   };
+  const to12Hour = timeStr => {
+    const date = new Date(`1970-01-01T${convertTo24(timeStr)}Z`);
+    return date
+      .toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZone: 'UTC',
+      })
+      .toLowerCase();
+  };
+  const convertTo24 = timeStr => {
+    const [time, modifier] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':');
+    hours = parseInt(hours, 10);
+    if (modifier.toLowerCase() === 'pm' && hours !== 12) {
+      hours += 12;
+    }
+    if (modifier.toLowerCase() === 'am' && hours === 12) {
+      hours = 0;
+    }
+    return `${String(hours).padStart(2, '0')}:${minutes}:00`;
+  };
+  function convertTimeSlotFormat(slots) {
+    return slots.map(slot => {
+      const startLabel = to12Hour(slot.start_time);
+      const endLabel = to12Hour(slot.end_time);
+      const endValue = convertTo24(slot.end_time);
 
+      return {
+        label: `${startLabel} - ${endLabel}`,
+        value: endValue,
+      };
+    });
+  }
+
+  const getTimeSlotsCapacity = () => {
+    callNonTokenApi(
+      global?.cart_delivery_date
+        ? `${config.apiName.getTimeSlots}/available?date=${global?.cart_delivery_date}`
+        : `${config.apiName.getTimeSlots}`,
+      'GET',
+    )
+      .then(res => {
+        if (res.status == 200) {
+          console.log(
+            res.timeslots,
+            'slots',
+            convertTimeSlotFormat(res.timeslots ?? []),
+          );
+          let data = convertTimeSlotFormat(res.timeslots ?? []);
+          setDeliveryTimes(data);
+          dispatch(setSelectedDeliveryTime(''));
+          setDeliveryTime('');
+        } else {
+          Alert.alert('Error!', res.message);
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  };
   const addAddress = async () => {
     refRBSheet.current.close();
     let params = {
@@ -581,50 +666,55 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
       {/* Send to Friend Section */}
       <Spacer />
       {/* Timing Section */}
-      <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
-        <Phrase
-          txt={t('deliveryDateAndTime')}
-          txtStyle={{...FONTS.body5_bold}}
-        />
-        <Spacer />
-        <View>
-          <TouchableOpacity
-            onPress={() => setOpenDate(true)}
-            style={{
-              ...StyleSheet.absoluteFill,
-              zIndex: 3,
-            }}
+      {!hasCategory10OutDoor() && (
+        <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
+          <Phrase
+            txt={t('deliveryDateAndTime')}
+            txtStyle={{...FONTS.body5_bold}}
           />
+          <Spacer />
+          <View>
+            <TouchableOpacity
+              onPress={() => setOpenDate(true)}
+              style={{
+                ...StyleSheet.absoluteFill,
+                zIndex: 3,
+              }}
+            />
 
-          <Input
-            label={t('chooseDeliveryDate')}
-            placeholder={t('selectDate')}
-            value={deliveryDate}
-            right={calendar}
-            customStyle={{zIndex: 1}}
-          />
+            <Input
+              label={t('chooseDeliveryDate')}
+              placeholder={t('selectDate')}
+              value={deliveryDate}
+              right={calendar}
+              customStyle={{zIndex: 1}}
+            />
+          </View>
+          <Spacer />
+          {!hasCategory15Party() && (
+            <View>
+              <TouchableOpacity
+                onPress={() => {
+                  refRBSheetTimings.current.open();
+                }}
+                style={{
+                  ...StyleSheet.absoluteFill,
+                  zIndex: 3,
+                }}
+              />
+              <Input
+                label={t('chooseDeliveryTime')}
+                placeholder={t('selectTime')}
+                value={deliveryTime.label}
+                setValue={setDeliveryTime}
+                right={clock}
+                customStyle={{zIndex: 1}}
+              />
+            </View>
+          )}
         </View>
-        <Spacer />
-        <View>
-          <TouchableOpacity
-            onPress={() => {
-              refRBSheetTimings.current.open();
-            }}
-            style={{
-              ...StyleSheet.absoluteFill,
-              zIndex: 3,
-            }}
-          />
-          <Input
-            label={t('chooseDeliveryTime')}
-            placeholder={t('selectTime')}
-            value={deliveryTime.label}
-            setValue={setDeliveryTime}
-            right={clock}
-            customStyle={{zIndex: 1}}
-          />
-        </View>
-      </View>
+      )}
+
       {/* Timing Section */}
       <Spacer />
       {/* Special delivery section */}
@@ -830,6 +920,8 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         open={openDate}
         date={calcDate}
         mode={'date'}
+        minimumDate={new Date()}
+        maximumDate={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)}
         onConfirm={date => {
           setOpenDate(false);
           setCalcDate(date);
@@ -848,7 +940,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         closeOnDragDown={true}
         closeOnPressMask={true}
         dragFromTopOnly={true}
-        height={300}
+        height={screenHeight * 0.6} // 60% of screen height
         minClosingHeight={0}
         customStyles={{
           wrapper: {
@@ -857,17 +949,29 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
           draggableIcon: {
             backgroundColor: '#000',
           },
-          container: {paddingHorizontal: SIZES.padding},
+          container: {
+            paddingHorizontal: SIZES.padding,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+          },
         }}>
         <Phrase
           txt={'Select Delivery Time Slot'}
-          txtStyle={{...FONTS.body4_bold, marginBottom: SIZES.padding}}
+          txtStyle={{
+            ...FONTS.body4_bold,
+            marginBottom: SIZES.padding,
+            marginTop: SIZES.padding,
+          }}
         />
-        {deliveryTimes.map((element, index) => {
-          return (
+
+        <ScrollView
+          style={{maxHeight: screenHeight * 0.4}} // max height for scroll area
+          contentContainerStyle={{paddingBottom: 20}}
+          showsVerticalScrollIndicator={false}>
+          {deliveryTimes?.map((element, index) => (
             <TouchableOpacity
               key={index.toString()}
-              style={{width: SIZES.hundred, height: 40}}
+              style={{width: '100%', height: 40, justifyContent: 'center'}}
               onPress={() => {
                 setDeliveryTime(element);
                 dispatch(setSelectedDeliveryTime(element.value));
@@ -877,14 +981,15 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
                 txtStyle={{
                   ...FONTS.body4_medium,
                   color:
-                    deliveryTime.label == element.label
+                    deliveryTime.label === element.label
                       ? COLORS.secondary
                       : COLORS.txtGray,
                 }}
               />
             </TouchableOpacity>
-          );
-        })}
+          ))}
+        </ScrollView>
+
         <View style={[styles.bSheetBottom, {justifyContent: 'center'}]}>
           <MyButton
             label={'Save'}
@@ -893,7 +998,6 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
             borderColor={COLORS.secondary}
             onPress={() => {
               dispatch(setSelectedDeliveryTime(deliveryTime));
-              console.log(global.cart_delivery_time);
               refRBSheetTimings.current.close();
             }}
           />

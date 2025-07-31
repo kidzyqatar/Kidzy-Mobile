@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import {WebView} from 'react-native-webview';
 import {
   MasterLayout,
   BackBar,
@@ -72,11 +73,24 @@ const MyCart = () => {
   const [title, setTitle] = useState('My Cart');
   const [form, setForm] = useState(0);
   const [authSheetHeight, setAuthSheetHeight] = useState(600);
+  const [showWebView, setShowWebView] = useState(false); // Add this state
+  const [paymentUrl, setPaymentUrl] = useState(''); // Add this state
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
+  const hasCategory13Cake = () => {
+    return global?.cart?.order_items.some(item =>
+      item?.product?.categories?.some(category => category == '13'),
+    );
+  };
+  const hasCategory15Party = () => {
+    return global?.cart?.order_items.some(item =>
+      item?.product?.categories?.some(category => category == '15'),
+    );
+  };
+  const hasCategory10OutDoor = () => {
+    return global?.cart?.order_items.some(item =>
+      item?.product?.categories?.some(category => category == '10'),
+    );
+  };
   const [calculations, setCalculations] = useState({
     subtotal: 0,
     wrapper: 0,
@@ -173,6 +187,13 @@ const MyCart = () => {
       .then(res => {
         dispatch(setLoader(false));
         if (res.status == 200) {
+          if (hasCategory10OutDoor()) {
+            Alert.alert(
+              'Thank You!',
+              'Your order will be delivered within 2 days',
+            );
+          }
+
           console.log(res.data);
           closeAuthSheet();
           dispatch(setCart(null));
@@ -195,6 +216,48 @@ const MyCart = () => {
       });
   };
 
+  const handleWebViewNavigationStateChange = navState => {
+    // Handle payment success/failure based on URL changes
+    console.log(navState.url, 'navState.url');
+    if (navState.url.includes('success') || navState.url.includes('thankyou')) {
+      setShowWebView(false);
+      // Handle successful payment
+      completeCart();
+    } else if (
+      navState.url.includes('cancel') ||
+      navState.url.includes('failed') ||
+      navState.url.includes('error')
+    ) {
+      setShowWebView(false);
+      Alert.alert('Payment Error!', 'Your payment was cancelled or failed.');
+    }
+  };
+
+  const closeWebView = () => {
+    setShowWebView(false);
+    setPaymentUrl('');
+  };
+  const onlinePayment = async () => {
+    dispatch(setLoader(true));
+    console.log('i am called here online pyament', global.cart_calculation);
+    callNonTokenApi(config.apiName.onlinePayment, 'POST', {
+      order_id: global.cart.id,
+    })
+      .then(res => {
+        dispatch(setLoader(false));
+        if (res.payment_url) {
+          console.log(res.payment_url, 'online response');
+          setPaymentUrl(res.payment_url);
+          setShowWebView(true);
+        } else {
+          Alert.alert('Error!', 'Payment URL not received');
+        }
+      })
+      .catch(err => {
+        dispatch(setLoader(false));
+        Alert.alert('Error', 'Something Went Wrong please try again.');
+      });
+  };
   const closeAuthSheet = () => {
     authSheet.current.close();
   };
@@ -308,21 +371,77 @@ const MyCart = () => {
     switch (step) {
       case 1:
         if (global?.isLoggedIn) {
-          setStep(2);
+          if (hasCategory13Cake()) {
+            setStep(3);
+          } else {
+            setStep(2);
+          }
         } else {
           authSheet.current.open();
         }
         break;
       case 2:
         setStep(3);
+
         break;
       case 3:
+        console.log(global, 'global');
+
+        const today = new Date();
+        const deliveryDate = new Date(global.cart_delivery_date);
+        const timeDifference = deliveryDate.getTime() - today.getTime();
+        const dayDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
+
+        // 1. CATEGORY VALIDATION
+        if (hasCategory13Cake()) {
+          if (dayDifference < 1) {
+            Alert.alert(
+              'Error',
+              'Cake orders require at least one day advance notice. Please select a delivery date that is at least one day from today.',
+            );
+            return;
+          }
+
+          if (!global.cart_delivery_time) {
+            Alert.alert(
+              'Error',
+              'Please make sure to select Delivery Time for cake orders.',
+            );
+            return;
+          }
+        } else if (hasCategory15Party()) {
+          if (dayDifference < 2) {
+            Alert.alert(
+              'Error',
+              'Party orders require at least two days advance notice. Please select a delivery date that is at least two days from today.',
+            );
+            return;
+          }
+
+          // ✅ Party does NOT require time, so we skip time validation
+        } else if (hasCategory10OutDoor()) {
+          // ✅ No date/time validation for outdoor
+          // ⚠️ UI should show "delivery within 2 days" after placing order
+        } else {
+          // DEFAULT CATEGORY (other than cake/party/outdoor)
+          if (!global.cart_delivery_date) {
+            Alert.alert('Error', 'Please select a delivery date.');
+            return;
+          }
+
+          if (!global.cart_delivery_time) {
+            Alert.alert('Error', 'Please select a delivery time.');
+            return;
+          }
+        }
+
         if (
           global.cart_is_same_as_billing &&
           global.cart_shipping_address == null
         ) {
           console.log('address is same as billing');
           dispatch(setSelectedShippingAddress(global.cart_billing_address));
+
           callNonTokenApi(config.apiName.addAddressToCart, 'POST', {
             address_id: global.cart_billing_address.id,
             order_id: global.cart.id,
@@ -332,6 +451,7 @@ const MyCart = () => {
               dispatch(setLoader(false));
               if (res.status == 200) {
                 console.log('Set Cart shipping address', res.data);
+                setStep(4); // ✅ Move to step only after address is set
               } else {
                 Alert.alert(
                   'Error',
@@ -344,25 +464,31 @@ const MyCart = () => {
               dispatch(setLoader(false));
               console.log(err);
             });
+
+          return; // ⛔ Prevent running setStep(4) below
         }
-        console.log(global.cart_delivery_date, global.cart_delivery_time);
+
         if (
           global.cart_shipping_address == null ||
           global.cart_billing_address == null
         ) {
           Alert.alert(
             'Error',
-            'Please make sure to add/select Shipping and billing Address.',
+            'Please make sure to add/select Shipping and Billing Address.',
           );
-        } else if (global.cart_delivery_date == '') {
-          Alert.alert('Error', 'Please make sure to select Delivery Date.');
-        } else if (global.cart_delivery_time == '') {
-          Alert.alert('Error', 'Please make sure to select Delivery Time.');
-        } else {
-          setStep(4);
+          return;
         }
+
+        // ✅ Everything valid, move to step 4
+        setStep(4);
+
         break;
       case 4:
+        if (global.payment_method == 'online') {
+          console.log('Online Payment!!!');
+          onlinePayment();
+          return;
+        }
         setStep(5);
         break;
       case 5:
@@ -379,7 +505,11 @@ const MyCart = () => {
         setStep(1);
         break;
       case 3:
-        setStep(2);
+        if (hasCategory13Cake()) {
+          setStep(1);
+        } else {
+          setStep(2);
+        }
         break;
       case 4:
         setStep(3);
@@ -393,82 +523,113 @@ const MyCart = () => {
   };
   return (
     <MasterLayout bgColor={COLORS.bgGray} scrolling={false} max={true}>
-      <View style={globalStyles.whiteBg}>
-        {step == 1 ? (
-          <BackBar
-            title={t(title)}
-            navigateTo={'Home'}
-            right={step == 1 ? true : false}
+      {showWebView ? (
+        <View style={{flex: 1}}>
+          <View style={[globalStyles.whiteBg, {paddingTop: 20}]}>
+            <TouchableOpacity
+              onPress={closeWebView}
+              style={{
+                padding: 15,
+                alignItems: 'center',
+                backgroundColor: COLORS.secondary,
+                margin: 10,
+                borderRadius: 5,
+              }}>
+              <Text style={{color: COLORS.white, fontWeight: 'bold'}}>
+                {t('close')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <WebView
+            source={{uri: paymentUrl}}
+            style={{flex: 1}}
+            onNavigationStateChange={handleWebViewNavigationStateChange}
+            startInLoadingState={true}
+            scalesPageToFit={true}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
           />
-        ) : (
-          <TouchableOpacity
-            onPress={() => {
-              handleBackPress();
-            }}>
-            <BackBar
-              title={t(title)}
-              navigateTo={'Home'}
-              right={step == 1 ? true : false}
-              showCaseView={true}
+        </View>
+      ) : (
+        <>
+          <View style={globalStyles.whiteBg}>
+            {step == 1 ? (
+              <BackBar
+                title={t(title)}
+                navigateTo={'Home'}
+                right={step == 1 ? true : false}
+              />
+            ) : (
+              <TouchableOpacity
+                onPress={() => {
+                  handleBackPress();
+                }}>
+                <BackBar
+                  title={t(title)}
+                  navigateTo={'Home'}
+                  right={step == 1 ? true : false}
+                  showCaseView={true}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+          <Spacer />
+
+          {step == 1 && (
+            <StepOne
+              cart={global.cart}
+              items={items}
+              calculations={calculations}
+              calculationsChanger={setCalculations}
+              applyCoupon={applyCoupon}
+              removeCoupon={removeCoupon}
+              getCart={getCart}
             />
-          </TouchableOpacity>
-        )}
-      </View>
-      <Spacer />
+          )}
+          {step == 2 && <StepTwo items={items} getCart={getCart} />}
+          {step == 3 && (
+            <StepThree
+              incrementBallonQuantity={incrementBallonQuantity}
+              decrementBallonQuantity={decrementBallonQuantity}
+            />
+          )}
+          {step == 4 && <StepFour />}
+          {step == 5 && (
+            <StepFive items={items} step={step} stepChanger={setStep} />
+          )}
 
-      {step == 1 && (
-        <StepOne
-          cart={global.cart}
-          items={items}
-          calculations={calculations}
-          calculationsChanger={setCalculations}
-          applyCoupon={applyCoupon}
-          removeCoupon={removeCoupon}
-          getCart={getCart}
-        />
+          {/* Cart Trigger */}
+          <Pressable
+            style={[
+              globalStyles.whiteBg,
+              styles.cartTriggerView,
+              styles.shadowContainer,
+            ]}
+            onPress={() => refRBSheet.current.open()}>
+            <View style={[styles.triggerLeft]}>
+              <Phrase txt={t('total')} txtStyle={styles.totalTxt} />
+              <Phrase
+                txt={`QAR ${calculations.grandTotal}`}
+                txtStyle={styles.priceTxt}
+              />
+              <Image source={chevron} style={styles.chevron} />
+            </View>
+            <View style={styles.triggerRight}>
+              <MyButton
+                label={t('continue')}
+                txtColor={COLORS.white}
+                btnColor={COLORS.primary}
+                borderColor={COLORS.primary}
+                btnStyle={styles.continueBtn}
+                onPress={() => {
+                  handleContinuePress();
+                }}
+              />
+            </View>
+          </Pressable>
+          {/* Cart Trigger */}
+        </>
       )}
-      {step == 2 && <StepTwo items={items} getCart={getCart} />}
-      {step == 3 && (
-        <StepThree
-          incrementBallonQuantity={incrementBallonQuantity}
-          decrementBallonQuantity={decrementBallonQuantity}
-        />
-      )}
-      {step == 4 && <StepFour />}
-      {step == 5 && (
-        <StepFive items={items} step={step} stepChanger={setStep} />
-      )}
-
-      {/* Cart Trigger */}
-      <Pressable
-        style={[
-          globalStyles.whiteBg,
-          styles.cartTriggerView,
-          styles.shadowContainer,
-        ]}
-        onPress={() => refRBSheet.current.open()}>
-        <View style={[styles.triggerLeft]}>
-          <Phrase txt={t('total')} txtStyle={styles.totalTxt} />
-          <Phrase
-            txt={`QAR ${calculations.grandTotal}`}
-            txtStyle={styles.priceTxt}
-          />
-          <Image source={chevron} style={styles.chevron} />
-        </View>
-        <View style={styles.triggerRight}>
-          <MyButton
-            label={t('continue')}
-            txtColor={COLORS.white}
-            btnColor={COLORS.primary}
-            borderColor={COLORS.primary}
-            btnStyle={styles.continueBtn}
-            onPress={() => {
-              handleContinuePress();
-            }}
-          />
-        </View>
-      </Pressable>
-      {/* Cart Trigger */}
 
       <RBSheet
         ref={refRBSheet}
