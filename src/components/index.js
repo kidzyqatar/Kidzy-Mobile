@@ -5,6 +5,7 @@ export { default as MyButton } from './Button/button';
 export { default as IconBtn } from './Button/iconBtn';
 export { default as Heading } from './General/heading';
 export { default as Phrase } from './General/phrase';
+export { default as Banner } from './Banner/Banner'; // Add this line
 export { default as CartBar } from './CartBar/cartbar';
 export { default as CategoryTile } from './CategoryTile/CategoryTile';
 export { default as CategoryWidget } from './CategoryTile/CategoryWidget';

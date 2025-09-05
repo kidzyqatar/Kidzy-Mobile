@@ -11,6 +11,27 @@ import {useTranslation} from 'react-i18next';
 const StepFive = ({items, step, stepChanger}) => {
   const {t} = useTranslation();
   const global = useSelector(state => state.global);
+  
+  // Add debugging
+  console.log('🔍 StepFive - Current payment method:', global.payment_method);
+  
+  // Helpers
+  const hasOutdoorCategory = () => {
+    try {
+      return global?.cart?.order_items?.some(item =>
+        item?.product?.categories?.some(category => category == '10'),
+      );
+    } catch (e) {
+      return false;
+    }
+  };
+  const rawTime = global.cart_delivery_time;
+  const timeText = rawTime
+    ? (typeof rawTime === 'object' ? (rawTime.label || rawTime.value || '') : rawTime)
+    : '';
+  const hasDate = !!global.cart_delivery_date;
+  const hasTime = !!timeText;
+  
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
@@ -62,10 +83,16 @@ const StepFive = ({items, step, stepChanger}) => {
         <Spacer />
         <View style={[styles.methodContainer, {borderWidth: 0}]}>
           <View style={styles.leftView}>
-            <Image source={cod} style={styles.methodImg} />
+            <Image 
+              source={global.payment_method === 'online' ? card : cod} 
+              style={styles.methodImg} 
+            />
           </View>
           <View style={styles.midView}>
-            <Phrase txt={t('cashOnDelivery')} txtStyle={styles.methodTitle} />
+            <Phrase 
+              txt={global.payment_method === 'online' ? t('payOnline') : t('cashOnDelivery')} 
+              txtStyle={styles.methodTitle} 
+            />
           </View>
         </View>
       </View>
@@ -135,40 +162,40 @@ const StepFive = ({items, step, stepChanger}) => {
       </View>
       {/* Shipping Widget */}
       <Spacer />
-      {/* Date Time Widget */}
-      <View style={globalStyles.whiteBg}>
-        <View style={globalStyles.rowView}>
-          <Heading txt={t('deliveryDateTime')} txtStyle={styles.cartHeading} />
-          <TouchableOpacity
-            style={[globalStyles.rowView]}
-            onPress={() => {
-              stepChanger(3);
-            }}>
-            <Image source={edit} style={styles.editImg} />
-            <Phrase txt={t('edit')} txtStyle={styles.editTxt} />
-          </TouchableOpacity>
+      {/* Date/Time Widget: hide for Outdoor; show for others only if selected */}
+      {!hasOutdoorCategory() && (hasDate || hasTime) && (
+        <View style={globalStyles.whiteBg}>
+          <View style={globalStyles.rowView}>
+            <Heading txt={t('deliveryDateTime')} txtStyle={styles.cartHeading} />
+            <TouchableOpacity
+              style={[globalStyles.rowView]}
+              onPress={() => {
+                stepChanger(3);
+              }}>
+              <Image source={edit} style={styles.editImg} />
+              <Phrase txt={t('edit')} txtStyle={styles.editTxt} />
+            </TouchableOpacity>
+          </View>
+          <Spacer />
+          {hasDate && (
+            <View style={[globalStyles.rowView, {justifyContent: 'flex-start'}]}>
+              <Phrase txt={`${t('date')}: `} txtStyle={styles.labelTxt} />
+              <Phrase txt={`${global.cart_delivery_date}`} txtStyle={styles.valueTxt} />
+            </View>
+          )}
+          {hasDate && hasTime && <Spacer />}
+          {hasTime && (
+            <View style={[globalStyles.rowView, {justifyContent: 'flex-start'}]}>
+              <Phrase txt={`${t('timeSlot')}: `} txtStyle={styles.labelTxt} />
+              <Phrase txt={`${timeText}`} txtStyle={styles.valueTxt} />
+            </View>
+          )}
         </View>
-        <Spacer />
-        <View style={[globalStyles.rowView, {justifyContent: 'flex-start'}]}>
-          <Phrase txt={`${t('date')}: `} txtStyle={styles.labelTxt} />
-          <Phrase
-            txt={`${global.cart_delivery_date}`}
-            txtStyle={styles.valueTxt}
-          />
-        </View>
-        <Spacer />
-        <View style={[globalStyles.rowView, {justifyContent: 'flex-start'}]}>
-          <Phrase txt={`${t('timeSlot')}: `} txtStyle={styles.labelTxt} />
-          <Phrase
-            txt={`${global.cart_delivery_time.value}`}
-            txtStyle={styles.valueTxt}
-          />
-        </View>
-      </View>
+      )}
       {/* DateTime Widget */}
       <Spacer />
       {/* Special Widget */}
-      {global.cart_character?.full_image ? (
+      {!hasOutdoorCategory() && global.cart_character?.full_image ? (
         <View style={globalStyles.whiteBg}>
           <View style={globalStyles.rowView}>
             <Heading txt={t('specialDelivery')} txtStyle={styles.cartHeading} />

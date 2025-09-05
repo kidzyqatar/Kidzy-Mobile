@@ -46,13 +46,40 @@ const StepFour = ({}) => {
   const [accountTitle, setAccountTitle] = useState('');
   const [bankName, setBankName] = useState('');
   useEffect(() => {
-    !global.cart_is_sent_to_friend
-      ? dispatch(setPaymentMethod('cod'))
-      : dispatch(setPaymentMethod('online'));
-    !global.cart_is_sent_to_friend
-      ? setDefaultMethod('cod')
-      : setDefaultMethod('online');
-  }, [isFocused]);
+    // Only set default based on cart_is_sent_to_friend on initial load
+    if (!global.cart_is_sent_to_friend) {
+      dispatch(setPaymentMethod('cod'));
+      setDefaultMethod('cod');
+    } else {
+      dispatch(setPaymentMethod('online'));
+      setDefaultMethod('online');
+    }
+  }, []); // Empty dependency array - runs only once
+  
+  // Separate useEffect to sync local state with global state
+  useEffect(() => {
+    // Sync local state with global state when it changes
+    setDefaultMethod(global.payment_method);
+  }, [global.payment_method]); // Add dependency to react to global state changes
+  
+  // Add debugging logs to the TouchableOpacity handlers
+  const handleCODSelection = () => {
+    console.log('🔄 COD selected');
+    setDefaultMethod('cod');
+    dispatch(setPaymentMethod('cod'));
+  };
+  
+  const handleOnlineSelection = () => {
+    console.log('🔄 Online payment selected');
+    setDefaultMethod('online');
+    dispatch(setPaymentMethod('online'));
+    
+    // Add verification
+    setTimeout(() => {
+      console.log('🔍 Payment method after dispatch:', global.payment_method);
+    }, 100);
+  };
+  
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <Spacer />
@@ -73,11 +100,7 @@ const StepFour = ({}) => {
             </View>
             <View style={styles.midView}>
               <Phrase txt={t('cashOnDelivery')} txtStyle={styles.methodTitle} />
-              <TouchableOpacity
-                onPress={() => {
-                  setDefaultMethod('cod');
-                  dispatch(setPaymentMethod('cod'));
-                }}>
+              <TouchableOpacity onPress={handleCODSelection}>
                 <Phrase
                   txt={
                     defaultMethod == 'cod' ? t('default') : t('setAsDefault')
@@ -102,15 +125,11 @@ const StepFour = ({}) => {
             },
           ]}>
           <View style={styles.leftView}>
-            <Image source={cod} style={styles.methodImg} />
+            <Image source={card} style={styles.methodImg} />
           </View>
           <View style={styles.midView}>
             <Phrase txt={t('payOnline')} txtStyle={styles.methodTitle} />
-            <TouchableOpacity
-              onPress={() => {
-                setDefaultMethod('online');
-                dispatch(setPaymentMethod('online'));
-              }}>
+            <TouchableOpacity onPress={handleOnlineSelection}>
               <Phrase
                 txt={
                   defaultMethod == 'online' ? t('default') : t('setAsDefault')

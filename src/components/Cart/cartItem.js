@@ -1,5 +1,5 @@
 import {StyleSheet, Image, View, TouchableOpacity, Alert} from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   MasterLayout,
   BackBar,
@@ -22,87 +22,134 @@ const CartItem = ({item}) => {
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
   const [quantity, setQuantity] = useState(item.quantity);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const deleteItemFromCart = () => {
+  // Sync local quantity with cart item quantity
+  useEffect(() => {
+    setQuantity(item.quantity);
+  }, [item.quantity]);
+
+  const deleteItemFromCart = async () => {
+    if (isUpdating) return;
+    
+    setIsUpdating(true);
     dispatch(setLoader(true));
-    callNonTokenApi(`${config.apiName.deleteItemFromCart}`, 'POST', {
-      id: item.id,
-    })
-      .then(res => {
-        dispatch(setLoader(false));
-        if (res.status == 200) {
-          getCart();
-        } else {
-          Alert.alert('Error!', res.message);
-        }
-      })
-      .catch(error => {
-        dispatch(setLoader(false));
-        console.log(error);
-        setApiFailModal(true);
+    
+    try {
+      const res = await callNonTokenApi(`${config.apiName.deleteItemFromCart}`, 'POST', {
+        id: item.id,
       });
+      
+      dispatch(setLoader(false));
+      setIsUpdating(false);
+      
+      if (res.status == 200) {
+        await getCart();
+      } else {
+        Alert.alert('Error!', res.message);
+      }
+    } catch (error) {
+      dispatch(setLoader(false));
+      setIsUpdating(false);
+      console.log('Delete error:', error);
+      Alert.alert('Error', 'Failed to delete item from cart');
+    }
   };
 
-  const getCart = () => {
+  const getCart = async () => {
     dispatch(setLoader(true));
-    callNonTokenApi(
-      `${config.apiName.getCart}/${global.cart_session_id}`,
-      'GET',
-    )
-      .then(res => {
-        dispatch(setLoader(false));
-        if (res.status == 200) {
-          console.log(res.data.cart.order_items.length);
-          console.log('the cart is', res.data.cart);
-          dispatch(setCart(res.data.cart));
-        } else {
-          Alert.alert('Error!', res.message);
-        }
-      })
-      .catch(error => {
-        dispatch(setLoader(false));
-        console.log(error);
-        setApiFailModal(true);
-      });
+    
+    try {
+      const res = await callNonTokenApi(
+        `${config.apiName.getCart}/${global.cart_session_id}`,
+        'GET',
+      );
+      
+      dispatch(setLoader(false));
+      
+      if (res.status == 200) {
+        console.log('Cart items count:', res.data.cart.order_items.length);
+        console.log('Updated cart:', res.data.cart);
+        dispatch(setCart(res.data.cart));
+      } else {
+        Alert.alert('Error!', res.message);
+      }
+    } catch (error) {
+      dispatch(setLoader(false));
+      console.log('Get cart error:', error);
+      Alert.alert('Error', 'Failed to refresh cart');
+    }
   };
 
-  const addItemTocart = async quantity => {
-    console.log('quantity', quantity);
+  const addItemTocart = async (newQuantity) => {
+    if (isUpdating) return;
+    
+    console.log('🔄 Updating quantity from', item.quantity, 'to', newQuantity);
+    setIsUpdating(true);
     dispatch(setLoader(true));
-    callNonTokenApi(`${config.apiName.addToCart}`, 'POST', {
-      product_id: item.product_id,
-      guest_session_id: global.cart_session_id,
-      quantity: quantity,
-    })
-      .then(res => {
-        dispatch(setLoader(false));
-        if (res.status == 200) {
-          getCart();
-        } else {
-          Alert.alert('Error!', res.message);
-        }
-      })
-      .catch(error => {
-        dispatch(setLoader(false));
-        console.log(error);
-        setApiFailModal(true);
+    
+    try {
+      // First, delete the current item completely
+      const deleteRes = await callNonTokenApi(`${config.apiName.deleteItemFromCart}`, 'POST', {
+        id: item.id,
       });
+      
+      if (deleteRes.status !== 200) {
+        throw new Error('Failed to delete item');
+      }
+      
+      // Then add it back with the exact new quantity
+      const addRes = await callNonTokenApi(`${config.apiName.addToCart}`, 'POST', {
+        product_id: item.product_id,
+        guest_session_id: global.cart_session_id,
+        quantity: parseInt(newQuantity),
+      });
+      
+      dispatch(setLoader(false));
+      setIsUpdating(false);
+      
+      if (addRes.status == 200) {
+        console.log('✅ Quantity set precisely to:', newQuantity);
+        await getCart();
+      } else {
+        Alert.alert('Error!', addRes.message);
+        // Revert quantity on error
+        setQuantity(item.quantity);
+      }
+    } catch (error) {
+      dispatch(setLoader(false));
+      setIsUpdating(false);
+      console.log('❌ Precise update error:', error);
+      Alert.alert('Error', 'Failed to update quantity');
+      // Revert quantity on error
+      setQuantity(item.quantity);
+    }
   };
 
   const incrementQuantity = () => {
-    setQuantity(quantity + 1);
-    addItemTocart(quantity + 1);
+    if (isUpdating) return;
+    
+    const newQuantity = quantity + 1;
+    console.log('➕ Incrementing to:', newQuantity);
+    setQuantity(newQuantity); // Optimistic update
+    addItemTocart(newQuantity);
   };
 
   const decrementQuantity = () => {
+    if (isUpdating) return;
+    
     if (quantity > 1) {
-      setQuantity(quantity - 1);
-      addItemTocart(quantity - 1);
-    }
-    if (quantity - 1 === 0) {
+      const newQuantity = quantity - 1;
+      console.log('➖ Decrementing to:', newQuantity);
+      setQuantity(newQuantity); // Optimistic update
+      addItemTocart(newQuantity);
+    } else {
+      // If quantity is 1, delete the item
+      console.log('🗑️ Deleting item (quantity would be 0)');
       deleteItemFromCart();
     }
   };
+
   return (
     <View style={[globalStyles.rowView, styles.tileHeight]}>
       <View style={styles.leftView}>
@@ -118,26 +165,29 @@ const CartItem = ({item}) => {
             numberOfLines={2}
           />
           <Phrase
-            txt={`QAR ${item.product.price}`}
+            txt={`QAR ${(item.product.price * quantity).toFixed(2)}`}
             txtStyle={styles.itemPrice}
           />
           <View style={styles.calcView}>
             <TouchableOpacity
-              onPress={() => {
-                decrementQuantity();
-              }}>
+              onPress={decrementQuantity}
+              disabled={isUpdating}
+              style={[isUpdating && {opacity: 0.5}]}>
               <Image source={minus} style={styles.calcImg} />
             </TouchableOpacity>
-            <Phrase txt={quantity} txtStyle={styles.calcTxt} />
+            <Phrase txt={quantity.toString()} txtStyle={styles.calcTxt} />
             <TouchableOpacity
-              onPress={() => {
-                incrementQuantity();
-              }}>
+              onPress={incrementQuantity}
+              disabled={isUpdating}
+              style={[isUpdating && {opacity: 0.5}]}>
               <Image source={plus} style={styles.calcImg} />
             </TouchableOpacity>
           </View>
         </View>
-        <TouchableOpacity onPress={deleteItemFromCart}>
+        <TouchableOpacity 
+          onPress={deleteItemFromCart}
+          disabled={isUpdating}
+          style={[isUpdating && {opacity: 0.5}]}>
           <Image source={bin} style={styles.binImage} />
         </TouchableOpacity>
       </View>

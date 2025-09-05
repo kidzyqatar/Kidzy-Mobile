@@ -32,6 +32,7 @@ export default {
     getAddresses: 'get-addresses',
     addAddress: 'add-address',
     addAddressToCart: 'add-order-address',
+    getCharacters: 'characters',
   },
   webviewUrl: {},
 };

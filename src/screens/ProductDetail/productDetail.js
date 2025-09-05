@@ -41,37 +41,30 @@ const ProductDetail = ({route}) => {
   const addItemTocart = async () => {
     console.log(quantity);
     dispatch(setLoader(true));
-
-    callNonTokenApi(`${config.apiName.addToCart}`, 'POST', {
-      product_id: item.id,
-      guest_session_id: global.cart_session_id,
-      quantity: quantity,
-    })
-      .then(res => {
-        dispatch(setCart(res.data));
-        callNonTokenApi(
+  
+    try {
+      const res = await callNonTokenApi(`${config.apiName.addToCart}`, 'POST', {
+        product_id: item.id,
+        guest_session_id: global.cart_session_id,
+        quantity: quantity,
+      });
+      
+      if (res.status == 200) {
+        const cartRes = await callNonTokenApi(
           `${config.apiName.getCart}/${global.cart_session_id}`,
           'GET',
-        )
-          .then(res => {
-            dispatch(setLoader(false));
-
-            console.log(res.data.cart.order_items.length);
-            dispatch(setCart(res.data.cart));
-          })
-          .catch(error => {
-            dispatch(setLoader(false));
-
-            console.log(error);
-            setApiFailModal(true);
-          });
-      })
-      .catch(error => {
-        dispatch(setLoader(false));
-
-        console.log(error);
-        setApiFailModal(true);
-      });
+        );
+        
+        if (cartRes.status == 200) {
+          dispatch(setCart(cartRes.data.cart));
+        }
+      }
+    } catch (error) {
+      console.log(error);
+      Alert.alert('Error', 'Failed to add item to cart');
+    } finally {
+      dispatch(setLoader(false));
+    }
   };
 
   const fetchData = async () => {

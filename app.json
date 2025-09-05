@@ -1,4 +1,9 @@
 {
   "name": "KidzyApp",
-  "displayName": "KidzyApp"
+  "displayName": "KidzyApp",
+  "extra": {
+    "eas": {
+      "projectId": "4658186e-8e68-4d92-a4b8-2e75f0fd169e"
+    }
+  }
 }

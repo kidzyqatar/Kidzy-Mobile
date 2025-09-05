@@ -9,14 +9,12 @@ import * as RootNavigation from '@navigators/RootNavigation';
 
 const CartBar = ({title, showCart = true}) => {
   const global = useSelector(state => state.global);
-  const [cartCount, setCartCount] = useState(
-    global.cart?.order_items?.length ?? 0,
-  );
+  const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
-    if (global.cart?.order_items === undefined && cartCount) return;
-    setCartCount(global.cart?.order_items?.length ?? 0);
-  }, [global.cart]);
+    const count = global.cart?.order_items?.length ?? 0;
+    setCartCount(count);
+  }, [global.cart?.order_items]);
 
   return (
     <View style={styles.mainView}>

@@ -67,6 +67,7 @@ import {
 import {TextInput} from 'react-native-paper';
 import {useTranslation} from 'react-i18next';
 import {useIsFocused} from '@react-navigation/native';
+import {getJSONData, storeJSONData} from '../../../helpers/AsyncStorage';
 
 const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const {t} = useTranslation();
@@ -88,6 +89,82 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
 
   const [openDate, setOpenDate] = useState(false);
 
+  // New state for available characters
+  const [availableCharacters, setAvailableCharacters] = useState([]);
+
+  // Function to permanently book a character for a specific date/time
+  const storeCharacterBooking = async (characterId, date, time) => {
+    try {
+      const timeValue = typeof time === 'object' ? time.value : time;
+      const bookingKey = `${characterId}_${date}_${timeValue}`;
+      
+      // Get existing bookings
+      const existingBookings = await getJSONData('character_bookings') || {};
+      
+      // Add new booking
+      existingBookings[bookingKey] = true;
+      
+      // Store updated bookings
+      await storeJSONData('character_bookings', existingBookings);
+      
+      console.log(`Character ${characterId} permanently booked for ${date} at ${timeValue}`);
+    } catch (error) {
+      console.log('Error storing character booking:', error);
+    }
+  };
+
+  // Function to get available characters with persistent booking check
+  const getAvailableCharacters = async () => {
+    if (global.cart_delivery_date && global.cart_delivery_time) {
+      const timeValue = typeof global.cart_delivery_time === 'object'
+        ? global.cart_delivery_time.value
+        : global.cart_delivery_time;
+
+      callNonTokenApi(
+        `${config.apiName.getCharacters}/available?date=${global.cart_delivery_date}&time=${timeValue}`,
+        'GET'
+      )
+        .then(res => {
+          if (res.status === 200) {
+            setAvailableCharacters(res.data.characters);
+          }
+        })
+        .catch(async error => {
+          console.log('Characters availability endpoint not found, using fallback logic');
+          // Fallback: Filter characters based on persistent booking data
+          if (global.allCharacters && global.allCharacters.length > 0) {
+            // Get stored bookings from AsyncStorage
+            const storedBookings = await getJSONData('character_bookings') || {};
+            
+            const availableChars = global.allCharacters.filter(character => {
+              // Create unique booking key for this character, date, and time
+              const bookingKey = `${character.id}_${global.cart_delivery_date}_${timeValue}`;
+              
+              // Check if this character is permanently booked for this date/time
+              const isPermanentlyBooked = storedBookings[bookingKey] === true;
+              
+              // Also check current cart items for immediate bookings
+              const isCurrentlyBooked = global?.cart?.order_items?.some(item => {
+                const itemDeliveryDate = item.delivery_date || global.cart_delivery_date;
+                const itemDeliveryTime = typeof item.delivery_time === 'object' 
+                  ? item.delivery_time.value 
+                  : item.delivery_time || (typeof global.cart_delivery_time === 'object' 
+                    ? global.cart_delivery_time.value 
+                    : global.cart_delivery_time);
+                
+                return item.character_id === character.id && 
+                       itemDeliveryDate === global.cart_delivery_date && 
+                       itemDeliveryTime === timeValue;
+              });
+              
+              return !isPermanentlyBooked && !isCurrentlyBooked;
+            });
+            
+            setAvailableCharacters(availableChars);
+          }
+        });
+    }
+  };
   //billing
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -110,21 +187,44 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const [quantityBalloon, setQuantityBalloon] = useState(0);
 
   const [deliveryTimes, setDeliveryTimes] = useState([]);
+  // Add initialization useEffect to sync local state with global state
   useEffect(() => {
     if (isFocused) {
-      dispatch(setSelectedDeliveryDate(''));
-      setDeliveryDate('');
+      // Initialize local state from global state if it exists
+      if (global.cart_delivery_date) {
+        setDeliveryDate(global.cart_delivery_date);
+        // Also set the calcDate for the DatePicker
+        setCalcDate(new Date(global.cart_delivery_date));
+      }
+      if (global.cart_delivery_time) {
+        setDeliveryTime(global.cart_delivery_time);
+      }
       getTimeSlotsCapacity();
     }
   }, [isFocused]);
+
+  // Keep the time clearing effect but only when date changes
   useEffect(() => {
-    if (isFocused) {
+    if (global?.cart_delivery_date) {
+      // Only clear time when date changes, not on focus
       dispatch(setSelectedDeliveryTime(''));
       setDeliveryTime('');
-
       getTimeSlotsCapacity();
     }
   }, [global?.cart_delivery_date]);
+  // Add this new useEffect to call getAvailableCharacters when date changes
+  useEffect(() => {
+    if (global.cart_delivery_date && global.cart_delivery_time) {
+      getAvailableCharacters();
+    }
+  }, [global.cart_delivery_date]);
+  // Add this new useEffect to call getAvailableCharacters when time changes
+  useEffect(() => {
+    if (global.cart_delivery_date && global.cart_delivery_time) {
+      getAvailableCharacters();
+    }
+  }, [global.cart_delivery_time]);
+
   useEffect(() => {
     isFocused && getAddresses();
   }, [isFocused]);
@@ -143,7 +243,31 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
     dispatch(setSendtoFriend(sameAsBilling));
   };
 
-  const characters = global.allCharacters;
+  // Local state for characters with availability status
+  const [characters, setCharacters] = useState([]);
+
+  // Add this useEffect to merge available characters with all characters
+  useEffect(() => {
+    if (global.allCharacters) {
+      if (availableCharacters.length > 0) {
+        // Create a map of available character IDs for quick lookup
+        const availableIds = new Set(availableCharacters.map(char => char.id));
+        // Update the characters array with availability status
+        const updatedCharacters = global.allCharacters.map(character => ({
+          ...character,
+          available: availableIds.has(character.id)
+        }));
+        setCharacters(updatedCharacters);
+      } else {
+        // If no available characters, mark all as unavailable
+        const updatedCharacters = global.allCharacters.map(character => ({
+          ...character,
+          available: false
+        }));
+        setCharacters(updatedCharacters);
+      }
+    }
+  }, [availableCharacters, global.allCharacters]);
 
   const addShippingAddress = async () => {
     refRBSheetFriendAddress.current.close();
@@ -394,10 +518,9 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
 
   const BillingAddresses = () => {
     return (
-      <FlatList
-        data={addresses}
-        renderItem={({item}) => (
-          <View style={[styles.addressContainer]}>
+      <ScrollView>
+        {addresses && addresses.map((item, index) => (
+          <View key={item.id || index} style={[styles.addressContainer]}>
             <View
               style={[
                 globalStyles.row,
@@ -443,17 +566,16 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
               </View>
             </View>
           </View>
-        )}
-      />
+        ))}
+      </ScrollView>
     );
   };
 
   const ShippingAddresses = () => {
     return (
-      <FlatList
-        data={addresses}
-        renderItem={({item}) => (
-          <View style={[styles.addressContainer]}>
+      <ScrollView>
+        {addresses && addresses.map((item, index) => (
+          <View key={item.id || index} style={[styles.addressContainer]}>
             <View
               style={[
                 globalStyles.row,
@@ -499,8 +621,8 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
               </View>
             </View>
           </View>
-        )}
-      />
+        ))}
+      </ScrollView>
     );
   };
 
@@ -718,6 +840,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
       {/* Timing Section */}
       <Spacer />
       {/* Special delivery section */}
+      {!hasCategory10OutDoor() && (
       <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
         <Phrase
           txt={t('specialInstructionsOptional')}
@@ -733,30 +856,60 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
         />
         <Spacer />
 
-        <FlatList
-          horizontal={true}
-          scrollEnabled={true}
-          data={characters}
-          renderItem={({item}) => (
-            <View style={{alignItems: 'center'}}>
+        <ScrollView horizontal={true} scrollEnabled={true}>
+          {characters && characters.map(item => (
+            <View key={item.id} style={{alignItems: 'center'}}>
               <TouchableOpacity
-                key={item.id}
                 style={[
                   styles.character,
                   {
                     borderWidth: character == item.id ? 3 : 1,
                     borderColor:
                       character == item.id ? COLORS.secondary : COLORS.grayBg,
+                    opacity: item.available ? 1 : 0.5,
                   },
                 ]}
-                onPress={() => {
-                  setCharacter(item.id);
-                  dispatch(setSelectedCharacter(item));
+                onPress={async () => {
+                  if (item.available) {
+                    setCharacter(item.id);
+                    dispatch(setSelectedCharacter(item));
+                    // Store the booking permanently when character is selected
+                    await storeCharacterBooking(
+                      item.id,
+                      global.cart_delivery_date,
+                      global.cart_delivery_time
+                    );
+                  } else {
+                    Alert.alert('Unavailable', 'This character is not available for the selected date and time.');
+                  }
                 }}>
                 <Image
                   source={{uri: item.full_image}}
-                  style={styles.characterImg}
+                  style={[
+                    styles.characterImg,
+                    {opacity: item.available ? 1 : 0.5}
+                  ]}
                 />
+                {!item.available && (
+                  <View style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    backgroundColor: 'rgba(0,0,0,0.3)',
+                    borderRadius: 10,
+                  }}>
+                    <Text style={{
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: 12,
+                      textAlign: 'center'
+                    }}>Not Available</Text>
+                  </View>
+                )}
               </TouchableOpacity>
               <Phrase
                 txt={`QAR ${item.price}`}
@@ -764,13 +917,14 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
                   ...FONTS.body5_bold,
                   color:
                     character == item.id ? COLORS.secondary : COLORS.txtGray,
+                  opacity: item.available ? 1 : 0.5,
                 }}
               />
             </View>
-          )}
-          keyExtractor={item => item.id}
-        />
+          ))}
+        </ScrollView>
       </View>
+      )}
       {/* Special delivery section */}
       <Spacer />
       {/* Special balloons section */}
@@ -929,6 +1083,10 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
           setDeliveryDate(value);
           dispatch(setSelectedDeliveryDate(value));
           console.log(deliveryDate, global.cart_delivery_date);
+          // Call getAvailableCharacters if time is already selected
+          if (global.cart_delivery_time) {
+            getAvailableCharacters();
+          }
         }}
         onCancel={() => {
           setOpenDate(false);
@@ -975,6 +1133,10 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
               onPress={() => {
                 setDeliveryTime(element);
                 dispatch(setSelectedDeliveryTime(element.value));
+                // Call getAvailableCharacters if date is already selected
+                if (global.cart_delivery_date) {
+                  setTimeout(() => getAvailableCharacters(), 100);
+                }
               }}>
               <Phrase
                 txt={element.label}
@@ -999,6 +1161,10 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
             onPress={() => {
               dispatch(setSelectedDeliveryTime(deliveryTime));
               refRBSheetTimings.current.close();
+              // Call getAvailableCharacters after setting time
+              if (global.cart_delivery_date) {
+                setTimeout(() => getAvailableCharacters(), 100);
+              }
             }}
           />
         </View>

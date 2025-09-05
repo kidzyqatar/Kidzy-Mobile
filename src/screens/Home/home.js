@@ -22,6 +22,7 @@ import {
   Spacer,
   Hr,
   ProductWidget,
+  Banner,
 } from '@components';
 import {menuIcon, whiteLogo, cart, search} from '@constants/icons';
 import {
@@ -213,6 +214,14 @@ export default function Home() {
     }
   };
 
+  const handleBannerPress = (banner) => {
+    if (banner.product_id) {
+      RootNavigation.navigate('ProductDetail', {id: banner.product_id});
+    } else if (banner.category_slug) {
+      RootNavigation.navigate('ProductListing', {slug: banner.category_slug});
+    }
+  };
+
   const handleBrandPress = () => {
     console.log('Pressed!');
     dispatch(setActiveTab(2));
@@ -227,27 +236,6 @@ export default function Home() {
     // Add your press event handling logic here
   };
 
-  const handleCategoryViewAll = partialSlug => {
-    let category = categories.find(cat => cat.slug.includes(partialSlug));
-    if (!category) {
-      category = topCategories.find(cat => cat.slug.includes(partialSlug));
-    }
-
-    // TODO: Remove this hardcoded check after most-selling category has been added to the homeAPI
-    if (partialSlug === 'most-selling') {
-      category = {
-        name: 'Most Selling',
-        slug: 'category-most-selling',
-      };
-    }
-
-    RootNavigation.navigate('ProductListing', {
-      namE: category.name,
-      slug: category.slug,
-      type: 'category',
-    });
-  };
-
   return (
     <MasterLayout
       bgColor={COLORS.bgGray}
@@ -258,13 +246,14 @@ export default function Home() {
           <View style={styles.menuBar}>
             <View style={styles.menuIconImg}>
               <View style={styles.languageSwitch}>
-                <Text style={styles.languageText}>{language}</Text>
+                <Text>{language}</Text>
                 <Switch
                   onValueChange={lang => {
                     dispatch(setLoader(true));
                     toggleLanguage(lang);
                   }}
                   value={language === 'EN'}
+                  // thumbColor={'#f5dd4b'}
                 />
               </View>
             </View>
@@ -287,14 +276,12 @@ export default function Home() {
           <SearchTextField />
         </View>
       }>
-      {/* Top Banner */}
-      <View style={styles.bannerContainer}>
-        <ImageBackground
-          source={topBanner}
-          style={styles.bannerImg}></ImageBackground>
-        <Text style={styles.bannerText}>{t('rampageText')}</Text>
-      </View>
-      {/* Top Banner */}
+      {/* Dynamic Top Banner (Slider) */}
+      <Banner 
+        type="Slider" 
+        onPress={handleBannerPress}
+        style={styles.bannerContainer}
+      />
 
       {/* Categories */}
       {topCategories == null ? null : (
@@ -341,9 +328,6 @@ export default function Home() {
       <View style={styles.contentView}>
         <View style={styles.headingView}>
           <Heading txt={t('newArrivals')} txtStyle={styles.heading} />
-          <Pressable onPress={() => handleCategoryViewAll('new-arrivals')}>
-            <Text style={styles.allLink}>{t('viewAll')}</Text>
-          </Pressable>
         </View>
         <Spacer />
         <FlatList
@@ -365,9 +349,6 @@ export default function Home() {
       <View style={styles.contentView}>
         <View style={styles.headingView}>
           <Heading txt={t('mostSelling')} txtStyle={styles.heading} />
-          <Pressable onPress={() => handleCategoryViewAll('most-selling')}>
-            <Text style={styles.allLink}>{t('viewAll')}</Text>
-          </Pressable>
         </View>
         <Spacer />
         <FlatList
@@ -385,20 +366,17 @@ export default function Home() {
       </View>
       {/* Most Selling*/}
 
-      {/* Medium Banner */}
-      <View style={styles.bannerContainer}>
-        <Image source={mediumBanner} style={styles.bannerImg} />
-        <Text style={styles.bannerText}>{t('allNewLegoesText')}</Text>
-      </View>
-      {/* Medium Banner */}
+      {/* Dynamic Middle Banner */}
+      <Banner 
+        type="Middle" 
+        onPress={handleBannerPress}
+        style={styles.bannerContainer}
+      />
 
       {/* For Boys */}
       <View style={styles.contentView}>
         <View style={styles.headingView}>
           <Heading txt={t('forBoys')} txtStyle={styles.heading} />
-          <Pressable onPress={() => handleCategoryViewAll('boys-toys')}>
-            <Text style={styles.allLink}>{t('viewAll')}</Text>
-          </Pressable>
         </View>
         <Spacer />
         <FlatList
@@ -420,9 +398,6 @@ export default function Home() {
       <View style={styles.contentView}>
         <View style={styles.headingView}>
           <Heading txt={t('forGirls')} txtStyle={styles.heading} />
-          <Pressable onPress={() => handleCategoryViewAll('girls-toys')}>
-            <Text style={styles.allLink}>{t('viewAll')}</Text>
-          </Pressable>
         </View>
         <Spacer />
         <FlatList
@@ -439,7 +414,11 @@ export default function Home() {
         />
       </View>
       {/* For Girls */}
-
+<Banner 
+        type="Bottom" 
+        onPress={handleBannerPress}
+        style={styles.bannerContainer}
+      />
       {/* For Brands */}
       <View style={styles.contentView}>
         <View style={styles.headingView}>

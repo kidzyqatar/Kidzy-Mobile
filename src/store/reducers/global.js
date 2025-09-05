@@ -31,6 +31,10 @@ const initialState = {
   cart_character: null,
   cart_delivery_date: '',
   cart_delivery_time: '',
+  
+  // Add guest information
+  guest_email: '',
+  guest_mobile: '',
 };
 const globalSlice = createSlice({
   name: 'global',
@@ -126,7 +130,16 @@ const globalSlice = createSlice({
     setCartCalculations: (state, action) => {
       return {...state, cart_calculation: action.payload};
     },
-  },
+    setGuestEmail: (state, action) => {
+      return {...state, guest_email: action.payload};
+    },
+    setGuestMobile: (state, action) => {
+      return {...state, guest_mobile: action.payload};
+    },
+    clearGuestInfo: (state) => {
+      return {...state, guest_email: '', guest_mobile: ''};
+    },
+},
 });
 
 export const {
@@ -157,5 +170,8 @@ export const {
   setSelectedDeliveryDate,
   setSameAsBillingAddress,
   setCartCalculations,
+  setGuestEmail,
+  setGuestMobile,
+  clearGuestInfo,
 } = globalSlice.actions;
 export default globalSlice.reducer;

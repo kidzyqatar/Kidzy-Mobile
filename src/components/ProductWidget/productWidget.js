@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Alert,
   Image,
@@ -23,6 +23,9 @@ const ProductWidget = ({item}) => {
   const {width: screenWidth} = useWindowDimensions();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
+  
+  // Add this missing state declaration
+  const [apiFailModal, setApiFailModal] = useState(false);
 
   const addItemTocart = async () => {
     dispatch(setLoader(true));
@@ -42,8 +45,8 @@ const ProductWidget = ({item}) => {
             'GET',
           )
             .then(res => {
-              dispatch(setLoader(false));
               if (res.status == 200) {
+                dispatch(setLoader(false));
                 console.log(res.data.cart.order_items.length);
                 console.log('res.data.cart', res.data.cart);
                 dispatch(setCart(res.data.cart));
@@ -57,7 +60,6 @@ const ProductWidget = ({item}) => {
               setApiFailModal(true);
             });
         } else {
-          dispatch(setLoader(false));
           Alert.alert('Error!', res.message);
         }
       })

@@ -42,8 +42,7 @@
   "register": "اشتراك",
   "email": "بريد إلكتروني",
   "password": "كلمة المرور",
-  "notAMember": "ليس عضوا؟",
-  "alreadyAMember": "بالفعل عضوا؟",
+  "alreadyAMember": "ليس عضوا؟",
   "signup": "اشتراك",
   "continueWithGoogle": "تواصل مع جوجل",
   "fullName": "الاسم الكامل",
@@ -175,6 +174,13 @@
   "emptyCart": "تفريغ السلة",
   "pleaseAddItemsToYourCart": "يرجى إضافة عناصر إلى سلتك",
   "productDetails": "تفاصيل المنتج",
-  "description": "وصف",
-  "serverError": "خطأ في الخادم"
+  "welcomeToKidzy": "مرحباً بكم في كيدزي",
+  "discoverAmazingToys": "اكتشف ألعاباً مذهلة لأطفالك الصغار",
+  "buyNow": "اشتري الآن",
+  "exploreBrands": "استكشف العلامات التجارية",
+  "welcomeToKidzy": "مرحباً بكم في كيدزي",
+  "discoverAmazingToys": "اكتشف ألعاباً مذهلة لأطفالك الصغار",
+  "exploreOurCollection": "استكشف مجموعتنا",
+  "specialOffers": "عروض خاصة",
+  "description": "وصف"
 }

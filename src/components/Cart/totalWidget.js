@@ -7,7 +7,7 @@ import {chevron} from '@constants/icons';
 import {useSelector} from 'react-redux';
 import {useTranslation} from 'react-i18next';
 
-const TotalWidget = ({calculations}) => {
+const TotalWidget = ({calculations, onCheckoutPress}) => {
   const {t} = useTranslation();
   const global = useSelector(state => state.global);
   return (
@@ -89,6 +89,7 @@ const TotalWidget = ({calculations}) => {
               btnColor={COLORS.primary}
               borderColor={COLORS.primary}
               btnStyle={styles.continueBtn}
+              onPress={onCheckoutPress}
             />
           </View>
         </View>
