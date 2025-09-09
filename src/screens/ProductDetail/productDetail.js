@@ -43,10 +43,16 @@ const ProductDetail = ({route}) => {
     dispatch(setLoader(true));
   
     try {
+      // Check if item already exists in cart
+      const existingItem = global?.cart?.order_items?.find(
+        x => x.product_id === item.id,
+      );
+      
       const res = await callNonTokenApi(`${config.apiName.addToCart}`, 'POST', {
         product_id: item.id,
         guest_session_id: global.cart_session_id,
-        quantity: quantity,
+        // If item exists, set total quantity, otherwise use selected quantity
+        quantity: existingItem ? existingItem.quantity + quantity : quantity,
       });
       
       if (res.status == 200) {

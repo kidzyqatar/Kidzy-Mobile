@@ -12,8 +12,11 @@ const CartBar = ({title, showCart = true}) => {
   const [cartCount, setCartCount] = useState(0);
 
   useEffect(() => {
-    const count = global.cart?.order_items?.length ?? 0;
-    setCartCount(count);
+    // Calculate total quantity instead of just counting items
+    const totalQuantity = global.cart?.order_items?.reduce((total, item) => {
+      return total + (item.quantity || 0);
+    }, 0) ?? 0;
+    setCartCount(totalQuantity);
   }, [global.cart?.order_items]);
 
   return (

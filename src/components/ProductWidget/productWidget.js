@@ -25,6 +25,7 @@ const ProductWidget = ({item}) => {
   const dispatch = useDispatch();
   
   // Add this missing state declaration
+  
   const [apiFailModal, setApiFailModal] = useState(false);
 
   const addItemTocart = async () => {
@@ -32,9 +33,11 @@ const ProductWidget = ({item}) => {
     const oldQuantity = global?.cart?.order_items?.find(
       x => x.product_id === item.id,
     )?.quantity;
+    
     callNonTokenApi(`${config.apiName.addToCart}`, 'POST', {
       product_id: item.id,
       guest_session_id: global.cart_session_id,
+      // Fix: Change 'oldQuantity + 0' to 'oldQuantity + 1'
       quantity: oldQuantity ? oldQuantity + 1 : 1,
     })
       .then(res => {

@@ -131,7 +131,11 @@ export default function Home() {
   }, [global.reload]);
 
   useEffect(() => {
-    setCartCount(global.cart?.order_items?.length ?? 0);
+    // Calculate total quantity instead of just counting items
+    const totalQuantity = global.cart?.order_items?.reduce((total, item) => {
+      return total + (item.quantity || 0);
+    }, 0) ?? 0;
+    setCartCount(totalQuantity);
     console.log('I am called home');
   }, [global.cart]);
 
@@ -142,7 +146,11 @@ export default function Home() {
       .then(res => {
         dispatch(setLoader(false));
         console.log(res.data.cart?.order_items?.length);
-        setCartCount(res.data.cart?.order_items?.length ?? 0);
+        // Calculate total quantity instead of just counting items
+        const totalQuantity = res.data.cart?.order_items?.reduce((total, item) => {
+          return total + (item.quantity || 0);
+        }, 0) ?? 0;
+        setCartCount(totalQuantity);
         dispatch(setCart(res.data.cart));
       })
       .catch(error => {
