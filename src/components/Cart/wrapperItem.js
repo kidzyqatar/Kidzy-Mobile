@@ -501,14 +501,39 @@ const WrapperItem = ({item, getCart}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [whichImage, setWhichImage] = useState(null);
 
-  const hasOutdoorCategory = () =>
-    item?.product?.categories?.some(category => category == '10');
+  const hasOutdoorCategory = () => {
+    // Handle both categories array and category_id fallback
+    if (item?.product?.categories && item?.product?.categories.length > 0) {
+      return item.product.categories.some(category => category == '10');
+    }
+    return item?.product?.category_id == '10';
+  };
 
-  const hasPartyCategory = () =>
-    item?.product?.categories?.some(category => category == '15');
+  const hasPartyCategory = () => {
+    if (item?.product?.categories && item?.product?.categories.length > 0) {
+      return item.product.categories.some(category => category == '15');
+    }
+    return item?.product?.category_id == '15';
+  };
 
-  const shouldHideGiftWrapper = hasOutdoorCategory() || hasPartyCategory();
+  const hasCakesCategory = () => {
+    if (item?.product?.categories && item?.product?.categories.length > 0) {
+      return item.product.categories.some(category => 
+        ['11', '12', '13', '14'].includes(category)
+      );
+    }
+    return ['11', '12', '13', '14'].includes(item?.product?.category_id);
+  };
 
+  // Updated logic: Hide gift wrapper only for outdoor and cakes categories
+  const shouldHideGiftWrapper = hasOutdoorCategory() || hasCakesCategory();
+
+  // Debug logging
+  console.log('Product categories:', item?.product?.categories);
+  console.log('Product category_id:', item?.product?.category_id);
+  console.log('Has outdoor:', hasOutdoorCategory());
+  console.log('Has cakes:', hasCakesCategory());
+  console.log('Should hide wrapper:', shouldHideGiftWrapper);
   const toggleModal = () => setModalVisible(!modalVisible);
   const toggleWrapperSwitch = () => setWrapperSwitch(!wrapperSwitch);
   const toggleCardSwitch = () => setCardSwitch(!cardSwitch);
@@ -895,5 +920,13 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     alignItems: 'center',
+  },
+  closeButton: {
+    alignSelf: 'flex-end',
+    marginTop: 10,
+  },
+  closeButtonText: {
+    color: 'blue',
+    fontSize: 16,
   },
 });

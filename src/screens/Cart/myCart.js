@@ -333,93 +333,95 @@ const MyCart = () => {
 
   const calculateTotal = (ballons = 0) => {
     // Add this check to prevent calculations on empty cart
-    if (!global.cart || !global.cart.order_items || global.cart.order_items.length === 0) {
-      console.log('Skipping calculation - cart is empty');
+    if (!global.cart?.order_items || global.cart.order_items.length === 0) {
+      setCalculations({
+        subtotal: 0,
+        wrapper: 0,
+        specialDelivery: 0,
+        balloons: 0,
+        shipping: 0,
+        discount: 0,
+        grandTotal: 0,
+      });
       return;
     }
-    
-    console.log('i am called herererererererererererererererererererererere');
-    var total = 0;
+
+    var subtotal = 0;
+    var wrapper = 0;
     var specialDelivery = 0;
-    var wrapperIDs = [];
-    var discount = 0;
     var ballonCharges = 0;
-    setItems(global.cart?.order_items ?? []);
-    global.cart?.order_items?.map((elem, index) => {
-      total = elem.total_price + total;
-      if (elem.details?.wrapper_id != null) {
-        wrapperIDs.push(elem.details?.wrapper_id);
-      }
+    var shipping = 0;
+    var discount = 0;
+    var grandTotal = 0;
+
+    global.cart?.order_items?.forEach(item => {
+      subtotal += parseFloat(item.total_price);
+      wrapper += parseFloat(item.wrapper_price);
+      specialDelivery += parseFloat(item.special_delivery_price);
     });
-    specialDelivery = Number(global.cart_character?.price ?? 0);
-    ballonCharges = Number(
-      (global.balloon_charges ?? 0) * global.cart_ballons_count,
-    );
-    var grandSum =
-      total +
-      specialDelivery +
-      wrapperIDs.length * 10 +
-      ballonCharges +
-      Number(global.shipping_charges) +
-      Number(global.tax);
 
-    // Apply discount calculation
-    if (global.cart?.coupon != null) {
-      if (global.cart.coupon.amount) discount = global.cart.coupon.amount;
+    ballonCharges = global.cart_ballons_count * 5;
+    shipping = global.cart?.shipping_charges || 0;
+    discount = global.cart?.discount_amount || 0;
+    grandTotal = subtotal + wrapper + specialDelivery + ballonCharges + shipping - discount;
+
+    setCalculations({
+      subtotal: subtotal.toFixed(2),
+      wrapper: wrapper.toFixed(2),
+      specialDelivery: specialDelivery.toFixed(2),
+      balloons: ballonCharges.toFixed(2),
+      shipping: shipping.toFixed(2),
+      discount: discount.toFixed(2),
+      grandTotal: grandTotal.toFixed(2),
+    });
+  };
+
+  // Add this function inside the MyCart component
+  const getStep2Title = () => {
+    const cartItems = global.cart?.order_items || [];
     
-      if (global.cart.coupon.percentage) {
-        const discountPercentage =
-          grandSum * (global.cart?.coupon.percentage / 100);
-        discount = global.cart.coupon.amount
-          ? Math.min(discountPercentage, global.cart.coupon.amount)
-          : discountPercentage;
-      }
+    if (cartItems.length === 0) {
+      return t('Add Gift Wrapper'); // Default when cart is empty
     }
+    
+    // Check if all items are outdoor or cakes categories
+    const allItemsAreOutdoorOrCakes = cartItems.every(item => {
+      const isOutdoor = item?.product?.categories?.some(cat => cat == '10') || 
+                       item?.product?.category_id == '10';
+      const isCakes = item?.product?.categories?.some(cat => 
+                       ['11', '12', '13', '14'].includes(cat)) || 
+                     ['11', '12', '13', '14'].includes(item?.product?.category_id);
+      return isOutdoor || isCakes;
+    });
 
-    // ✅ Fixed: Apply discount only once and convert to fixed decimal
-    grandSum = Number(grandSum - discount).toFixed(2);
-    // Remove this duplicate line that was causing double subtraction:
-    // grandSum = grandSum - discount; // ❌ This line should be removed
-    discount = Number(discount).toFixed(2);
-
-    setStep(step);
-    const newCalculations = {
-      subtotal: total,
-      grandTotal: grandSum,
-      specialDelivery: specialDelivery,
-      wrapper: wrapperIDs.length * 10,
-      discount: discount,
-      balloons: ballonCharges,
-      shipping: global.shipping_charges,
-    };
-
-    setCalculations(newCalculations);  // Update local state
-    dispatch(setCartCalculations(newCalculations));  // Update Redux state
+    // Return 'Add Gift Card' only when ALL items are outdoor/cakes
+    // Otherwise return 'Add Gift Wrapper' (default for mixed carts or other products)
+    return allItemsAreOutdoorOrCakes ? t('Add Gift Card') : t('Add Gift Wrapper');
   };
 
   useEffect(() => {
     switch (step) {
       case 1:
-        setTitle('My Cart');
+        setTitle(t('My Cart'));
         break;
       case 2:
-        setTitle('Add Gift Wrapper');
+        setTitle(getStep2Title());
         calculateTotal(0);
         break;
       case 3:
-        setTitle('Address & Delivery');
+        setTitle(t('Address & Delivery'));
         break;
       case 4:
-        setTitle('Payment');
+        setTitle(t('Payment'));
         break;
       case 5:
-        setTitle('Confirmation');
+        setTitle(t('Confirmation'));
         break;
       default:
-        setTitle('My Cart');
+        setTitle(t('My Cart'));
         break;
     }
-  }, [step]);
+  }, [step, global.cart]); // Add global.cart as dependency to update when cart changes
 
   const incrementBallonQuantity = quantity => {
     // console.log(quantity)

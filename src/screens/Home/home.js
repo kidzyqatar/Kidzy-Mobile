@@ -124,7 +124,10 @@ export default function Home() {
     dispatch(setLoader(true));
     const value = generateRandomString(20);
     saveIfNotExists('cart_session_random_value', value);
-
+    
+    // Load persisted guest info
+    loadGuestInfo();
+    
     fetchData();
     fetchHomeData();
     getProfile();
@@ -466,3 +469,19 @@ export default function Home() {
     </MasterLayout>
   );
 }
+
+const loadGuestInfo = async () => {
+  try {
+    const guestEmail = await AsyncStorage.getItem('guest_email');
+    const guestMobile = await AsyncStorage.getItem('guest_mobile');
+    
+    if (guestEmail) {
+      dispatch(setGuestEmail(guestEmail));
+    }
+    if (guestMobile) {
+      dispatch(setGuestMobile(guestMobile));
+    }
+  } catch (error) {
+    console.log('Error loading guest info:', error);
+  }
+};
