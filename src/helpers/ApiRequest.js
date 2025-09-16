@@ -24,31 +24,54 @@ const getAccessToken = async () => {
   return token;
 };
 
+const pendingRequests = new Map();
+
 export const callNonTokenApi = async (url, method, params) => {
-  const token = await getAccessToken();
-  if (token === '') {
-    console.log('without token', url, method);
-    var response = await instance({
-      url: url,
-      method: method,
-      data: params,
-    });
-    const value = isFailedResponse(response);
-    return !value ? response.data : null;
-  } else {
-    console.log('with token', url, method);
-    var response = await instance({
-      url: url,
-      method: method,
-      data: params,
-      headers: {
-        authorization: 'Bearer ' + token,
-      },
-    });
-    // console.log(response.data)
-    const value = isFailedResponse(response);
-    return !value ? response.data : null;
+  // Create a unique key for this request
+  const requestKey = `${method}:${url}:${JSON.stringify(params)}`;
+  
+  // If this exact request is already pending, return the existing promise
+  if (pendingRequests.has(requestKey)) {
+    console.log('🔄 Deduplicating request:', requestKey);
+    return pendingRequests.get(requestKey);
   }
+  
+  const token = await getAccessToken();
+  
+  const requestPromise = (async () => {
+    try {
+      if (token === '') {
+        console.log('without token', url, method);
+        var response = await instance({
+          url: url,
+          method: method,
+          data: params,
+        });
+        const value = isFailedResponse(response);
+        return !value ? response.data : null;
+      } else {
+        console.log('with token', url, method);
+        var response = await instance({
+          url: url,
+          method: method,
+          data: params,
+          headers: {
+            authorization: 'Bearer ' + token,
+          },
+        });
+        const value = isFailedResponse(response);
+        return !value ? response.data : null;
+      }
+    } finally {
+      // Remove from pending requests when done
+      pendingRequests.delete(requestKey);
+    }
+  })();
+  
+  // Store the promise
+  pendingRequests.set(requestKey, requestPromise);
+  
+  return requestPromise;
 };
 
 export const callNonTokenApiAddress = async (url, method, params) => {

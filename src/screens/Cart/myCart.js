@@ -168,21 +168,21 @@ const MyCart = () => {
         
         // Step 1: Complete cart with all order details (like web version)
         const completeCartPayload = {
-          guest_session_id: global.cart_session_id, // Add this missing field
+          guest_session_id: global.cart_session_id,
           status: "PENDING",
           order_id: global.cart.id,
           subtotal: calculations.subtotal,
-          discount: Number(calculations.discount).toFixed(2),
+          discount: calculations.discount,
           shipping_cost: calculations.shipping,
-          tax: global.tax || 0,
-          grand_total: Number(calculations.grandTotal).toFixed(2),
+          tax: (global.tax || 0).toString(),
+          grand_total: calculations.grandTotal,
           special_delivery_cost: calculations.specialDelivery,
           balloon_cost: calculations.balloons,
           wrapper_cost: calculations.wrapper,
           delivery_date: global.cart_delivery_date,
           character_id: global.cart_character?.id || null,
           payment_method: "DIBSY",
-          source: 'mobile_app', // Add this line to fix the admin panel source display
+          source: 'mobile_app',
         };
         
         console.log('🔍 Complete Cart Payload:', JSON.stringify(completeCartPayload, null, 2));
@@ -250,15 +250,15 @@ const MyCart = () => {
         const response = await callNonTokenApi(config.apiName.completeCart, 'POST', {
           guest_session_id: global.cart_session_id,
           payment_method: global.payment_method,
-          status: 'PENDING', // Changed from 'COMPLETED' to 'PENDING'
+          status: 'PENDING',
           order_id: global.cart.id,
           source: 'mobile_app',
-          // Add all the missing calculation fields
+          // Fix: Use calculations values directly since they're already formatted strings
           subtotal: calculations.subtotal,
-          discount: Number(calculations.discount).toFixed(2),
+          discount: calculations.discount,
           shipping_cost: calculations.shipping,
-          tax: global.tax || 0,
-          grand_total: Number(calculations.grandTotal).toFixed(2),
+          tax: (global.tax || 0).toString(),
+          grand_total: calculations.grandTotal,
           special_delivery_cost: calculations.specialDelivery,
           balloon_cost: calculations.balloons,
           wrapper_cost: calculations.wrapper,
@@ -335,13 +335,13 @@ const MyCart = () => {
     // Add this check to prevent calculations on empty cart
     if (!global.cart?.order_items || global.cart.order_items.length === 0) {
       setCalculations({
-        subtotal: 0,
-        wrapper: 0,
-        specialDelivery: 0,
-        balloons: 0,
-        shipping: 0,
-        discount: 0,
-        grandTotal: 0,
+        subtotal: '0.00',
+        wrapper: '0.00',
+        specialDelivery: '0.00',
+        balloons: '0.00',
+        shipping: '0.00',
+        discount: '0.00',
+        grandTotal: '0.00',
       });
       return;
     }
@@ -355,14 +355,14 @@ const MyCart = () => {
     var grandTotal = 0;
 
     global.cart?.order_items?.forEach(item => {
-      subtotal += parseFloat(item.total_price);
-      wrapper += parseFloat(item.wrapper_price);
-      specialDelivery += parseFloat(item.special_delivery_price);
+      subtotal += parseFloat(item.total_price || 0);
+      wrapper += parseFloat(item.wrapper_price || 0);
+      specialDelivery += parseFloat(item.special_delivery_price || 0);
     });
 
-    ballonCharges = global.cart_ballons_count * 5;
-    shipping = global.cart?.shipping_charges || 0;
-    discount = global.cart?.discount_amount || 0;
+    ballonCharges = (global.cart_ballons_count || 0) * 5;
+    shipping = parseFloat(global.cart?.shipping_charges || 0);
+    discount = parseFloat(global.cart?.discount_amount || 0);
     grandTotal = subtotal + wrapper + specialDelivery + ballonCharges + shipping - discount;
 
     setCalculations({

@@ -32,6 +32,7 @@ const ProductDetail = ({route}) => {
   const [otherImages, setOtherImages] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [bigImage, setBigImage] = useState(item.full_image);
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
 
   useEffect(() => {
     dispatch(setLoader(true));
@@ -39,7 +40,10 @@ const ProductDetail = ({route}) => {
   }, []);
 
   const addItemTocart = async () => {
+    if (isLoading) return; // Prevent multiple calls
+    
     console.log(quantity);
+    setIsLoading(true); // Set local loading state
     dispatch(setLoader(true));
   
     try {
@@ -63,6 +67,7 @@ const ProductDetail = ({route}) => {
       console.log(error);
       Alert.alert('Error', 'Failed to add item to cart');
     } finally {
+      setIsLoading(false); // Reset loading state
       dispatch(setLoader(false));
     }
   };
@@ -169,13 +174,14 @@ const ProductDetail = ({route}) => {
 
         <MyButton
           label={<Text style={styles.productBtn}>{t('addToCart')}</Text>}
-          btnStyle={styles.btnStyle}
+          btnStyle={[styles.btnStyle, isLoading && {opacity: 0.6}]}
           txtColor={COLORS.white}
           btnColor={COLORS.secondary}
           borderColor={COLORS.secondary}
           icon={btnCartWhite}
           iconPosition={'right'}
           onPress={addItemTocart}
+          disabled={isLoading} // Add disabled prop
         />
       </View>
       <Spacer />

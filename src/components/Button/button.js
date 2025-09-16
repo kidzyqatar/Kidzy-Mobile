@@ -12,6 +12,7 @@ const MyButton = ({
   borderColor = 'transparent',
   txtColor = COLORS.white,
   onPress = () => {},
+  disabled = false, // Add disabled prop
 }) => {
   if (typeof icon !== 'undefined') {
     return (
@@ -40,8 +41,11 @@ const MyButton = ({
           />
         )}
         buttonColor={btnColor}
+        disabled={disabled} // Pass disabled prop to Button
         onPress={() => {
-          onPress();
+          if (!disabled) { // Extra safety check
+            onPress();
+          }
         }}>
         {label}
       </Button>
@@ -60,8 +64,11 @@ const MyButton = ({
         }}
         buttonColor={btnColor}
         textColor={txtColor}
+        disabled={disabled} // Pass disabled prop to Button
         onPress={() => {
-          onPress();
+          if (!disabled) { // Extra safety check
+            onPress();
+          }
         }}>
         {label}
       </Button>
