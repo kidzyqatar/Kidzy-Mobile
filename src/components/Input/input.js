@@ -16,13 +16,34 @@ const Input = ({
   ...customStyle
 }) => {
   const [secure, setSecure] = React.useState(isSecure);
+  const [isFocused, setIsFocused] = React.useState(false);
+
+  // Memoize the style to prevent recreation on every render
+  const inputStyle = React.useMemo(() => [
+    globalStyles.textInput,
+    customStyle
+  ], [customStyle]);
+  
+  // Memoize the onChangeText handler
+  const handleChangeText = React.useCallback((text) => {
+    setValue(text);
+  }, [setValue]);
+  
+  // Memoize focus handlers
+  const handleFocus = React.useCallback(() => {
+    setIsFocused(true);
+  }, []);
+  
+  const handleBlur = React.useCallback(() => {
+    setIsFocused(false);
+  }, []);
 
   return (
     <React.Fragment>
       {label !== null && <Text style={globalStyles.label}>{label}</Text>}
 
       <TextInput
-        style={[globalStyles.textInput, {...customStyle}]}
+        style={inputStyle}
         secureTextEntry={secure}
         outlineStyle={globalStyles.textInputOutline}
         mode="outlined"
@@ -30,11 +51,13 @@ const Input = ({
         placeholderTextColor={COLORS.grayLight}
         textColor={COLORS.black}
         value={value}
-        setValue={setValue}
         editable={editable}
-        onChangeText={text => {
-          setValue(text);
-        }}
+        onChangeText={handleChangeText}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        // Add these props to improve focus behavior
+        blurOnSubmit={false}
+        returnKeyType="next"
         left={
           typeof left !== 'undefined' ? (
             <TextInput.Icon

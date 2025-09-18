@@ -8,6 +8,8 @@ import {
   StyleSheet,
   FlatList,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {
   MasterLayout,
@@ -68,6 +70,132 @@ import {TextInput} from 'react-native-paper';
 import {useTranslation} from 'react-i18next';
 import {useIsFocused} from '@react-navigation/native';
 import {getJSONData, storeJSONData} from '../../../helpers/AsyncStorage';
+
+const SendToFriendAddressInput = React.memo(({ 
+  refRBSheetFriendAddress, 
+  t, 
+  s_firstName, 
+  s_setFirstName,
+  s_lastName, 
+  s_setLastName,
+  s_mobileNumber, 
+  s_setMobileNumber,
+  s_street, 
+  s_setStreet,
+  s_city, 
+  s_setCity,
+  s_province, 
+  s_setProvince,
+  addShippingAddress,
+  styles,
+  globalStyles,
+  COLORS,
+  SIZES
+}) => {
+  return (
+    <RBSheet
+      ref={refRBSheetFriendAddress}
+      closeOnDragDown={true}
+      closeOnPressMask={false}
+      dragFromTopOnly={true}
+      height={670}
+      minClosingHeight={0}
+      keyboardAvoidingViewEnabled={true}
+      animationType="slide"
+      customStyles={{
+        wrapper: {
+          backgroundColor: COLORS.bottomSheetBackground,
+        },
+        draggableIcon: {
+          backgroundColor: '#000',
+        },
+        container: {
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+        }
+      }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{flexGrow: 1, paddingBottom: 50}}
+        nestedScrollEnabled={true}>
+        <View
+          style={[
+            globalStyles.contentContainer,
+            {marginHorizontal: SIZES.radius, paddingBottom: 30},
+          ]}>
+          <Heading
+            txt={t('addNewAddress')}
+            txtStyle={styles.bSheetTopHeading}
+          />
+          <Spacer />
+          <>
+            <Spacer />
+            <Input
+              label={t(`recipientFirstName`)}
+              placeholder={t('firstName')}
+              value={s_firstName}
+              setValue={s_setFirstName}
+            />
+            <Spacer />
+            <Input
+              label={t('recipientLastName')}
+              placeholder={t('lastName')}
+              value={s_lastName}
+              setValue={s_setLastName}
+            />
+            <Spacer />
+            <PrefixTextInput
+              label={t('mobileNumber')}
+              placeholder={'000-000-000'}
+              prefix={'+974'}
+              value={s_mobileNumber}
+              maxLength={9}
+              setValue={s_setMobileNumber}
+            />
+            <Spacer />
+            <Input
+              label={t('street')}
+              placeholder={t('pleaseProvideStreetAddress')}
+              value={s_street}
+              setValue={s_setStreet}
+            />
+            <Spacer />
+            <View style={styles.cvvView}>
+              <View style={styles.halfInput}>
+                <Input
+                  label={t('city')}
+                  placeholder={t('exampleAlWakra')}
+                  value={s_city}
+                  setValue={s_setCity}
+                />
+              </View>
+              <View style={styles.halfInput}>
+                <Input
+                  label={t('stateProvinceArea')}
+                  placeholder={t('exampleDoha')}
+                  value={s_province}
+                  setValue={s_setProvince}
+                />
+              </View>
+            </View>
+            <Spacer />
+            <Spacer />
+          </>
+          <View style={[styles.bSheetBottom, {justifyContent: 'center'}]}>
+            <MyButton
+              label={t('addAddress')}
+              txtColor={COLORS.white}
+              btnColor={COLORS.secondary}
+              borderColor={COLORS.secondary}
+              onPress={addShippingAddress}
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </RBSheet>
+  );
+});
 
 const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const {t} = useTranslation();
@@ -183,6 +311,19 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   const [s_city, s_setCity] = useState('');
   const [s_province, s_setProvince] = useState('');
 
+  // Memoize all setter functions to prevent recreation
+const memoizedSetFirstName = React.useCallback((value) => s_setFirstName(value), []);
+const memoizedSetLastName = React.useCallback((value) => s_setLastName(value), []);
+const memoizedSetMobileNumber = React.useCallback((value) => s_setMobileNumber(value), []);
+const memoizedSetStreet = React.useCallback((value) => s_setStreet(value), []);
+const memoizedSetCity = React.useCallback((value) => s_setCity(value), []);
+const memoizedSetProvince = React.useCallback((value) => s_setProvince(value), []);
+
+// Fix the memoized function - remove circular dependency
+const memoizedAddShippingAddress = React.useCallback(() => {
+  addShippingAddress();
+}, [s_firstName, s_lastName, s_mobileNumber, s_street, s_city, s_province, defaultShipping, defaultBilling]);
+
   const [addresses, setAddresses] = useState(null);
   const [quantityBalloon, setQuantityBalloon] = useState(0);
 
@@ -270,45 +411,141 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
   }, [availableCharacters, global.allCharacters]);
 
   const addShippingAddress = async () => {
-    refRBSheetFriendAddress.current.close();
-    let params = {
-      guest_session_id: global.cart_session_id,
-      first_name: s_firstName,
-      last_name: s_lastName,
-      mobile_number: s_mobileNumber,
-      street: s_street,
-      city: s_city,
-      state: s_province,
-      is_default_shipping: false,
-      is_default_billing: false,
-    };
-    if (global.isLoggedIn) {
-      params['user_id'] = global.user.id;
+  console.log('🚀 addShippingAddress function called');
+  console.log('📋 Form values:', {
+    firstName: s_firstName,
+    lastName: s_lastName,
+    mobileNumber: s_mobileNumber,
+    street: s_street,
+    city: s_city,
+    province: s_province,
+    defaultShipping,
+    defaultBilling
+  });
+  console.log('🌐 Global state:', {
+    cart_session_id: global.cart_session_id,
+    isLoggedIn: global.isLoggedIn,
+    user_id: global.user?.id,
+    cart_id: global.cart?.id
+  });
+
+  // Validation checks with detailed logging
+  if (!s_firstName || s_firstName.trim() === '') {
+    console.log('❌ Validation failed: First name is required');
+    Alert.alert('Error!', 'First name is required');
+    return;
+  }
+  if (!s_lastName || s_lastName.trim() === '') {
+    console.log('❌ Validation failed: Last name is required');
+    Alert.alert('Error!', 'Last name is required');
+    return;
+  }
+  if (!s_mobileNumber || s_mobileNumber.trim() === '') {
+    console.log('❌ Validation failed: Mobile number is required');
+    Alert.alert('Error!', 'Mobile number is required');
+    return;
+  }
+  if (s_mobileNumber.length < 8) {
+    console.log('❌ Validation failed: Mobile number too short:', s_mobileNumber.length);
+    Alert.alert('Error!', 'Mobile number should be at least 10 digits');
+    return;
+  }
+  if (!s_street || s_street.trim() === '') {
+    console.log('❌ Validation failed: Street is required');
+    Alert.alert('Error!', 'Street is required');
+    return;
+  }
+  if (!s_city || s_city.trim() === '') {
+    console.log('❌ Validation failed: City is required');
+    Alert.alert('Error!', 'City is required');
+    return;
+  }
+  if (!s_province || s_province.trim() === '') {
+    console.log('❌ Validation failed: Province is required');
+    Alert.alert('Error!', 'Province is required');
+    return;
+  }
+
+  // Check cart session ID
+  if (!global.cart_session_id) {
+    console.log('❌ Critical error: cart_session_id is missing');
+    Alert.alert('Error!', 'Cart session not found. Please refresh and try again.');
+    return;
+  }
+
+  console.log('✅ All validations passed, proceeding with API call');
+
+  try {
+    // Remove this line - it closes the form too early
+    // refRBSheet.current.close();
+    
+    const response = await callNonTokenApiAddress(
+      config.apiName.addAddress,
+      'POST',
+      {
+        guest_session_id: global.cart_session_id,
+        first_name: s_firstName.trim(),
+        last_name: s_lastName.trim(),
+        mobile_number: s_mobileNumber.trim(),
+        street: s_street.trim(),
+        city: s_city.trim(),
+        state: s_province.trim(),
+        is_default_billing: defaultBilling === 1,
+        is_default_shipping: defaultShipping === 1,
+        // If logged in, add user_id
+        ...(global.isLoggedIn && global.user?.id ? { user_id: global.user.id } : {})
+      }
+    );
+
+    console.log('📡 API Response received:', {
+      status: response?.status,
+      message: response?.message,
+      data: response?.data
+    });
+    
+    dispatch(setLoader(false));
+    
+    if (response?.status === 200) {
+      console.log('✅ Address added successfully');
+      
+      // Clear form fields using correct state setters
+      s_setFirstName('');
+      s_setLastName('');
+      s_setMobileNumber('');
+      s_setStreet('');
+      s_setCity('');
+      s_setProvince('');
+      setDefaultShipping(0);
+      setDefaultBilling(0);
+      
+      console.log('🏠 Setting selected shipping address:', response.data.address);
+      dispatch(setSelectedShippingAddress(response.data.address));
+      
+      console.log('🛒 Calling addShippingAddressToCart with address ID:', response.data.address.id);
+      await addShippingAddressToCart(response.data.address);
+      
+      console.log('🔄 Refreshing addresses list');
+      getAddresses();
+      
+      // Close the friend address form AFTER successful completion
+      refRBSheetFriendAddress.current.close();
+      
+      console.log('🎉 Shipping address process completed successfully');
+    } else {
+      console.log('❌ API returned error status:', response?.status);
+      console.log('❌ Error message:', response?.message);
+      Alert.alert('Error!', response?.message || 'Failed to add address');
     }
-    dispatch(setLoader(true));
-    callNonTokenApiAddress(config.apiName.addAddress, 'POST', params)
-      .then(res => {
-        dispatch(setLoader(false));
-        if (res.status == 200) {
-          s_setFirstName('');
-          s_setLastName('');
-          s_setMobileNumber('');
-          s_setStreet('');
-          s_setCity('');
-          s_setProvince('');
-          dispatch(setSelectedShippingAddress(res.data.address));
-          addShippingAddressToCart(res.data.address);
-          getAddresses();
-        } else {
-          Alert.alert('Error!', res.message);
-        }
-      })
-      .catch(err => {
-        console.log(err);
-        Alert.alert('Error', 'Error while adding shipping Address');
-        dispatch(setLoader(false));
-      });
-  };
+  } catch (error) {
+    console.log('💥 Exception caught in addShippingAddress:', error);
+    console.log('💥 Error details:', {
+      message: error.message,
+      stack: error.stack
+    });
+    dispatch(setLoader(false));
+    Alert.alert('Error!', 'An unexpected error occurred. Please try again.');
+  }
+};
   const hasCategory10OutDoor = () => {
     return global?.cart?.order_items.some(item =>
       item?.product?.categories?.some(category => category == '10'),
@@ -320,25 +557,26 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
     );
   };
   const addShippingAddressToCart = async address => {
-    callNonTokenApi(config.apiName.addAddressToCart, 'POST', {
-      address_id: address?.id,
-      order_id: global.cart.id,
-      type: 'shipping',
+  dispatch(setLoader(true));
+  callNonTokenApi(config.apiName.addAddressToCart, 'POST', {
+    address_id: address?.id,
+    order_id: global.cart.id,
+    type: 'shipping',
+  })
+    .then(res => {
+      dispatch(setLoader(false));
+      if (res.status == 200) {
+        console.log(res);
+      } else {
+        Alert.alert('Error!', res.message);
+      }
     })
-      .then(res => {
-        dispatch(setLoader(false));
-        if (res.status == 200) {
-          console.log(res);
-        } else {
-          Alert.alert('Error!', res.message);
-        }
-      })
-      .catch(err => {
-        Alert.alert('Error', 'Error while binding shipping Address');
-        dispatch(setLoader(false));
-        console.log(err);
-      });
-  };
+    .catch(err => {
+      Alert.alert('Error', 'Error while binding shipping Address');
+      dispatch(setLoader(false));
+      console.log(err);
+    });
+};
   const to12Hour = timeStr => {
     const date = new Date(`1970-01-01T${convertTo24(timeStr)}Z`);
     return date
@@ -626,102 +864,7 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
     );
   };
 
-  const SendToFriendAddressInput = () => {
-    return (
-      <RBSheet
-        ref={refRBSheetFriendAddress}
-        closeOnDragDown={true}
-        closeOnPressMask={true}
-        dragFromTopOnly={true}
-        height={670}
-        minClosingHeight={0}
-        customStyles={{
-          wrapper: {
-            backgroundColor: COLORS.bottomSheetBackground,
-          },
-          draggableIcon: {
-            backgroundColor: '#000',
-          },
-        }}>
-        <View
-          style={[
-            globalStyles.contentContainer,
-            {marginHorizontal: SIZES.radius},
-          ]}>
-          <Heading
-            txt={t('addNewAddress')}
-            txtStyle={styles.bSheetTopHeading}
-          />
-          <Spacer />
-          {/* {<AddressForm />} */}
-          <>
-            <Spacer />
-            <Input
-              label={t(`recipientFirstName`)}
-              placeholder={t('firstName')}
-              value={s_firstName}
-              setValue={s_setFirstName}
-            />
-            <Spacer />
-            <Input
-              label={t('recipientLastName')}
-              placeholder={t('lastName')}
-              value={s_lastName}
-              setValue={s_setLastName}
-            />
-            <Spacer />
-            <PrefixTextInput
-              label={t('mobileNumber')}
-              placeholder={'000-000-000'}
-              prefix={'+974'}
-              value={s_mobileNumber}
-              maxLength={9}
-              setValue={s_setMobileNumber}
-            />
-            <Spacer />
-            <Input
-              label={t('street')}
-              placeholder={t('pleaseProvideStreetAddress')}
-              value={s_street}
-              setValue={s_setStreet}
-            />
-            <Spacer />
 
-            <View style={styles.cvvView}>
-              <View style={styles.halfInput}>
-                <Input
-                  label={t('city')}
-                  placeholder={t('exampleAlWakra')}
-                  value={s_city}
-                  setValue={s_setCity}
-                />
-              </View>
-              <View style={styles.halfInput}>
-                <Input
-                  label={t('stateProvinceArea')}
-                  placeholder={t('exampleDoha')}
-                  value={s_province}
-                  setValue={s_setProvince}
-                />
-              </View>
-            </View>
-            <Spacer />
-            <Spacer />
-          </>
-
-          <View style={[styles.bSheetBottom, {justifyContent: 'center'}]}>
-            <MyButton
-              label={t('addAddress')}
-              txtColor={COLORS.white}
-              btnColor={COLORS.secondary}
-              borderColor={COLORS.secondary}
-              onPress={addShippingAddress}
-            />
-          </View>
-        </View>
-      </RBSheet>
-    );
-  };
 
   return (
     <ScrollView
@@ -780,7 +923,27 @@ const StepThree = ({incrementBallonQuantity, decrementBallonQuantity}) => {
               icon={addCircle}
               onPress={() => refRBSheetFriendAddress.current.open()}
             />
-            <SendToFriendAddressInput />
+            <SendToFriendAddressInput 
+              refRBSheetFriendAddress={refRBSheetFriendAddress}
+              t={t}
+              s_firstName={s_firstName}
+              s_setFirstName={memoizedSetFirstName}
+              s_lastName={s_lastName}
+              s_setLastName={memoizedSetLastName}
+              s_mobileNumber={s_mobileNumber}
+              s_setMobileNumber={memoizedSetMobileNumber}
+              s_street={s_street}
+              s_setStreet={memoizedSetStreet}
+              s_city={s_city}
+              s_setCity={memoizedSetCity}
+              s_province={s_province}
+              s_setProvince={memoizedSetProvince}
+              addShippingAddress={memoizedAddShippingAddress}
+              styles={styles}
+              globalStyles={globalStyles}
+              COLORS={COLORS}
+              SIZES={SIZES}
+            />
           </>
         ) : null}
       </View>

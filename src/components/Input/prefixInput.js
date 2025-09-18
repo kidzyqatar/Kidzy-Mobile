@@ -35,7 +35,6 @@ const PrefixTextInput = ({
           placeholderTextColor={COLORS.grayLight}
           textColor={COLORS.primary}
           value={value}
-          setValue={setValue}
           maxLength={maxLength}
           onChangeText={text => {
             // Filter out non-numeric characters
