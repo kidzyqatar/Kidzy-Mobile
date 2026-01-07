@@ -486,10 +486,22 @@ const handleContinuePress = () => {
       case 3:
         if (
           global.cart_is_same_as_billing &&
-          global.cart_shipping_address == null
+          global.cart_shipping_address == null &&
+          global.cart_billing_address &&
+          global.cart_billing_address.id
         ) {
           console.log('address is same as billing');
           dispatch(setSelectedShippingAddress(global.cart_billing_address));
+          
+          // Validate cart exists before making API call
+          if (!global.cart || !global.cart.id) {
+            Alert.alert(
+              t('error'),
+              t('cartNotFound') || 'Cart not found. Please try again'
+            );
+            return;
+          }
+
           callNonTokenApi(config.apiName.addAddressToCart, 'POST', {
             address_id: global.cart_billing_address.id,
             order_id: global.cart.id,
@@ -498,18 +510,21 @@ const handleContinuePress = () => {
             .then(res => {
               dispatch(setLoader(false));
               if (res.status == 200) {
-                console.log('Set Cart shipping address', res.data);
+                console.log('✅ Set Cart shipping address', res.data);
               } else {
                 Alert.alert(
-                  'Error',
-                  'Error while binding shipping Address, Please Try Again',
+                  t('error'),
+                  res.message || t('somethingWentWrong')
                 );
               }
             })
             .catch(err => {
-              Alert.alert('Error', 'Error while binding shipping Address');
               dispatch(setLoader(false));
-              console.log(err);
+              console.error('❌ Error binding shipping address:', err);
+              Alert.alert(
+                t('error'),
+                t('addressBindingError') || 'Error while binding shipping address. Please try again.'
+              );
             });
         }
         console.log(global.cart_delivery_date, global.cart_delivery_time);
@@ -569,7 +584,13 @@ const handleContinuePress = () => {
     }
   };
   return (
-    <MasterLayout bgColor={COLORS.bgGray} scrolling={false} max={true}>
+    <MasterLayout 
+    bgColor={COLORS.bgGray} 
+    scrolling={false} 
+    max={true}
+    statusBarColor={COLORS.white}
+    statusBarStyle='dark-content'
+    >
       <View style={globalStyles.whiteBg}>
         {step == 1 ? (
           <BackBar

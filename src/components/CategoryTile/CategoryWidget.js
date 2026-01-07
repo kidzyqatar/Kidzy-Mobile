@@ -15,7 +15,7 @@ const CategoryWidget = ({
 }) => {
   return (
     <TouchableOpacity
-      style={[styles.container, {backgroundColor: bgColor}]}
+      style={[styles.container, {backgroundColor: bgColor,}]}
       onPress={() => {
         RootNavigation.navigate('ProductListing', {
           namE: name,
@@ -25,7 +25,7 @@ const CategoryWidget = ({
       }}>
       <View style={styles.innerContainer}>
         <View style={styles.leftView}>
-          <Phrase txt={name} txtStyle={styles.txt} />
+          <Phrase txt={`${name}`} txtStyle={styles.txt} />
         </View>
         <View style={styles.rightView}>
           <Image source={{uri: img}} style={styles.catImg} />
@@ -37,36 +37,48 @@ const CategoryWidget = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: SIZES.fourtyFive,
-    height: 100,
+    // width: SIZES.fourtyFive,
+    flex:1,
+    // height: 120,
     borderRadius: SIZES.minor,
+    marginHorizontal: SIZES.base,
     // padding: SIZES.radius,
-    marginTop: SIZES.padding,
-    overflow: 'visible',
+    // padding: SIZES.radius,
+    // marginTop: 0,
+    // overflow: 'visible',
   },
   innerContainer: {
+    flex:1,
     flexDirection: 'row',
     // justifyContent: 'space-between',
     // alignItems: 'center',
   },
   leftView: {
-    width: SIZES.fourtyFive,
+    flex:0.5,
+    // width: SIZES.fourtyFive,
     justifyContent: 'center',
-    height: 100,
-    paddingLeft: SIZES.radius,
+    // height: 120,
+    paddingLeft: SIZES.base,
   },
   txt: {...FONTS.body3_bold, color: COLORS.white},
   rightView: {
-    width: SIZES.fifty,
+    flex:0.5,
+    // backgroundColor:"red",
+    // width: SIZES.fifty,
     justifyContent: 'center',
-    height: 100,
+    // padding:SIZES.radius
+    // height: 120,
   },
   catImg: {
-    width: 120,
-    bottom: 0,
+    // width: 120,
+    // bottom: 0,
+    // paddingRight:40,
+    // backgroundColor:"blue",
+    // width:100,
     height: 100,
-    aspectRatio: 0.8,
-    resizeMode: 'contain',
+    // flex:1,
+    // aspectRatio: 0.8,
+    // resizeMode: 'contain',
   },
 });
 export default CategoryWidget;

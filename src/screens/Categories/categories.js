@@ -16,6 +16,7 @@ export default function Categories() {
   return (
     <MasterLayout bgColor={COLORS.bgGray}>
       <CartBar title={t('categories')} />
+     
       <Spacer />
 
       <FlatList

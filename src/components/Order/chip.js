@@ -5,14 +5,18 @@ import {COLORS, SIZES, FONTS} from '@constants/theme';
 import globalStyles from '../../constants/global-styles';
 
 const Chip = ({status, bgColor, txtColor, icon = null, customStyle}) => {
+  // Ensure valid colors - fallback to defaults if empty
+  const validBgColor = bgColor || COLORS.grayLight + '1A';
+  const validTxtColor = txtColor || COLORS.gray;
+  
   return (
     <View
       style={[
         globalStyles.rowView,
         styles.orderItemChip,
-        {backgroundColor: bgColor, ...customStyle},
+        {backgroundColor: validBgColor, ...customStyle},
       ]}>
-      <Phrase txt={status} txtStyle={{color: txtColor, ...FONTS.body6}} />
+      <Phrase txt={status} txtStyle={{color: validTxtColor, ...FONTS.body6}} />
       {icon !== null && <Image source={icon} style={styles.iconImg} />}
     </View>
   );

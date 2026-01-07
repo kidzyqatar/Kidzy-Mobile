@@ -38,10 +38,11 @@ export default styles = StyleSheet.create({
   cartViewNumber: {...FONTS.body3_bold, color: COLORS.secondary},
   topBar: {
     backgroundColor: COLORS.secondary,
+    // backgroundColor: 'red',
     width: SIZES.hundred,
-    height: 120,
+    height: 110,
     paddingHorizontal: SIZES.radius,
-    paddingVertical: SIZES.padding,
+    paddingVertical: SIZES.base,
     zIndex: 999,
   },
   menuBar: {
@@ -81,12 +82,16 @@ export default styles = StyleSheet.create({
   contentView: {
     backgroundColor: COLORS.white,
     padding: SIZES.padding,
-    marginTop: SIZES.radius,
+    paddingTop:0,
+    marginTop:10,
+    // backgroundColor:'red'
+    // marginTop: SIZES.base,
   },
   headingView: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    // backgroundColor:"green",
     zIndex: 1,
   },
   heading: {
@@ -94,9 +99,10 @@ export default styles = StyleSheet.create({
     color: COLORS.primary,
     ...Platform.select({
       ios: {
-        paddingVertical: 16,
+        paddingVertical: 10,
       },
     }),
+    // backgroundColor:"blue"
   },
   allLink: {
     color: COLORS.black,
@@ -107,4 +113,10 @@ export default styles = StyleSheet.create({
       },
     }),
   },
+  catImg:{
+    flex:1,
+    height:100,
+    // width:40
+  },
+  txt: {...FONTS.body3_bold, color: COLORS.white},
 });

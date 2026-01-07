@@ -6,7 +6,7 @@ import {
   Image,
   Pressable,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   MasterLayout,
   CartBar,
@@ -17,24 +17,24 @@ import {
   ProductWidget,
   Spacer,
 } from '@components';
-import {COLORS, SIZES, FONTS} from '@constants/theme';
+import { COLORS, SIZES, FONTS } from '@constants/theme';
 import globalStyles from '@constants/global-styles';
-import {search, filter, close, checked, unchecked} from '@constants/icons';
-import {styles} from './styles';
-import {product1} from '@constants/images';
-import {useFocusEffect} from '@react-navigation/native';
+import { search, filter, close, checked, unchecked } from '@constants/icons';
+import { styles } from './styles';
+import { product1 } from '@constants/images';
+import { useFocusEffect } from '@react-navigation/native';
 import config from '../../constants/config';
-import {callNonTokenApi} from '../../helpers/ApiRequest';
-import {useDispatch, useSelector} from 'react-redux';
-import {MyButton, SearchTextField} from '../../components';
-import {setLoader} from '../../store/reducers/global';
-import {useTranslation} from 'react-i18next';
+import { callNonTokenApi } from '../../helpers/ApiRequest';
+import { useDispatch, useSelector } from 'react-redux';
+import { MyButton, SearchTextField } from '../../components';
+import { setLoader } from '../../store/reducers/global';
+import { useTranslation } from 'react-i18next';
 
-const ProductListing = ({route}) => {
+const ProductListing = ({ route }) => {
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
-  const {t} = useTranslation();
-  const {namE, slug, type} = route.params;
+  const { t } = useTranslation();
+  const { namE, slug, type } = route.params;
   const [searchText, setSearchText] = useState('');
 
   const [newArrivals, setNewArrivals] = useState(null);
@@ -119,7 +119,7 @@ const ProductListing = ({route}) => {
       });
   };
 
-  const applyFilters = async () => {};
+  const applyFilters = async () => { };
 
   const onApplyFilterPressed = (applied = false) => {
     dispatch(setLoader(true));
@@ -230,6 +230,8 @@ const ProductListing = ({route}) => {
       bgColor={COLORS.bgGray}
       scrolling={true}
       max={true}
+      statusBarColor={COLORS.white}
+      statusBarStyle='dark-content'
       header={
         scene == 'Listing' && (
           <View style={globalStyles.whiteBg}>
@@ -257,60 +259,55 @@ const ProductListing = ({route}) => {
               showsHorizontalScrollIndicator={false}
               horizontal={true}
               data={ageFilters}
-              renderItem={({item, index}) => (
-                <React.Fragment key={item.id}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      // handleCheckboxChange('age', index);
-                      let updatedAgeFilters = [...ageFilters];
-                      updatedAgeFilters[index] = {
-                        ...updatedAgeFilters[index],
-                        checked: !updatedAgeFilters[index].checked,
-                      };
-                      setAgeFilters(updatedAgeFilters);
-                      console.log('Age Filters:', updatedAgeFilters);
-                      updatedAgeFilters.map(item => {
-                        if (item.checked) {
-                          console.log(item.checked);
-                          ageSF.push(item.value);
-                        }
-                      });
-                      onApplyFilterPressed(true);
+              renderItem={({ item, index }) => (
+                <TouchableOpacity
+                  onPress={() => {
+                    // handleCheckboxChange('age', index);
+                    let updatedAgeFilters = [...ageFilters];
+                    updatedAgeFilters[index] = {
+                      ...updatedAgeFilters[index],
+                      checked: !updatedAgeFilters[index].checked,
+                    };
+                    setAgeFilters(updatedAgeFilters);
+                    console.log('Age Filters:', updatedAgeFilters);
+                    updatedAgeFilters.map(item => {
+                      if (item.checked) {
+                        console.log(item.checked);
+                        ageSF.push(item.value);
+                      }
+                    });
+                    onApplyFilterPressed(true);
+                  }}
+                  style={[
+                    styles.ageItem,
+
+                    {
+                      backgroundColor: item.checked
+                        ? COLORS.secondary
+                        : COLORS.bgGray,
+                    },
+                  ]}>
+                  <Phrase
+                    txt={item.title}
+                    txtStyle={{
+                      color: item.checked ? COLORS.white : COLORS.black,
                     }}
-                    style={[
-                      styles.ageItem,
-                      {
-                        backgroundColor: item.checked
-                          ? COLORS.secondary
-                          : COLORS.bgGray,
-                      },
-                    ]}>
-                    <Phrase
-                      txt={item.title}
-                      txtStyle={{
-                        color: item.checked ? COLORS.white : COLORS.black,
-                      }}
-                    />
-                  </TouchableOpacity>
-                </React.Fragment>
+                  />
+                </TouchableOpacity>
               )}
-              keyExtractor={item => item.id}
+              keyExtractor={(item, index) => item.id?.toString() || `age-${index}`}
             />
           </View>
         )
       }>
       {scene == 'Listing' ? (
-        <View style={{marginTop: 130}}>
+        <View >
           <FlatList
             data={newArrivals}
             scrollEnabled={false}
             numColumns={2}
-            renderItem={({item}) => (
-              <React.Fragment key={item.sku}>
-                <ProductWidget item={item} />
-              </React.Fragment>
-            )}
-            keyExtractor={item => item.sku}
+            renderItem={({ item }) => <ProductWidget item={item} />}
+            keyExtractor={(item, index) => item.sku?.toString() || item.id?.toString() || `product-${index}`}
             contentContainerStyle={styles.listingContainer}
             ListEmptyComponent={renderEmptyComponent}
           />
@@ -328,90 +325,108 @@ const ProductListing = ({route}) => {
               </TouchableOpacity>
             </View>
           </View>
-          <Spacer />
-          <View
-            style={[
-              globalStyles.whiteBg,
-              {flexDirection: 'row', flexWrap: 'wrap'},
-            ]}>
-            {ageFilters.map((item, index) => {
-              if (item.checked) {
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.filterItem}
-                    onPress={() => {
-                      handleCheckboxChange('age', index);
-                    }}>
-                    <Phrase
-                      txt={`Age: ${item.title}`}
-                      txtStyle={styles.filterItemTxt}
-                    />
 
-                    <Image source={close} style={styles.filterItemImg} />
-                  </TouchableOpacity>
-                );
-              }
-            })}
-            {categoriesFilters.map((item, index) => {
-              if (item.checked) {
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.filterItem}
-                    onPress={() => {
-                      handleCheckboxChange('categories', index);
-                    }}>
-                    <Phrase
-                      txt={`Category: ${item.name}`}
-                      txtStyle={styles.filterItemTxt}
-                    />
+          {(() => {
+            // Check if any filter has checked items
+            const hasCheckedAge = ageFilters.some(item => item.checked);
+            const hasCheckedCategory = categoriesFilters.some(item => item.checked);
+            const hasCheckedBrand = brandFilters.some(item => item.checked);
+            const hasCheckedPrice = priceFilters.some(item => item.checked);
 
-                    <Image source={close} style={styles.filterItemImg} />
-                  </TouchableOpacity>
-                );
-              }
-            })}
-            {brandFilters.map((item, index) => {
-              if (item.checked) {
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.filterItem}
-                    onPress={() => {
-                      handleCheckboxChange('brand', index);
-                    }}>
-                    <Phrase
-                      txt={`Brand: ${item.name}`}
-                      txtStyle={styles.filterItemTxt}
-                    />
+            // Only render if at least one filter is checked
+            if (hasCheckedAge || hasCheckedCategory || hasCheckedBrand || hasCheckedPrice) {
+              return (
+                <>
+                  <Spacer />
+                  <View
+                    style={[
+                      globalStyles.whiteBg,
+                      { flexDirection: 'row', flexWrap: 'wrap',paddingBottom:0 },
+                    ]}>
+                    {ageFilters.map((item, index) => {
+                      if (item.checked) {
+                        return (
+                          <TouchableOpacity
+                            key={index}
+                            style={styles.filterItem}
+                            onPress={() => {
+                              handleCheckboxChange('age', index);
+                            }}>
+                            <Phrase
+                              txt={`Age: ${item.title}`}
+                              txtStyle={styles.filterItemTxt}
+                            />
 
-                    <Image source={close} style={styles.filterItemImg} />
-                  </TouchableOpacity>
-                );
-              }
-            })}
+                            <Image source={close} style={styles.filterItemImg} />
+                          </TouchableOpacity>
+                        );
+                      }
+                    })}
+                    {categoriesFilters.map((item, index) => {
+                      if (item.checked) {
+                        return (
+                          <TouchableOpacity
+                            key={index}
+                            style={styles.filterItem}
+                            onPress={() => {
+                              handleCheckboxChange('categories', index);
+                            }}>
+                            <Phrase
+                              txt={`Category: ${item.name}`}
+                              txtStyle={styles.filterItemTxt}
+                            />
 
-            {priceFilters.map((item, index) => {
-              if (item.checked) {
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.filterItem}
-                    onPress={() => {
-                      handleCheckboxChange('price', index);
-                    }}>
-                    <Phrase
-                      txt={`Price: ${item.title}`}
-                      txtStyle={styles.filterItemTxt}
-                    />
+                            <Image source={close} style={styles.filterItemImg} />
+                          </TouchableOpacity>
+                        );
+                      }
+                    })}
+                    {brandFilters.map((item, index) => {
+                      if (item.checked) {
+                        return (
+                          <TouchableOpacity
+                            key={index}
+                            style={styles.filterItem}
+                            onPress={() => {
+                              handleCheckboxChange('brand', index);
+                            }}>
+                            <Phrase
+                              txt={`Brand: ${item.name}`}
+                              txtStyle={styles.filterItemTxt}
+                            />
 
-                    <Image source={close} style={styles.filterItemImg} />
-                  </TouchableOpacity>
-                );
-              }
-            })}
-          </View>
+                            <Image source={close} style={styles.filterItemImg} />
+                          </TouchableOpacity>
+                        );
+                      }
+                    })}
+
+                    {priceFilters.map((item, index) => {
+                      if (item.checked) {
+                        return (
+                          <TouchableOpacity
+                            key={index}
+                            style={styles.filterItem}
+                            onPress={() => {
+                              handleCheckboxChange('price', index);
+                            }}>
+                            <Phrase
+                              txt={`Price: ${item.title}`}
+                              txtStyle={styles.filterItemTxt}
+                            />
+
+                            <Image source={close} style={styles.filterItemImg} />
+                          </TouchableOpacity>
+                        );
+                      }
+                    })}
+                  </View>
+                </>
+
+              );
+            }
+            return null;
+          })()}
           <Spacer />
           {/* Age Filter */}
           <View style={[globalStyles.whiteBg]}>

@@ -33,7 +33,14 @@ const Orders = () => {
     getOrders();
   }, []);
 
-  useEffect(() => {}, [ordersPending, ordersProcessing, ordersComplete]);
+  useEffect(() => {
+    console.log('📋 Orders State:', {
+      pending: ordersPending.length,
+      processing: ordersProcessing.length,
+      complete: ordersComplete.length,
+      currentTab: value
+    });
+  }, [ordersPending, ordersProcessing, ordersComplete, value]);
 
   const getOrders = async () => {
     dispatch(setLoader(true));
@@ -69,74 +76,78 @@ const Orders = () => {
   };
 
   return (
-    <MasterLayout bgColor={COLORS.bgGray} scrolling={false} max={true}>
+    <MasterLayout 
+    bgColor={COLORS.bgGray} 
+    scrolling={false} 
+    max={true}
+    statusBarColor={COLORS.white}
+    statusBarStyle="dark-content"
+    
+    >
       <View style={globalStyles.whiteBg}>
         <BackBar title={t('myOrders')} navigateTo={'Account'} />
       </View>
       <Spacer />
-      {noOrder ? (
-        <Phrase
-          txt={t('noOrderFound')}
-          txtStyle={{color: value == 2 ? COLORS.white : COLORS.black}}
-        />
-      ) : (
-        <View style={globalStyles.whiteBg}>
-          <View style={globalStyles.contentContainer}>
-            <View style={styles.pillsContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.pillBtn,
-                  {
-                    backgroundColor:
-                      value == 0 ? COLORS.secondary : 'transparent',
-                  },
-                ]}
-                onPress={() => {
-                  setValue(0);
-                }}>
-                <Phrase
-                  txt={t('pending')}
-                  txtStyle={{color: value == 0 ? COLORS.white : COLORS.black}}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.pillBtn,
-                  {
-                    backgroundColor:
-                      value == 1 ? COLORS.secondary : 'transparent',
-                  },
-                ]}
-                onPress={() => {
-                  setValue(1);
-                }}>
-                <Phrase
-                  txt={t('processing')}
-                  txtStyle={{color: value == 1 ? COLORS.white : COLORS.black}}
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.pillBtn,
-                  {
-                    backgroundColor:
-                      value == 2 ? COLORS.secondary : 'transparent',
-                  },
-                ]}
-                onPress={() => {
-                  setValue(2);
-                }}>
-                <Phrase
-                  txt={t('complete')}
-                  txtStyle={{color: value == 2 ? COLORS.white : COLORS.black}}
-                />
-              </TouchableOpacity>
-            </View>
+      <View style={[globalStyles.whiteBg, {flex: 1}]}>
+        <View style={globalStyles.contentContainer}>
+          <View style={styles.pillsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.pillBtn,
+                {
+                  backgroundColor:
+                    value == 0 ? COLORS.secondary : 'transparent',
+                },
+              ]}
+              onPress={() => {
+                setValue(0);
+              }}>
+              <Phrase
+                txt={t('pending')}
+                txtStyle={{color: value == 0 ? COLORS.white : COLORS.black}}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.pillBtn,
+                {
+                  backgroundColor:
+                    value == 1 ? COLORS.secondary : 'transparent',
+                },
+              ]}
+              onPress={() => {
+                setValue(1);
+              }}>
+              <Phrase
+                txt={t('processing')}
+                txtStyle={{color: value == 1 ? COLORS.white : COLORS.black}}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.pillBtn,
+                {
+                  backgroundColor:
+                    value == 2 ? COLORS.secondary : 'transparent',
+                },
+              ]}
+              onPress={() => {
+                setValue(2);
+              }}>
+              <Phrase
+                txt={t('complete')}
+                txtStyle={{color: value == 2 ? COLORS.white : COLORS.black}}
+              />
+            </TouchableOpacity>
           </View>
-          <Spacer />
-          {value == 0 && (
+        </View>
+        <Spacer />
+        
+        {/* Pending Orders */}
+        {value == 0 && (
+          ordersPending.length > 0 ? (
             <ScrollView
-              style={{marginBottom: 100}}
+              style={{marginBottom: 100, paddingHorizontal: SIZES.base}}
               scrollEnabled={true}
               showsVerticalScrollIndicator={false}>
               {ordersPending.map((item, index) => {
@@ -148,11 +159,18 @@ const Orders = () => {
                 );
               })}
             </ScrollView>
-          )}
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Phrase txt={t('noPendingOrders')} txtStyle={styles.emptyText} />
+            </View>
+          )
+        )}
 
-          {value == 1 && (
+        {/* Processing Orders */}
+        {value == 1 && (
+          ordersProcessing.length > 0 ? (
             <ScrollView
-              style={{marginBottom: 100}}
+              style={{marginBottom: 100, paddingHorizontal: SIZES.padding}}
               scrollEnabled={true}
               showsVerticalScrollIndicator={false}>
               {ordersProcessing.map((item, index) => {
@@ -164,10 +182,18 @@ const Orders = () => {
                 );
               })}
             </ScrollView>
-          )}
-          {value == 2 && (
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Phrase txt={t('noProcessingOrders')} txtStyle={styles.emptyText} />
+            </View>
+          )
+        )}
+
+        {/* Completed Orders */}
+        {value == 2 && (
+          ordersComplete.length > 0 ? (
             <ScrollView
-              style={{marginBottom: 100}}
+              style={{marginBottom: 100, paddingHorizontal: SIZES.padding}}
               scrollEnabled={true}
               showsVerticalScrollIndicator={false}>
               {ordersComplete.map((item, index) => {
@@ -179,9 +205,13 @@ const Orders = () => {
                 );
               })}
             </ScrollView>
-          )}
-        </View>
-      )}
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Phrase txt={t('noCompletedOrders')} txtStyle={styles.emptyText} />
+            </View>
+          )
+        )}
+      </View>
     </MasterLayout>
   );
 };

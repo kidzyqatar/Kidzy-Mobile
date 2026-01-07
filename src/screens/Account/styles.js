@@ -22,7 +22,7 @@ export const styles = StyleSheet.create({
   topRowEmail: { ...FONTS.body4_medium, color: COLORS.black },
   contentContainer: { paddingHorizontal: SIZES.padding },
   listItem: {
-    borderRadius: SIZES.radius,
+    borderRadius: SIZES.base,
     backgroundColor: COLORS.white,
     padding: SIZES.radius,
   },
@@ -197,4 +197,19 @@ export const styles = StyleSheet.create({
     marginBottom: SIZES.minor,
   },
   makeDefaultView: { width: SIZES.fifty },
+
+  // Empty state styles
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+    paddingHorizontal: SIZES.padding,
+    // backgroundColor:"red"
+  },
+  emptyText: {
+    ...FONTS.body4,
+    color: COLORS.gray,
+    textAlign: 'center',
+  },
 });

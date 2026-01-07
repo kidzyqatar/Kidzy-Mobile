@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useContext} from 'react';
+import React, { useEffect, useState, useContext, useRef } from 'react';
 import {
   Text,
   View,
@@ -9,8 +9,10 @@ import {
   TouchableOpacity,
   Alert,
   Switch,
+  StatusBar,
 } from 'react-native';
-import {COLORS, SIZES} from '@constants/theme';
+import { useFocusEffect } from '@react-navigation/native';
+import { COLORS, SIZES } from '@constants/theme';
 import {
   MasterLayout,
   Phrase,
@@ -24,7 +26,7 @@ import {
   ProductWidget,
   Banner,
 } from '@components';
-import {menuIcon, whiteLogo, cart, search} from '@constants/icons';
+import { menuIcon, whiteLogo, cart, search } from '@constants/icons';
 import {
   topBanner,
   mediumBanner,
@@ -40,9 +42,9 @@ import {
 import styles from './styles';
 import * as RootNavigation from '@navigators/RootNavigation';
 import config from '../../constants/config';
-import {callNonTokenApi} from '../../helpers/ApiRequest';
-import {useDispatch, useSelector} from 'react-redux';
-import {Description, SearchTextField} from '../../components';
+import { callNonTokenApi } from '../../helpers/ApiRequest';
+import { useDispatch, useSelector } from 'react-redux';
+import { Description, SearchTextField } from '../../components';
 import {
   setActiveTab,
   setAllAges,
@@ -59,16 +61,18 @@ import {
   setLoader,
   setTax,
   setUser,
+  setGuestEmail,
+  setGuestMobile,
 } from '../../store/reducers/global';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {getData} from '../../helpers/AsyncStorage';
-import {LanguageContext} from '../../store/LanguageContext';
-import {useTranslation} from 'react-i18next';
+import { getData } from '../../helpers/AsyncStorage';
+import { LanguageContext } from '../../store/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
 export default function Home() {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
-  const {language, toggleLanguage} = useContext(LanguageContext);
+  const { language, toggleLanguage } = useContext(LanguageContext);
 
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
@@ -87,6 +91,48 @@ export default function Home() {
 
   // cart
   const [cartCount, setCartCount] = useState(0);
+
+  // Track if error alert has been shown (to prevent multiple popups)
+  const errorShownRef = useRef(false);
+
+  // Load persisted guest info from AsyncStorage
+  const loadGuestInfo = async () => {
+    try {
+      const guestEmail = await AsyncStorage.getItem('guest_email');
+      const guestMobile = await AsyncStorage.getItem('guest_mobile');
+
+      if (guestEmail) {
+        dispatch(setGuestEmail(guestEmail));
+      }
+      if (guestMobile) {
+        dispatch(setGuestMobile(guestMobile));
+      }
+    } catch (error) {
+      console.log('Error loading guest info:', error);
+    }
+  };
+
+  // Show error alert when API fails (only once per session)
+  const showApiError = () => {
+    // Prevent multiple error popups
+    if (errorShownRef.current) {
+      return;
+    }
+    errorShownRef.current = true;
+    
+    Alert.alert(
+      t('error'),
+      t('somethingWentWrong'),
+      [{ 
+        text: t('ok'), 
+        style: 'default',
+        onPress: () => {
+          // Reset after user dismisses, so future errors can show
+          errorShownRef.current = false;
+        }
+      }]
+    );
+  };
 
   function generateRandomString(length) {
     let result = '';
@@ -121,13 +167,16 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Reset error flag on reload
+    errorShownRef.current = false;
+    
     dispatch(setLoader(true));
     const value = generateRandomString(20);
     saveIfNotExists('cart_session_random_value', value);
-    
+
     // Load persisted guest info
     loadGuestInfo();
-    
+
     fetchData();
     fetchHomeData();
     getProfile();
@@ -159,7 +208,7 @@ export default function Home() {
       .catch(error => {
         dispatch(setLoader(false));
         console.log(error);
-        setApiFailModal(true);
+        showApiError();
       });
   };
 
@@ -183,7 +232,7 @@ export default function Home() {
       })
       .catch(error => {
         console.log(error);
-        setApiFailModal(true);
+        showApiError();
       });
   };
 
@@ -203,7 +252,7 @@ export default function Home() {
       })
       .catch(error => {
         console.log(error);
-        setApiFailModal(true);
+        showApiError();
       });
   };
 
@@ -227,9 +276,9 @@ export default function Home() {
 
   const handleBannerPress = (banner) => {
     if (banner.product_id) {
-      RootNavigation.navigate('ProductDetail', {id: banner.product_id});
+      RootNavigation.navigate('ProductDetail', { id: banner.product_id });
     } else if (banner.category_slug) {
-      RootNavigation.navigate('ProductListing', {slug: banner.category_slug});
+      RootNavigation.navigate('ProductListing', { slug: banner.category_slug });
     }
   };
 
@@ -247,24 +296,48 @@ export default function Home() {
     // Add your press event handling logic here
   };
 
+  // Debug: Log forBoys data to check image URLs
+  useEffect(() => {
+    if (forBoys.length > 0) {
+      console.log('🔍 forBoys data check:');
+      forBoys.forEach((item, index) => {
+        console.log(`  [${index}] ${item.name}: full_image = "${item.full_image || 'MISSING'}"`);
+      });
+    }
+  }, [forBoys]);
+
+  // Reset status bar when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      StatusBar.setBarStyle('light-content');
+  
+      if (Platform.OS === 'android') {
+        StatusBar.setBackgroundColor(COLORS.secondary);
+      }
+    }, [])
+  );
+
   return (
-    <MasterLayout
-      bgColor={COLORS.bgGray}
-      scrolling={true}
-      max={true}
-      header={
+      <MasterLayout
+        bgColor={COLORS.bgGray}
+        scrolling={true}
+        max={true}
+        statusBarColor={COLORS.secondary}
+        statusBarStyle="light-content"
+        header={
         <View style={styles.topBar}>
           <View style={styles.menuBar}>
             <View style={styles.menuIconImg}>
               <View style={styles.languageSwitch}>
-                <Text>{language}</Text>
+                <Text style={{marginLeft:5,paddingRight:language==='EN' ? 0 : 3}}>{language}</Text>
                 <Switch
                   onValueChange={lang => {
                     dispatch(setLoader(true));
                     toggleLanguage(lang);
                   }}
                   value={language === 'EN'}
-                  // thumbColor={'#f5dd4b'}
+                  style={{transform: [{scaleX: 0.7}, {scaleY: 0.7}]}}
+                // thumbColor={'#f5dd4b'}
                 />
               </View>
             </View>
@@ -288,8 +361,8 @@ export default function Home() {
         </View>
       }>
       {/* Dynamic Top Banner (Slider) */}
-      <Banner 
-        type="Slider" 
+      <Banner
+        type="Slider"
         onPress={handleBannerPress}
         style={styles.bannerContainer}
       />
@@ -297,13 +370,13 @@ export default function Home() {
       {/* Categories */}
       {topCategories == null ? null : (
         <View style={styles.contentView}>
-          <View style={styles.headingView}>
+          <View style={{...styles.headingView, marginBottom: 7, marginTop: language === 'AR' ? 10 : 0}}>
             <Heading txt={t('categories')} txtStyle={styles.heading} />
             <Pressable onPress={handleCategoryPress}>
               <Text style={styles.allLink}>{t('viewAll')}</Text>
             </Pressable>
           </View>
-          <View style={styles.headingView}>
+          <View style={{...styles.headingView,}}>
             <CategoryWidget
               name={t('shopFor') + topCategories[0].name}
               img={topCategories[0].full_image}
@@ -322,7 +395,7 @@ export default function Home() {
             scrollEnabled={false}
             data={categories}
             numColumns={2}
-            renderItem={({item}) => (
+            renderItem={({ item }) => (
               <React.Fragment key={item.id}>
                 <Spacer size={'lg'} />
                 <CategoryTile item={item} />
@@ -337,102 +410,102 @@ export default function Home() {
 
       {/* New Arrivals*/}
       <View style={styles.contentView}>
-        <View style={styles.headingView}>
+        <View style={{...styles.headingView,marginTop: language === 'AR' ? 10 : 0}}>
           <Heading txt={t('newArrivals')} txtStyle={styles.heading} />
         </View>
-        <Spacer />
+        {/* <Spacer /> */}
         <FlatList
           data={newArrivals}
           horizontal={true}
           showsHorizontalScrollIndicator={false}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <React.Fragment key={item.id}>
               <ProductWidget item={item} />
             </React.Fragment>
           )}
           keyExtractor={item => item.id}
-          contentContainerStyle={{alignItems: 'center'}}
+          contentContainerStyle={{ alignItems: 'center' }}
         />
       </View>
       {/* New Arrivals*/}
 
       {/* Most Selling*/}
       <View style={styles.contentView}>
-        <View style={styles.headingView}>
+        <View style={{...styles.headingView,marginTop: language === 'AR' ? 10 : 0}}>
           <Heading txt={t('mostSelling')} txtStyle={styles.heading} />
         </View>
-        <Spacer />
+        {/* <Spacer /> */}
         <FlatList
           data={mostSelling}
           horizontal={true}
           showsHorizontalScrollIndicator={false}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <React.Fragment key={item.id}>
               <ProductWidget item={item} />
             </React.Fragment>
           )}
           keyExtractor={item => item.id}
-          contentContainerStyle={{alignItems: 'center'}}
+          contentContainerStyle={{ alignItems: 'center' }}
         />
       </View>
       {/* Most Selling*/}
 
       {/* Dynamic Middle Banner */}
-      <Banner 
-        type="Middle" 
+      <Banner
+        type="Middle"
         onPress={handleBannerPress}
         style={styles.bannerContainer}
       />
 
       {/* For Boys */}
       <View style={styles.contentView}>
-        <View style={styles.headingView}>
+        <View style={{...styles.headingView,marginTop: language === 'AR' ? 10 : 0}}>
           <Heading txt={t('forBoys')} txtStyle={styles.heading} />
         </View>
-        <Spacer />
+        {/* <Spacer /> */}
         <FlatList
           data={forBoys}
           horizontal={true}
           showsHorizontalScrollIndicator={false}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <React.Fragment key={item.id}>
               <ProductWidget item={item} />
             </React.Fragment>
           )}
           keyExtractor={item => item.id}
-          contentContainerStyle={{alignItems: 'center'}}
+          contentContainerStyle={{ alignItems: 'center' }}
         />
       </View>
       {/* For Boys */}
 
       {/* For Girls */}
       <View style={styles.contentView}>
-        <View style={styles.headingView}>
+        <View style={{...styles.headingView,marginTop: language === 'AR' ? 10 : 0}}>
           <Heading txt={t('forGirls')} txtStyle={styles.heading} />
         </View>
-        <Spacer />
+        {/* <Spacer /> */}
         <FlatList
           data={forGirls}
           horizontal={true}
           showsHorizontalScrollIndicator={false}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <React.Fragment key={item.id}>
               <ProductWidget item={item} />
             </React.Fragment>
           )}
           keyExtractor={item => item.id}
-          contentContainerStyle={{alignItems: 'center'}}
+          contentContainerStyle={{ alignItems: 'center' }}
         />
       </View>
       {/* For Girls */}
-<Banner 
-        type="Bottom" 
+      <Banner
+        type="Bottom"
         onPress={handleBannerPress}
         style={styles.bannerContainer}
       />
       {/* For Brands */}
       <View style={styles.contentView}>
-        <View style={styles.headingView}>
+        <View style={{...styles.headingView,marginTop: language === 'AR' ? 10 : 0}}>
           <Heading txt={t('brands')} txtStyle={styles.heading} />
           <Pressable onPress={handleBrandPress}>
             <Text style={styles.allLink}>{t('viewAll')}</Text>
@@ -442,46 +515,30 @@ export default function Home() {
           data={brands1}
           horizontal={true}
           showsHorizontalScrollIndicator={false}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <React.Fragment key={item.id}>
               <Spacer size={'lg'} />
               <BrandTile item={item} />
             </React.Fragment>
           )}
           keyExtractor={item => item.id}
-          contentContainerStyle={{alignItems: 'center'}}
+          contentContainerStyle={{ alignItems: 'center' }}
         />
         <FlatList
           data={brands2}
           horizontal={true}
           showsHorizontalScrollIndicator={false}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <React.Fragment key={item.id}>
               <Spacer size={'lg'} />
               <BrandTile item={item} />
             </React.Fragment>
           )}
           keyExtractor={item => item.id}
-          contentContainerStyle={{alignItems: 'center'}}
+          contentContainerStyle={{ alignItems: 'center' }}
         />
       </View>
       {/* For Brands */}
-    </MasterLayout>
+      </MasterLayout>
   );
 }
-
-const loadGuestInfo = async () => {
-  try {
-    const guestEmail = await AsyncStorage.getItem('guest_email');
-    const guestMobile = await AsyncStorage.getItem('guest_mobile');
-    
-    if (guestEmail) {
-      dispatch(setGuestEmail(guestEmail));
-    }
-    if (guestMobile) {
-      dispatch(setGuestMobile(guestMobile));
-    }
-  } catch (error) {
-    console.log('Error loading guest info:', error);
-  }
-};

@@ -20,7 +20,14 @@ const Wallet = () => {
   const {t} = useTranslation();
 
   return (
-    <MasterLayout bgColor={COLORS.bgGray} scrolling={false} max={true}>
+    <MasterLayout 
+    bgColor={COLORS.bgGray} 
+    scrolling={false} 
+    max={true}
+    statusBarColor={COLORS.white}
+    statusBarStyle="dark-content"
+    
+    >
       <View style={globalStyles.whiteBg}>
         <BackBar title={t('wallet')} navigateTo={'Account'} />
       </View>

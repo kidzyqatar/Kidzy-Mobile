@@ -182,5 +182,18 @@
   "discoverAmazingToys": "اكتشف ألعاباً مذهلة لأطفالك الصغار",
   "exploreOurCollection": "استكشف مجموعتنا",
   "specialOffers": "عروض خاصة",
-  "description": "وصف"
+  "description": "وصف",
+  "somethingWentWrong": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",
+  "ok": "حسنا",
+  "failedToAddToCart": "فشل في إضافة العنصر إلى السلة",
+  "exploreMore": "استكشف المزيد",
+  "notAMember": "لست عضوا؟",
+  "noPendingOrders": "لا توجد طلبات معلقة",
+  "noProcessingOrders": "لا توجد طلبات قيد المعالجة",
+  "noCompletedOrders": "لا توجد طلبات مكتملة",
+  "addressRequired": "يرجى إضافة عنوان قبل المتابعة",
+  "cartNotFound": "لم يتم العثور على السلة. يرجى المحاولة مرة أخرى",
+  "addressNotCreated": "لم يتم إنشاء العنوان بشكل صحيح. يرجى المحاولة مرة أخرى.",
+  "addressBindingError": "حدث خطأ أثناء ربط عنوان الشحن. يرجى المحاولة مرة أخرى.",
+  "invalidAddress": "عنوان غير صالح تم تحديده"
 }

@@ -111,7 +111,13 @@ export default function Account() {
     }
   };
   return (
-    <MasterLayout bgColor={COLORS.bgGray} scrolling={false} max={true}>
+    <MasterLayout 
+    bgColor={COLORS.bgGray} 
+    scrolling={false} 
+    max={true}
+     statusBarColor={COLORS.secondaryLite}
+        statusBarStyle="dark-content"
+    >
       {profile === null ? (
         <>
           <View
@@ -231,16 +237,16 @@ export default function Account() {
             <View style={styles.topRowLeftView}>
               <Avatar.Image
                 size={70}
-                source={{uri: profile.full_image}}
+                source={{uri: profile?.full_image || ''}}
                 style={styles.topImg}
               />
             </View>
             <View style={styles.topRowRightView}>
               <Phrase
-                txt={`${profile.name} ${profile.last_name}`}
+                txt={`${profile?.name || ''} ${profile?.last_name || ''}`}
                 txtStyle={styles.topRowName}
               />
-              <Phrase txt={profile.email} txtStyle={styles.topRowEmail} />
+              <Phrase txt={profile?.email || ''} txtStyle={styles.topRowEmail} />
             </View>
           </View>
 

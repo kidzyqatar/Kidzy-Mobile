@@ -38,7 +38,14 @@ const PaymentInformation = () => {
   const [accountTitle, setAccountTitle] = useState('');
   const [bankName, setBankName] = useState('');
   return (
-    <MasterLayout bgColor={COLORS.bgGray} scrolling={true} max={true}>
+    <MasterLayout 
+    bgColor={COLORS.bgGray} 
+    scrolling={true} 
+    max={true}
+    statusBarColor={COLORS.white}
+    statusBarStyle="dark-content"
+    
+    >
       <View style={globalStyles.whiteBg}>
         <BackBar title={'Payment Information'} navigateTo={'Account'} />
       </View>

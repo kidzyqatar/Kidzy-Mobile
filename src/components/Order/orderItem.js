@@ -7,8 +7,8 @@ import {useTranslation} from 'react-i18next';
 
 const OrderItem = ({item}) => {
   const {t} = useTranslation();
-  let chipBgColor = '';
-  let chipTxtColor = '';
+  let chipBgColor = COLORS.grayLight + '1A';
+  let chipTxtColor = COLORS.gray;
   switch (item.status) {
     case 'Pending':
       chipBgColor = COLORS.danger + '1A';
@@ -24,6 +24,7 @@ const OrderItem = ({item}) => {
       break;
 
     default:
+      // Use default values already set above
       break;
   }
   return (

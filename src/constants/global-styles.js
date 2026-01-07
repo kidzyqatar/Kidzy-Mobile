@@ -24,6 +24,7 @@ export default GlobalStyle = StyleSheet.create({
   whiteBg: {
     backgroundColor: COLORS.white,
     padding: SIZES.padding,
+    paddingTop: SIZES.minor,
     zIndex: 999,
   },
   rowView: {

@@ -18,8 +18,8 @@ import {useTranslation} from 'react-i18next';
 const OrderDetail = ({route}) => {
   const {t} = useTranslation();
   const {item} = route.params;
-  let chipBgColor = '';
-  let chipTxtColor = '';
+  let chipBgColor = COLORS.grayLight + '1A';
+  let chipTxtColor = COLORS.gray;
   switch (item?.status) {
     case 'Pending':
       chipBgColor = COLORS.danger + '1A';
@@ -35,17 +35,25 @@ const OrderDetail = ({route}) => {
       break;
 
     default:
+      // Use default values already set above
       break;
   }
   return (
-    <MasterLayout bgColor={COLORS.bgGray} scrolling={false} max={true}>
+    <MasterLayout 
+    bgColor={COLORS.bgGray} 
+    scrolling={false} 
+    max={true}
+    statusBarColor={COLORS.white}
+    statusBarStyle="dark-content"
+    
+    >
       <View style={globalStyles.whiteBg}>
         <BackBar title={t('orderDetails')} navigateTo={'Orders'} />
       </View>
       <Spacer />
       <ScrollView scrollEnabled={true} showsVerticalScrollIndicator={false}>
-        <View style={globalStyles.whiteBg}>
-          <View style={globalStyles.rowView}>
+        <View style={{...globalStyles.whiteBg,paddingBottom:0}}>
+          <View style={{...globalStyles.rowView}}>
             <Phrase txt={t('orderStatus')} txtStyle={styles.smallHeading} />
             <Chip
               status={item?.status}
@@ -53,10 +61,11 @@ const OrderDetail = ({route}) => {
               txtColor={chipTxtColor}
             />
           </View>
+          <View style={{borderWidth:0.5,borderColor:"black",marginVertical:10}}/>
         </View>
-        <Spacer />
+        {/* <Spacer /> */}
 
-        <View style={globalStyles.whiteBg}>
+        <View style={{...globalStyles.whiteBg,}}>
           <Phrase txt={t('orderInfo')} txtStyle={styles.smallHeading} />
           <Phrase
             txt={`${t('orderId')}: ${item.id}`}
@@ -115,7 +124,7 @@ const OrderDetail = ({route}) => {
 
         {/* Special Widget */}
 
-        <Spacer />
+        {/* <Spacer /> */}
 
         {/* Balloon Widget */}
         {item.balloon_cost > 0 ? (
@@ -131,7 +140,7 @@ const OrderDetail = ({route}) => {
             </View>
           </View>
         ) : null}
-        <Spacer />
+        {/* <Spacer /> */}
         <View style={globalStyles.whiteBg}>
           <View style={globalStyles.rowView}>
             <Phrase txt={t('total')} txtStyle={styles.smallInfoTxt} />

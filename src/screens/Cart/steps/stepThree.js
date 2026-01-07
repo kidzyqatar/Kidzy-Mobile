@@ -373,10 +373,14 @@ const memoizedAddShippingAddress = React.useCallback(() => {
   useEffect(() => {
     if (!sameAsBilling) {
       dispatch(setSelectedShippingAddress(global.cart_shipping_address));
+
     } else {
       dispatch(setSelectedShippingAddress(global.cart_billing_address));
     }
+    dispatch(setSendtoFriend(sameAsBilling))
   }, [sameAsBilling]);
+
+  console.log("sameAsBilling", sameAsBilling);
 
   const toggleSameAsBillingAddress = () => {
     setSameAsBilling(!sameAsBilling);
@@ -519,10 +523,16 @@ const memoizedAddShippingAddress = React.useCallback(() => {
       setDefaultBilling(0);
       
       console.log('🏠 Setting selected shipping address:', response.data.address);
-      dispatch(setSelectedShippingAddress(response.data.address));
-      
-      console.log('🛒 Calling addShippingAddressToCart with address ID:', response.data.address.id);
-      await addShippingAddressToCart(response.data.address);
+      // Validate address exists in response before using it
+      if (response.data && response.data.address && response.data.address.id) {
+        dispatch(setSelectedShippingAddress(response.data.address));
+        
+        console.log('🛒 Calling addShippingAddressToCart with address ID:', response.data.address.id);
+        await addShippingAddressToCart(response.data.address);
+      } else {
+        console.error('❌ Shipping address response is invalid:', response.data);
+        Alert.alert(t('error'), t('addressNotCreated') || 'Shipping address was not created properly. Please try again.');
+      }
       
       console.log('🔄 Refreshing addresses list');
       getAddresses();
@@ -557,21 +567,33 @@ const memoizedAddShippingAddress = React.useCallback(() => {
     );
   };
   const addShippingAddressToCart = async address => {
-  dispatch(setLoader(true));
-  callNonTokenApi(config.apiName.addAddressToCart, 'POST', {
-    address_id: address?.id,
-    order_id: global.cart.id,
-    type: 'shipping',
-  })
-    .then(res => {
-      dispatch(setLoader(false));
-      if (res.status == 200) {
-        console.log(res);
-      } else {
-        Alert.alert('Error!', res.message);
-      }
+    // Validate address exists before proceeding
+    if (!address || !address.id) {
+      console.error('❌ Cannot add shipping address to cart: address is missing or invalid', address);
+      return; // Silently return - don't show alert for shipping address
+    }
+
+    // Validate cart exists
+    if (!global.cart || !global.cart.id) {
+      console.error('❌ Cannot add shipping address to cart: cart is missing or invalid');
+      return;
+    }
+
+    dispatch(setLoader(true));
+    callNonTokenApi(config.apiName.addAddressToCart, 'POST', {
+      address_id: address.id,
+      order_id: global.cart.id,
+      type: 'shipping',
     })
-    .catch(err => {
+      .then(res => {
+        dispatch(setLoader(false));
+        if (res.status == 200) {
+          console.log('✅ Shipping address added to cart:', res.data);
+        } else {
+          Alert.alert(t('error'), res.message || t('somethingWentWrong'));
+        }
+      })
+      .catch(err => {
       Alert.alert('Error', 'Error while binding shipping Address');
       dispatch(setLoader(false));
       console.log(err);
@@ -652,7 +674,7 @@ const memoizedAddShippingAddress = React.useCallback(() => {
       is_default_billing: true,
       is_default_shipping: true,
     };
-    if (global.isLoggedIn) {
+    if (global.isLoggedIn && global.user?.id) {
       params['user_id'] = global.user.id;
     }
     dispatch(setLoader(true));
@@ -668,11 +690,18 @@ const memoizedAddShippingAddress = React.useCallback(() => {
           setProvince('');
           setDefaultShipping(0);
           setDefaultBilling(0);
-          dispatch(setSelectedBillingAddress(res.data.address));
-          addAddressToCart(res.data.address);
+          
+          // Validate address exists in response before using it
+          if (res.data && res.data.address && res.data.address.id) {
+            dispatch(setSelectedBillingAddress(res.data.address));
+            addAddressToCart(res.data.address);
+          } else {
+            console.error('❌ Address response is invalid:', res.data);
+            Alert.alert(t('error'), t('addressNotCreated') || 'Address was not created properly. Please try again.');
+          }
           getAddresses();
         } else {
-          Alert.alert('Error!', res.message);
+          Alert.alert(t('error'), res.message || t('somethingWentWrong'));
         }
       })
       .catch(err => {
@@ -689,24 +718,38 @@ const memoizedAddShippingAddress = React.useCallback(() => {
         dispatch(setLoader(false));
         if (res.status == 200) {
           const {addresses} = res.data;
-          setAddresses(res.data.addresses);
+          setAddresses(res.data.addresses || []);
 
-          if (!global.cart_billing_address) {
-            const selectedBilling =
-              addresses.find(x => x.is_default_billing == true) || addresses[0];
-            dispatch(setSelectedBillingAddress(selectedBilling));
-            addAddressToCart(res.data.addresses[0]);
-          }
+          // Only process addresses if array exists and has items
+          if (addresses && Array.isArray(addresses) && addresses.length > 0) {
+            if (!global.cart_billing_address) {
+              const selectedBilling =
+                addresses.find(x => x.is_default_billing == true) || addresses[0];
+              
+              // Only set and add if valid address found
+              if (selectedBilling && selectedBilling.id) {
+                dispatch(setSelectedBillingAddress(selectedBilling));
+                addAddressToCart(selectedBilling);
+              }
+            }
 
-          if (!global.cart_shipping_address) {
-            const selectedShipping =
-              addresses.find(x => x.is_default_shipping == true) ||
-              addresses[0];
-            dispatch(setSelectedShippingAddress(selectedShipping));
-            addShippingAddressToCart(selectedShipping);
+            if (!global.cart_shipping_address) {
+              const selectedShipping =
+                addresses.find(x => x.is_default_shipping == true) ||
+                addresses[0];
+              
+              // Only set and add if valid address found
+              if (selectedShipping && selectedShipping.id) {
+                dispatch(setSelectedShippingAddress(selectedShipping));
+                addShippingAddressToCart(selectedShipping);
+              }
+            }
+          } else {
+            console.log('ℹ️ No addresses found for user');
+            // Don't show error - user just hasn't added addresses yet
           }
         } else {
-          Alert.alert('Error!', res.message);
+          Alert.alert(t('error'), res.message || t('somethingWentWrong'));
         }
       })
       .catch(err => {
@@ -715,6 +758,26 @@ const memoizedAddShippingAddress = React.useCallback(() => {
   };
 
   const addAddressToCart = async address => {
+    // Validate address exists before proceeding
+    if (!address || !address.id) {
+      console.error('❌ Cannot add address to cart: address is missing or invalid', address);
+      Alert.alert(
+        t('error'),
+        t('addressRequired') || 'Please add an address before continuing'
+      );
+      return;
+    }
+
+    // Validate cart exists
+    if (!global.cart || !global.cart.id) {
+      console.error('❌ Cannot add address to cart: cart is missing or invalid');
+      Alert.alert(
+        t('error'),
+        t('cartNotFound') || 'Cart not found. Please try again'
+      );
+      return;
+    }
+
     dispatch(setLoader(true));
 
     callNonTokenApi(config.apiName.addAddressToCart, 'POST', {
@@ -725,14 +788,15 @@ const memoizedAddShippingAddress = React.useCallback(() => {
       .then(res => {
         dispatch(setLoader(false));
         if (res.status == 200) {
-          console.log(res.data);
+          console.log('✅ Billing address added to cart:', res.data);
         } else {
-          Alert.alert('Error!', res.message);
+          Alert.alert(t('error'), res.message || t('somethingWentWrong'));
         }
       })
       .catch(err => {
         dispatch(setLoader(false));
-        console.log(err);
+        console.error('❌ Error adding billing address to cart:', err);
+        Alert.alert(t('error'), t('somethingWentWrong'));
       });
   };
 
@@ -768,8 +832,13 @@ const memoizedAddShippingAddress = React.useCallback(() => {
               <View style={{width: SIZES.ten}}>
                 <TouchableOpacity
                   onPress={() => {
-                    dispatch(setSelectedBillingAddress(item));
-                    addAddressToCart(item);
+                    if (item && item.id) {
+                      dispatch(setSelectedBillingAddress(item));
+                      addAddressToCart(item);
+                    } else {
+                      console.error('❌ Invalid address item selected:', item);
+                      Alert.alert(t('error'), t('invalidAddress') || 'Invalid address selected');
+                    }
                   }}>
                   <Image
                     source={
@@ -823,8 +892,13 @@ const memoizedAddShippingAddress = React.useCallback(() => {
               <View style={{width: SIZES.ten}}>
                 <TouchableOpacity
                   onPress={() => {
-                    dispatch(setSelectedShippingAddress(item));
-                    addShippingAddressToCart(item);
+                    if (item && item.id) {
+                      dispatch(setSelectedShippingAddress(item));
+                      addShippingAddressToCart(item);
+                    } else {
+                      console.error('❌ Invalid shipping address item selected:', item);
+                      Alert.alert(t('error'), t('invalidAddress') || 'Invalid address selected');
+                    }
                   }}>
                   <Image
                     source={
@@ -902,8 +976,7 @@ const memoizedAddShippingAddress = React.useCallback(() => {
         <Checkbox
           state={sameAsBilling}
           stateChanger={toggleSameAsBillingAddress}
-          label={t('sameAsBillingAddress')}
-        />
+          label={t('sameAsBillingAddress')}/>
         <Spacer />
         <Checkbox
           state={!sameAsBilling}

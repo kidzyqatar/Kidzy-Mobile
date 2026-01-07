@@ -7,6 +7,7 @@ import { forwardArrow } from '@constants/icons';
 import * as RootNavigation from '@navigators/RootNavigation';
 
 const BrandTile = ({ item }) => {
+  // console.log('item', JSON.stringify(item,null,4));
   return (
     <TouchableOpacity
       style={styles.container}

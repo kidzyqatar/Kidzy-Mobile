@@ -180,5 +180,18 @@
     "emptyCart": "Empty cart",
     "pleaseAddItemsToYourCart": "Please add items to your cart",
     "productDetails": "Product Details",
-    "description": "Description"
+    "description": "Description",
+    "somethingWentWrong": "Something went wrong. Please try again.",
+    "ok": "OK",
+    "failedToAddToCart": "Failed to add item to cart",
+    "exploreMore": "Explore More",
+    "notAMember": "Not a member?",
+    "noPendingOrders": "No pending orders found",
+    "noProcessingOrders": "No processing orders found",
+    "noCompletedOrders": "No completed orders found",
+    "addressRequired": "Please add an address before continuing",
+    "cartNotFound": "Cart not found. Please try again",
+    "addressNotCreated": "Address was not created properly. Please try again.",
+    "addressBindingError": "Error while binding shipping address. Please try again.",
+    "invalidAddress": "Invalid address selected"
 }

@@ -10,6 +10,9 @@ export const styles = StyleSheet.create({
     color: COLORS.txtGray,
     ...FONTS.body5,
   },
+  searchRow:{
+    marginTop:SIZES.radius
+  },
   filterItem: {
     width: 'auto',
     paddingHorizontal: SIZES.padding,

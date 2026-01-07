@@ -19,7 +19,9 @@ const CategoryTile = ({item}) => {
       }}>
       <View style={styles.innerContainer}>
         <View style={styles.leftView}>
-          <Phrase txt={item.name} txtStyle={styles.txt} numberOfLine={2} />
+          <Phrase txt={item.name} txtStyle={styles.txt}
+          //  numberOfLine={2}
+            />
           <Image source={forwardArrow} style={styles.img} />
         </View>
         <View style={styles.rightView}>
@@ -32,26 +34,43 @@ const CategoryTile = ({item}) => {
 
 const styles = StyleSheet.create({
   container: {
-    width: SIZES.fourtyFive,
-    height: 140,
+    // width: SIZES.fourtyFive,
+    flex:1,
+    // height: 100,
     backgroundColor: COLORS.categoryBackground,
     borderRadius: SIZES.minor,
-    padding: SIZES.radius,
+    padding: SIZES.base,
     marginHorizontal: SIZES.base,
     marginTop: SIZES.padding,
     flexDirection: 'row',
   },
-  innerContainer: {flexDirection: 'row', justifyContent: 'space-between'},
+  innerContainer: {flex:1,flexDirection: 'row', justifyContent: 'space-between'},
   leftView: {
-    width: SIZES.fifty,
-    justifyContent: 'space-between',
+    flex:0.6,
+    // alignItems:"center",
+    justifyContent:"center"
+    // width: SIZES.fifty,
+    // justifyContent: 'space-between',
+    // backgroundColor:"red"
   },
   txt: {...FONTS.body4_bold, marginBottom: 5},
-  img: {width: 15, height: 15},
-  rightView: {width: SIZES.fifty, paddingLeft: 10},
+  img: {width:18,height:18,marginVertical:SIZES.minor,},
+  rightView: {
+    // width: SIZES.fifty, 
+    flex:0.4,
+    justifyContent:"center",
+    alignItems:"center",
+    // paddingLeft: 2,
+    // backgroundColor:"blue"
+  },
   catImg: {
-    width: SIZES.hundred,
-    height: undefined,
+    // width: SIZES.fifty,
+    // height: undefined,
+    // width:"70%",
+    // flex:1,
+    width:"100%",
+    height:70,
+
     aspectRatio: 0.6,
     resizeMode: 'contain',
   },

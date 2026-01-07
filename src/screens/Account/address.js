@@ -1,7 +1,7 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Image, TouchableOpacity, View, FlatList, Alert} from 'react-native';
-import {Avatar} from 'react-native-paper';
-import {avatar} from '@constants/images';
+import React, { useEffect, useRef, useState } from 'react';
+import { Image, TouchableOpacity, View, FlatList, Alert, ScrollView, Text } from 'react-native';
+import { Avatar } from 'react-native-paper';
+import { avatar } from '@constants/images';
 import {
   myOrders,
   myWallet,
@@ -10,7 +10,7 @@ import {
   myUser,
   back,
 } from '@constants/icons';
-import {COLORS, SIZES, FONTS} from '@constants/theme';
+import { COLORS, SIZES, FONTS } from '@constants/theme';
 import {
   MasterLayout,
   Phrase,
@@ -24,7 +24,7 @@ import {
   PrefixTextInput,
 } from '@components';
 import globalStyles from '@constants/global-styles';
-import {styles} from './styles';
+import { styles } from './styles';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import {
   checkedRadio,
@@ -32,8 +32,8 @@ import {
   checked as checkedCheckbox,
   unchecked as uncheckedCheckbox,
 } from '@constants/icons';
-import {useDispatch, useSelector} from 'react-redux';
-import {setLoader} from '../../store/reducers/global';
+import { useDispatch, useSelector } from 'react-redux';
+import { setLoader } from '../../store/reducers/global';
 import {
   callNonTokenApi,
   callNonTokenApiAddress,
@@ -41,12 +41,12 @@ import {
 import config from '../../constants/config';
 import ActivityIndicatorOverlay from '../../components/ActivityIndicator/ActivityIndicatorOverlay';
 import Checkbox from '../../components/Checkbox/Checkbox';
-import {handleReload} from '../../helpers/helper';
+import { handleReload } from '../../helpers/helper';
 import constants from '../../constants/constants';
-import {useTranslation} from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 export default function Address() {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
 
   const dispatch = useDispatch();
   const global = useSelector(state => state.global);
@@ -66,7 +66,7 @@ export default function Address() {
     getAddresses();
   }, []);
 
-  useEffect(() => {}, [addresses]);
+  useEffect(() => { }, [addresses]);
 
   const addAddress = async () => {
     refRBSheet.current.close();
@@ -81,7 +81,7 @@ export default function Address() {
       is_default_billing: defaultBilling,
       is_default_shipping: defaultShipping,
     };
-    if (global.isLoggedIn) {
+    if (global.isLoggedIn && global.user?.id) {
       params['user_id'] = global.user.id;
     }
     dispatch(setLoader(true));
@@ -127,24 +127,31 @@ export default function Address() {
   };
 
   return (
-    <MasterLayout bgColor={COLORS.bgGray} scrolling={false} max={true}>
+    <MasterLayout
+      bgColor={COLORS.bgGray}
+      scrolling={false}
+      max={true}
+      statusBarColor={COLORS.white}
+      statusBarStyle="dark-content"
+
+    >
       <View style={globalStyles.whiteBg}>
         <BackBar title={t('addresses')} navigateTo={'Account'} />
       </View>
-      <Spacer />
+      {/* <Spacer /> */}
       <Spacer />
       <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
         <FlatList
           data={addresses}
-          renderItem={({item}) => (
+          renderItem={({ item }) => (
             <View style={[styles.addressContainer]}>
               <View
                 style={[
                   globalStyles.row,
                   globalStyles.alignCenter,
-                  {alignItems: 'flex-start'},
+                  { alignItems: 'flex-start' },
                 ]}>
-                <View style={{width: SIZES.ninty}}>
+                <View style={{ width: SIZES.ninty }}>
                   <View style={globalStyles.row}>
                     <Phrase
                       txt={t('addressName')}
@@ -196,7 +203,7 @@ export default function Address() {
         closeOnDragDown={true}
         closeOnPressMask={true}
         dragFromTopOnly={true}
-        height={740}
+        // height={740}
         minClosingHeight={0}
         customStyles={{
           wrapper: {
@@ -209,11 +216,12 @@ export default function Address() {
         {global.loader ? (
           <ActivityIndicatorOverlay visible={true} />
         ) : (
-          <View
+          <ScrollView
             style={[
               globalStyles.contentContainer,
-              {marginHorizontal: SIZES.radius},
+              { flex: 1, marginHorizontal: SIZES.radius, },
             ]}>
+
             <Heading
               txt={t('addNewAddress')}
               txtStyle={styles.bSheetTopHeading}
@@ -281,7 +289,7 @@ export default function Address() {
                 label={t('defaultShippingAddress')}
               />
             </>
-            <View style={[styles.bSheetBottom, {justifyContent: 'center'}]}>
+            <View style={[styles.bSheetBottom, { justifyContent: 'center',marginBottom: 50 }]}>
               <MyButton
                 label={t('addAddress')}
                 txtColor={COLORS.white}
@@ -290,7 +298,9 @@ export default function Address() {
                 onPress={addAddress}
               />
             </View>
-          </View>
+
+
+          </ScrollView>
         )}
       </RBSheet>
     </MasterLayout>

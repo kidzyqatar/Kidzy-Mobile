@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, Text, TouchableOpacity, ScrollView, Alert} from 'react-native';
 import {
   MasterLayout,
@@ -20,19 +20,27 @@ import {callNonTokenApiMP} from '../../helpers/ApiRequest';
 import config from '../../constants/config';
 import {setLoader, setUser} from '../../store/reducers/global';
 import {useTranslation} from 'react-i18next';
+import * as RootNavigation from '../../navigators/RootNavigation';
 
 const Profile = () => {
   const {t} = useTranslation();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
   const [value, setValue] = useState(0);
-  const [firstName, setFirstName] = useState(global.user.name);
-  const [lastName, setLstName] = useState(global.user.last_name);
-  const [mobileNumber, setMobileNumber] = useState(global.user.mobile_number);
-  const [email, setEmail] = useState(global.user.email);
+  const [firstName, setFirstName] = useState(global.user?.name || '');
+  const [lastName, setLstName] = useState(global.user?.last_name || '');
+  const [mobileNumber, setMobileNumber] = useState(global.user?.mobile_number || '');
+  const [email, setEmail] = useState(global.user?.email || '');
   const [pass, setPass] = useState('');
   const [nPass, setNPass] = useState('');
   const [rnPass, setRnpass] = useState('');
+
+  // Redirect to Account screen if user is logged out
+  useEffect(() => {
+    if (!global.user) {
+      RootNavigation.navigate('Account');
+    }
+  }, [global.user]);
 
   const updateProfile = async () => {
     let param = {};
@@ -72,8 +80,20 @@ const Profile = () => {
       });
   };
 
+  // Don't render if user is not logged in
+  if (!global.user) {
+    return null;
+  }
+
   return (
-    <MasterLayout bgColor={COLORS.bgGray} scrolling={false} max={true}>
+    <MasterLayout 
+    bgColor={COLORS.bgGray} 
+    scrolling={false} 
+    max={true}
+    statusBarColor={COLORS.white}
+    statusBarStyle="dark-content"
+    
+    >
       <View style={globalStyles.whiteBg}>
         <BackBar title={t('accountInformation')} navigateTo={'Account'} />
       </View>

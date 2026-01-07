@@ -1,4 +1,4 @@
-import {View, Text, Image, FlatList, Pressable} from 'react-native';
+import {View, Text, Image, FlatList, Pressable, Alert} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {
   MasterLayout,
@@ -65,7 +65,7 @@ const ProductDetail = ({route}) => {
       }
     } catch (error) {
       console.log(error);
-      Alert.alert('Error', 'Failed to add item to cart');
+      Alert.alert(t('error'), t('failedToAddToCart'));
     } finally {
       setIsLoading(false); // Reset loading state
       dispatch(setLoader(false));
@@ -88,7 +88,7 @@ const ProductDetail = ({route}) => {
       .catch(error => {
         dispatch(setLoader(false));
         console.log(error);
-        setApiFailModal(true);
+        Alert.alert(t('error'), t('somethingWentWrong'));
       });
   };
 
@@ -186,7 +186,7 @@ const ProductDetail = ({route}) => {
       </View>
       <Spacer />
       <View style={globalStyles.whiteBg}>
-        <CartBar title={'Explore More'} showCart={false} />
+        <CartBar title={t('exploreMore')} showCart={false} />
         <FlatList
           data={newArrivals}
           horizontal={true}

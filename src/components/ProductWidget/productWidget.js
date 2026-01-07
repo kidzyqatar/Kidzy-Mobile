@@ -101,6 +101,12 @@ const ProductWidget = ({item}) => {
     }
   };
 
+  // Fallback placeholder image when full_image is missing
+  const placeholderImage = 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSHTecWVG03Q76l1-z24nS61GOBn9Rq-7DSkw&s';
+  const imageSource = item.full_image && item.full_image.trim() !== '' 
+    ? {uri: item.full_image} 
+    : {uri: placeholderImage};
+
   return (
     <View>
       <TouchableOpacity
@@ -111,21 +117,29 @@ const ProductWidget = ({item}) => {
         onPress={() => {
           RootNavigation.navigate('ProductDetail', {item: item});
         }}>
-        <Image source={{uri: item.full_image}} style={styles.productImg} />
-        <View style={{padding: SIZES.radius}}>
+        <Image 
+          source={imageSource} 
+          style={styles.productImg}
+          onError={(e) => console.log('Image load error:', item.name, e.nativeEvent.error)}
+        />
+        <View style={styles.contentContainer}>
           <Phrase
             txt={item.name}
             txtStyle={styles.productTitle}
-            numberOfLines={3}
+            numberOfLines={2}
           />
-          {item.before_discount_price && (
-            <Phrase
-              txt={`QAR ${item.before_discount_price}`}
-              txtStyle={styles.productOldPrice}
-              crossed
-            />
-          )}
-          <Phrase txt={`QAR ${item.price}`} txtStyle={styles.productPrice} />
+          <View style={styles.priceContainer}>
+            {item.before_discount_price ? (
+              <Phrase
+                txt={`QAR ${item.before_discount_price}`}
+                txtStyle={styles.productOldPrice}
+                crossed
+              />
+            ) : (
+              <View style={styles.priceSpacerPlaceholder} />
+            )}
+            <Phrase txt={`QAR ${item.price}`} txtStyle={styles.productPrice} />
+          </View>
           <MyButton
             label={<Text style={styles.productBtn}>{t('addToCart')}</Text>}
             btnStyle={[styles.btnStyle, isLoading && {opacity: 0.6}]}
@@ -135,7 +149,7 @@ const ProductWidget = ({item}) => {
             icon={btnCart}
             iconPosition={'right'}
             onPress={addItemTocart}
-            disabled={isLoading} // Disable button during loading
+            disabled={isLoading}
           />
         </View>
       </TouchableOpacity>
@@ -145,33 +159,45 @@ const ProductWidget = ({item}) => {
 
 const styles = StyleSheet.create({
   container: {
-    borderWidth: 0.5,
-    borderColor: COLORS.grayLight,
+    borderWidth: 1,
+    borderColor: COLORS.grayLight1,
     borderRadius: SIZES.base,
     marginRight: SIZES.radius,
     overflow: 'hidden',
     backgroundColor: COLORS.white,
-    marginVertical: SIZES.radius,
+    marginVertical: SIZES.base,
+    height: 340, // Fixed height for consistent cards
   },
   productImg: {
     width: '100%',
-    height: 192,
+    height: 150,
     resizeMode: 'contain',
+  },
+  contentContainer: {
+    padding: SIZES.radius,
+    flex: 1,
+    justifyContent: 'space-between',
   },
   productTitle: {
     color: COLORS.black,
     ...FONTS.body5,
-    height: 16 * 4,
+    height: 44, // Fixed height for 2 lines
+    lineHeight: 22,
+  },
+  priceContainer: {
+    height: 58, // Fixed height for price section
+    justifyContent: 'flex-end',
+  },
+  priceSpacerPlaceholder: {
+    height: 22, // Same height as old price text
   },
   productPrice: {
     color: COLORS.black,
-    marginTop: SIZES.base,
     ...FONTS.body3_bold,
   },
   productOldPrice: {
     color: COLORS.gray,
-    marginTop: SIZES.base,
-    ...FONTS.body3_bold,
+    ...FONTS.body6,
     textDecorationLine: 'line-through',
   },
   productBtn: {

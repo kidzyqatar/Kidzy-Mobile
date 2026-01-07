@@ -42,7 +42,6 @@ const globalSlice = createSlice({
   reducers: {
     setUser: (state, action) => {
       return {...state, user: action.payload};
-      console.log(state, action);
     },
     setLoader: (state, action) => {
       return {...state, loader: action.payload};

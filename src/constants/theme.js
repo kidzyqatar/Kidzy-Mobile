@@ -16,12 +16,14 @@ export const COLORS = {
   bgGray: '#F2F4F7',
   iconGray: '#98A2B3',
   grayLight: '#D0D5DD',
+  grayLight1:'#D3D3D3',
   categoryBackground: '#D1FADF',
   txtGray: '#667085',
   girls: '#D50075',
   cartBtn: '#E9F6F9',
   bottomSheetBackground: 'rgba(0, 0, 0, 0.5)',
 };
+
 
 export const SIZES = {
   // spacings
