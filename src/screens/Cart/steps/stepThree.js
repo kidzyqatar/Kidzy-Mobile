@@ -878,6 +878,8 @@ const memoizedAddShippingAddress = React.useCallback(() => {
     );
   };
 
+  console.log(">>>>>>>>>>> address",JSON.stringify(addresses,null,4))
+
   const ShippingAddresses = () => {
     return (
       <ScrollView>
@@ -1182,6 +1184,7 @@ const memoizedAddShippingAddress = React.useCallback(() => {
           <Phrase txt={t('quantity')} txtStyle={{...FONTS.body4}} />
           <View style={styles.calcView}>
             <TouchableOpacity
+            style={{padding:16}}
               onPress={() => {
                 decrementQuantity();
               }}>
@@ -1189,6 +1192,7 @@ const memoizedAddShippingAddress = React.useCallback(() => {
             </TouchableOpacity>
             <Phrase txt={quantityBalloon} txtStyle={styles.calcTxt} />
             <TouchableOpacity
+             style={{xpadding:16}}
               onPress={() => {
                 incrementQuantity();
               }}>

@@ -24,6 +24,7 @@ const MyButton = ({
           borderWidth: 1,
           borderColor: borderColor,
           marginTop: SIZES.radius,
+          // backgroundColor:"red",
           ...btnStyle,
         }}
         contentStyle={{

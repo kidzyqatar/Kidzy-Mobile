@@ -1,4 +1,4 @@
-import {View, Text, Image, StyleSheet, Alert} from 'react-native';
+import {View, Text, Image, StyleSheet, Alert, ScrollView} from 'react-native';
 import React, {useState} from 'react';
 import {Button} from 'react-native-paper';
 import {
@@ -54,10 +54,10 @@ const GuestForm = ({closeForm, page = true, completeCart}) => {
           styles.contentMiddleView,
           {height: page ? SIZES.seventy : SIZES.hundred},
         ]}>
-        <KeyboardAwareScrollView
-          bounces={true}
+        <ScrollView
+          
           keyboardShouldPersistTaps={'handled'}
-          extraScrollHeight={70}
+        
           showsVerticalScrollIndicator={false}>
           <Input
             label={t('email')}
@@ -163,7 +163,7 @@ const GuestForm = ({closeForm, page = true, completeCart}) => {
                 });
             }}
           />
-        </KeyboardAwareScrollView>
+        </ScrollView>
       </View>
     </View>
   );

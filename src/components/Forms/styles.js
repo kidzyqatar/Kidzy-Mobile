@@ -1,13 +1,19 @@
 import {StyleSheet} from 'react-native';
 import {FONTS, SIZES, COLORS} from '@constants/theme';
 export default styles = StyleSheet.create({
-  content: {flex: 1, height: SIZES.height},
+  content: {
+    // flex: 1, 
+    paddingBottom:10,
+    // height: SIZES.height
+    // backgroundColor:"red"
+  
+  },
   contentTopView: {
     height: SIZES.twenty,
     paddingHorizontal: SIZES.radius,
   },
   contentMiddleView: {
-    height: SIZES.seventy,
+    // height: SIZES.seventy,
     paddingHorizontal: SIZES.radius,
     justifyContent: 'flex-start',
   },

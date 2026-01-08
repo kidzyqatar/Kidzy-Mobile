@@ -1,4 +1,4 @@
-import {View, Text, Image, StyleSheet, Alert} from 'react-native';
+import {View, Text, Image, StyleSheet, Alert, ScrollView} from 'react-native';
 import React, {useState} from 'react';
 import {
   logo,
@@ -198,12 +198,12 @@ const LoginForm = ({closeForm, toggleForm, page = true, completeCart}) => {
       <View
         style={[
           styles.contentMiddleView,
-          {height: page ? SIZES.seventy : SIZES.hundred},
+         
+          {height: page ? SIZES.seventy : SIZES.hundred,},
         ]}>
-        <KeyboardAwareScrollView
-          bounces={true}
-          keyboardShouldPersistTaps={'handled'}
-          extraScrollHeight={70}
+        <ScrollView
+          // keyboardShouldPersistTaps={'handled'}
+          // extraScrollHeight={70}
           showsVerticalScrollIndicator={false}>
           <Spacer />
           <Spacer />
@@ -261,7 +261,7 @@ const LoginForm = ({closeForm, toggleForm, page = true, completeCart}) => {
               loginTunnel('google-login');
             }}
           />
-        </KeyboardAwareScrollView>
+        </ScrollView>
       </View>
       {page && (
         <View style={styles.contentBottomView}>
