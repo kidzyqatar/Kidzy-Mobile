@@ -27,6 +27,7 @@ const initialState = {
   cart_is_sent_to_friend: false,
   payment_method: 'cod',
   cart_billing_address: null,
+  cart_friend_address: null, // Store friend address locally in Redux
   cart_ballons_count: 0,
   cart_character: null,
   cart_delivery_date: '',
@@ -99,6 +100,10 @@ const globalSlice = createSlice({
       return {...state, cart_billing_address: action.payload};
     },
 
+    setFriendAddress: (state, action) => {
+      return {...state, cart_friend_address: action.payload};
+    },
+
     setBallonsCount: (state, action) => {
       return {...state, cart_ballons_count: action.payload};
     },
@@ -163,6 +168,7 @@ export const {
   setPaymentMethod,
   setSelectedShippingAddress,
   setSelectedBillingAddress,
+  setFriendAddress,
   setBallonsCount,
   setSelectedCharacter,
   setSelectedDeliveryTime,

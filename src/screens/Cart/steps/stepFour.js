@@ -88,7 +88,7 @@ const StepFour = ({}) => {
       <Spacer />
       <Spacer />
       <View style={globalStyles.whiteBg}>
-        {global.cart_is_sent_to_friend && (
+        {!global.cart_is_sent_to_friend && (
           <View
             style={[
               styles.methodContainer,

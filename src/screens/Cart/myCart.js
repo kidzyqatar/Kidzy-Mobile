@@ -527,6 +527,17 @@ const handleContinuePress = () => {
               );
             });
         }
+
+        // Check if user selected "sending it to a friend" but hasn't added friend address
+        // Use cart_is_sent_to_friend flag instead of cart_is_same_as_billing
+        if (global.cart_is_sent_to_friend && !global.cart_friend_address) {
+          Alert.alert(
+            t('error'),
+            t('pleaseAddFriendAddress') || 'Please add Friend address before continuing'
+          );
+          return;
+        }
+
         console.log(global.cart_delivery_date, global.cart_delivery_time);
         if (
           global.cart_shipping_address == null ||

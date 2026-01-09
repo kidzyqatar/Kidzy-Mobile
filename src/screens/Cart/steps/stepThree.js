@@ -65,6 +65,7 @@ import {
   setSelectedDeliveryTime,
   setSelectedShippingAddress,
   setSendtoFriend,
+  setFriendAddress,
 } from '../../../store/reducers/global';
 import {TextInput} from 'react-native-paper';
 import {useTranslation} from 'react-i18next';
@@ -367,18 +368,31 @@ const memoizedAddShippingAddress = React.useCallback(() => {
   }, [global.cart_delivery_time]);
 
   useEffect(() => {
-    isFocused && getAddresses();
+    if (isFocused) {
+      getAddresses();
+      // If friend address exists in Redux, set it as selected shipping address
+      if (global.cart_friend_address && !sameAsBilling) {
+        dispatch(setSelectedShippingAddress(global.cart_friend_address));
+      }
+    }
   }, [isFocused]);
   console.log(deliveryTimes, 'deliveryTimes');
   useEffect(() => {
     if (!sameAsBilling) {
-      dispatch(setSelectedShippingAddress(global.cart_shipping_address));
-
+      // Sending to a friend
+      if (global.cart_friend_address) {
+        dispatch(setSelectedShippingAddress(global.cart_friend_address));
+      } else {
+        // No friend address yet — clear selection to force validation
+        dispatch(setSelectedShippingAddress(null));
+      }
     } else {
+      // Same as billing
       dispatch(setSelectedShippingAddress(global.cart_billing_address));
     }
-    dispatch(setSendtoFriend(sameAsBilling))
-  }, [sameAsBilling]);
+    // cart_is_sent_to_friend should be true when NOT same as billing
+    dispatch(setSendtoFriend(!sameAsBilling));
+  }, [sameAsBilling, global.cart_friend_address, global.cart_billing_address]);
 
   console.log("sameAsBilling", sameAsBilling);
 
@@ -525,6 +539,8 @@ const memoizedAddShippingAddress = React.useCallback(() => {
       console.log('🏠 Setting selected shipping address:', response.data.address);
       // Validate address exists in response before using it
       if (response.data && response.data.address && response.data.address.id) {
+        // Save friend address to Redux locally
+        dispatch(setFriendAddress(response.data.address));
         dispatch(setSelectedShippingAddress(response.data.address));
         
         console.log('🛒 Calling addShippingAddressToCart with address ID:', response.data.address.id);
@@ -878,64 +894,62 @@ const memoizedAddShippingAddress = React.useCallback(() => {
     );
   };
 
-  console.log(">>>>>>>>>>> address",JSON.stringify(addresses,null,4))
+  // console.log(">>>>>>>>>>> address",JSON.stringify(addresses,null,4))
 
   const ShippingAddresses = () => {
+    // Only show friend address if it exists in Redux
+    const friendAddress = global.cart_friend_address;
+    
+    if (!friendAddress) {
+      return null; // Don't show anything if no friend address exists
+    }
+
     return (
       <ScrollView>
-        {addresses && addresses.map((item, index) => (
-          <View key={item.id || index} style={[styles.addressContainer]}>
-            <View
-              style={[
-                globalStyles.row,
-                globalStyles.alignCenter,
-                {alignItems: 'flex-start'},
-              ]}>
-              <View style={{width: SIZES.ten}}>
-                <TouchableOpacity
-                  onPress={() => {
-                    if (item && item.id) {
-                      dispatch(setSelectedShippingAddress(item));
-                      addShippingAddressToCart(item);
-                    } else {
-                      console.error('❌ Invalid shipping address item selected:', item);
-                      Alert.alert(t('error'), t('invalidAddress') || 'Invalid address selected');
-                    }
-                  }}>
-                  <Image
-                    source={
-                      global.cart_shipping_address?.id === item.id
-                        ? checkedRadio
-                        : uncheckedRadio
-                    }
-                    style={styles.checkbox}
-                  />
-                </TouchableOpacity>
+        <View key={friendAddress.id} style={[styles.addressContainer]}>
+          <View
+            style={[
+              globalStyles.row,
+              globalStyles.alignCenter,
+              {alignItems: 'flex-start'},
+            ]}>
+            <View style={{width: SIZES.ten}}>
+              <TouchableOpacity
+                onPress={() => {
+                  if (friendAddress && friendAddress.id) {
+                    dispatch(setSelectedShippingAddress(friendAddress));
+                    addShippingAddressToCart(friendAddress);
+                  } else {
+                    console.error('❌ Invalid shipping address item selected:', friendAddress);
+                    Alert.alert(t('error'), t('invalidAddress') || 'Invalid address selected');
+                  }
+                }}>
+                <Image
+                  source={
+                    global.cart_shipping_address?.id === friendAddress.id
+                      ? checkedRadio
+                      : uncheckedRadio
+                  }
+                  style={styles.checkbox}
+                />
+              </TouchableOpacity>
+            </View>
+            <View style={{width: SIZES.ninty}}>
+              <View style={globalStyles.row}>
+                <Phrase txt={'Home: '} txtStyle={styles.addressNameTitle} />
               </View>
-              <View style={{width: SIZES.ninty}}>
-                <View style={globalStyles.row}>
-                  <Phrase txt={'Home: '} txtStyle={styles.addressNameTitle} />
-                  {item.is_default_shipping ? (
-                    <Chip
-                      status={'Default'}
-                      bgColor={COLORS.secondary + '1A'}
-                      txtColor={COLORS.secondary}
-                    />
-                  ) : null}
-                </View>
 
-                <Phrase
-                  txt={`${item.first_name} ${item.last_name}, ${item.street}, ${item.city}, ${item.state}`}
-                  txtStyle={styles.addressName}
-                />
-                <Phrase
-                  txt={`${item.mobile_number}`}
-                  txtStyle={styles.addressName}
-                />
-              </View>
+              <Phrase
+                txt={`${friendAddress.first_name} ${friendAddress.last_name}, ${friendAddress.street}, ${friendAddress.city}, ${friendAddress.state}`}
+                txtStyle={styles.addressName}
+              />
+              <Phrase
+                txt={`${friendAddress.mobile_number}`}
+                txtStyle={styles.addressName}
+              />
             </View>
           </View>
-        ))}
+        </View>
       </ScrollView>
     );
   };
@@ -988,7 +1002,7 @@ const memoizedAddShippingAddress = React.useCallback(() => {
         {!sameAsBilling ? (
           <>
             <Spacer />
-            <ShippingAddresses />
+             <ShippingAddresses />
             <MyButton
               label={t('addNewAddress')}
               txtColor={COLORS.secondary}
@@ -1184,7 +1198,7 @@ const memoizedAddShippingAddress = React.useCallback(() => {
           <Phrase txt={t('quantity')} txtStyle={{...FONTS.body4}} />
           <View style={styles.calcView}>
             <TouchableOpacity
-            style={{padding:16}}
+            style={{padding:16,}}
               onPress={() => {
                 decrementQuantity();
               }}>
@@ -1192,7 +1206,7 @@ const memoizedAddShippingAddress = React.useCallback(() => {
             </TouchableOpacity>
             <Phrase txt={quantityBalloon} txtStyle={styles.calcTxt} />
             <TouchableOpacity
-             style={{xpadding:16}}
+             style={{padding:16}}
               onPress={() => {
                 incrementQuantity();
               }}>
