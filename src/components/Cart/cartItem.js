@@ -173,14 +173,20 @@ const CartItem = ({item}) => {
               onPress={decrementQuantity}
               disabled={isUpdating}
               style={[isUpdating && {opacity: 0.5}]}>
-              <Image source={minus} style={styles.calcImg} />
+                <View style={{padding:10,paddingHorizontal:25}}>
+                <Image source={minus} style={styles.calcImg} />
+                </View>
+             
             </TouchableOpacity>
             <Phrase txt={quantity.toString()} txtStyle={styles.calcTxt} />
             <TouchableOpacity
               onPress={incrementQuantity}
               disabled={isUpdating}
               style={[isUpdating && {opacity: 0.5}]}>
-              <Image source={plus} style={styles.calcImg} />
+                <View style={{padding:10,paddingHorizontal:25}}>
+                <Image source={plus} style={styles.calcImg} />
+                </View>
+              
             </TouchableOpacity>
           </View>
         </View>

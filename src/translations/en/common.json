@@ -194,5 +194,6 @@
     "addressNotCreated": "Address was not created properly. Please try again.",
     "addressBindingError": "Error while binding shipping address. Please try again.",
     "invalidAddress": "Invalid address selected",
-    "pleaseAddFriendAddress": "Please add Friend address before continuing"
+    "pleaseAddFriendAddress": "Please add Friend address before continuing",
+    "productAlreadyInCart": "This product is already in your cart"
 }

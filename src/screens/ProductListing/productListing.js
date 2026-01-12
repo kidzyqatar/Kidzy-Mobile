@@ -300,6 +300,7 @@ const ProductListing = ({ route }) => {
           </View>
         )
       }>
+        {console.log(">>>>>",scene)}
       {scene == 'Listing' ? (
         <View >
           <FlatList

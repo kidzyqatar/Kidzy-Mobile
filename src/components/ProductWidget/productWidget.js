@@ -29,7 +29,24 @@ const ProductWidget = ({item}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiFailModal, setApiFailModal] = useState(false);
 
+  // Check if this product is already in the cart
+  const isInCart =
+    global?.cart?.order_items?.some(
+      cartItem =>
+        cartItem.product_id === item.id ||
+        cartItem.product?.id === item.id,
+    ) || false;
+
   const addItemTocart = async () => {
+    // If already in cart, just show a message and don't add again
+    if (isInCart) {
+      Alert.alert(
+        t('added'),
+        t('productAlreadyInCart') || 'This product is already in your cart.',
+      );
+      return;
+    }
+    console.log("call add to cart")
     if (isLoading) return;
     
     setIsLoading(true);
@@ -40,6 +57,7 @@ const ProductWidget = ({item}) => {
       let guestSessionId = global.cart_session_id;
       
       if (!guestSessionId) {
+        console.log("Check AsyncStorage first")
         // Check AsyncStorage first
         guestSessionId = await AsyncStorage.getItem('guest_session_id');
         
@@ -63,9 +81,9 @@ const ProductWidget = ({item}) => {
       console.log(`📡 [${timestamp}] Making API call`);
       
       const response = await callNonTokenApi(
-        'add-to-cart',
+        config.apiName.addToCart,
         'POST',
-        payload
+        payload,
       );
       
       console.log(`✅ [${timestamp}] API call successful:`, response);
@@ -73,15 +91,24 @@ const ProductWidget = ({item}) => {
       if (response?.status === 200) {
         // After successful add, refresh the cart to get updated items
         const cartResponse = await callNonTokenApi(
-          `get-cart/${guestSessionId}`,
-          'GET'
+          `${config.apiName.getCart}/${guestSessionId}`,
+          'GET',
         );
         
         if (cartResponse?.status === 200) {
           dispatch(setCart(cartResponse.data.cart));
           console.log(`🛒 Cart refreshed successfully`);
-          console.log(`📊 Cart items:`, cartResponse.data.cart?.order_items?.length || 0);
+          console.log(
+            `📊 Cart items:`,
+            cartResponse.data.cart?.order_items?.length || 0,
+          );
         }
+      } else {
+        // Non-200 response from add-to-cart
+        Alert.alert(
+          t('error'),
+          response?.message || t('failedToAddToCart'),
+        );
       }
     } catch (error) {
       console.log(`❌ Add to cart error:`, error);
@@ -94,7 +121,12 @@ const ProductWidget = ({item}) => {
         console.log('💡 Possible issues: missing fields, invalid data, or business rules');
       }
       
-      Alert.alert('Error', `Failed to add item to cart: ${error.response?.data?.message || error.message}`);
+      Alert.alert(
+        t('error'),
+        error.response?.data?.message ||
+          t('failedToAddToCart') ||
+          error.message,
+      );
     } finally {
       setIsLoading(false);
       console.log(`🏁 [${timestamp}] Resetting loading state`);
@@ -141,8 +173,15 @@ const ProductWidget = ({item}) => {
             <Phrase txt={`QAR ${item.price}`} txtStyle={styles.productPrice} />
           </View>
           <MyButton
-            label={<Text style={styles.productBtn}>{t('addToCart')}</Text>}
-            btnStyle={[styles.btnStyle, isLoading && {opacity: 0.6}]}
+            label={
+              <Text style={styles.productBtn}>
+                {isInCart ? t('added') : t('addToCart')}
+              </Text>
+            }
+            btnStyle={[
+              styles.btnStyle,
+              (isLoading || isInCart) && {opacity: 0.6},
+            ]}
             txtColor={COLORS.secondary}
             btnColor={COLORS.cartBtn}
             borderColor={COLORS.black}
