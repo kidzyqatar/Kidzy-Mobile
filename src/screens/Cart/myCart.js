@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   StyleSheet,
   Alert,
   Modal,
+  Platform,
+  Keyboard,
 } from 'react-native';
 import {
   MasterLayout,
@@ -28,20 +30,20 @@ import {
   RegisterForm,
   GuestForm,
 } from '@components';
-import {product1, product2, product3} from '@constants/images';
-import {chevron, logo, mail, lock, eye, userSimple, clock} from '@constants/icons';
-import {COLORS, SIZES, FONTS} from '@constants/theme';
+import { product1, product2, product3 } from '@constants/images';
+import { chevron, logo, mail, lock, eye, userSimple, clock } from '@constants/icons';
+import { COLORS, SIZES, FONTS } from '@constants/theme';
 import globalStyles from '@constants/global-styles';
-import {styles} from './styles';
+import { styles } from './styles';
 import RBSheet from 'react-native-raw-bottom-sheet';
 import StepOne from '@screens/Cart/steps/stepOne';
 import StepTwo from '@screens/Cart/steps/stepTwo';
 import StepThree from './steps/stepThree';
 import StepFour from './steps/stepFour';
 import StepFive from './steps/stepFive';
-import {useDispatch, useSelector} from 'react-redux';
-import {cart, discount} from '../../constants/icons';
-import {callNonTokenApi} from '../../helpers/ApiRequest';
+import { useDispatch, useSelector } from 'react-redux';
+import { cart, discount } from '../../constants/icons';
+import { callNonTokenApi } from '../../helpers/ApiRequest';
 import config from '../../constants/config';
 import {
   setCart,
@@ -61,10 +63,10 @@ import {
 import ActivityIndicatorOverlay from '../../components/ActivityIndicator/ActivityIndicatorOverlay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as RootNavigation from '@navigators/RootNavigation';
-import {useTranslation} from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 const MyCart = () => {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
   const [userCart, setUserCart] = useState(global.cart);
@@ -80,6 +82,30 @@ const MyCart = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+
+
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent =
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+  
+    const showSub = Keyboard.addListener(showEvent, e => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+  
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+  
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const [calculations, setCalculations] = useState({
     subtotal: 0,
@@ -156,16 +182,16 @@ const MyCart = () => {
   const completeCart = async () => {
     try {
       dispatch(setLoader(true));
-      
+
       console.log('🚀 Starting cart completion...');
       console.log('🔍 Current global.payment_method:', global.payment_method);
       console.log('🔍 Cart session ID:', global.cart_session_id);
       console.log('🔍 Cart ID:', global.cart?.id);
-      
+
       // For online payments, complete cart first then initiate Dibsy payment
       if (global.payment_method === 'online') {
         console.log('✅ Completing cart first for online payment...');
-        
+
         // Step 1: Complete cart with all order details (like web version)
         const completeCartPayload = {
           guest_session_id: global.cart_session_id,
@@ -184,37 +210,37 @@ const MyCart = () => {
           payment_method: "DIBSY",
           source: 'mobile_app',
         };
-        
+
         console.log('🔍 Complete Cart Payload:', JSON.stringify(completeCartPayload, null, 2));
-        
+
         // Call complete-cart API
         const completeResponse = await callNonTokenApi(config.apiName.completeCart, 'POST', completeCartPayload);
-        
+
         console.log('🔍 Complete Cart Response:', completeResponse);
-        
+
         if (completeResponse && completeResponse.status === 200) {
           console.log('✅ Cart completed successfully, now initiating Dibsy payment...');
-          
+
           // Step 2: Call dibsy/initiate to get payment URL (send order_id and grand_total)
           const dibsyPayload = {
             order_id: global.cart.id,
             grand_total: Number(calculations.grandTotal).toFixed(2), // Add the payment amount
           };
-          
+
           console.log('🔍 Dibsy Payload:', JSON.stringify(dibsyPayload, null, 2));
-          
+
           const paymentResponse = await callNonTokenApi(config.apiName.onlinePayment, 'POST', dibsyPayload);
-          
+
           console.log('🔍 Dibsy Payment Response:', paymentResponse);
           console.log('🔍 Payment URL:', paymentResponse?.payment_url);
-          
+
           dispatch(setLoader(false));
-          
+
           if (paymentResponse && paymentResponse.payment_url) {
             console.log('🚀 Navigating to DibsyPaymentScreen with URL:', paymentResponse.payment_url);
-            
+
             // Navigate to Dibsy payment screen
-            RootNavigation.navigate('DibsyPaymentScreen', { 
+            RootNavigation.navigate('DibsyPaymentScreen', {
               paymentUrl: paymentResponse.payment_url,
               cartSessionId: global.cart_session_id,
               orderId: global.cart.id,
@@ -231,7 +257,7 @@ const MyCart = () => {
                 character_id: global.cart_character?.id || null,
               }
             });
-            
+
             return;
           } else {
             console.log('❌ Failed to initiate Dibsy payment');
@@ -265,13 +291,13 @@ const MyCart = () => {
           delivery_date: global.cart_delivery_date,
           character_id: global.cart_character?.id || null,
         });
-        
+
         dispatch(setLoader(false));
-        
+
         // Fix: Check if response exists and has success indicators instead of status
         if (response && !response.error) {
           console.log('✅ Cart completion successful');
-          
+
           // Reset cart state
           dispatch(setCart({}));
           dispatch(setCartSessionID(''));
@@ -284,7 +310,7 @@ const MyCart = () => {
           dispatch(setSelectedDeliveryTime(''));
           dispatch(setSameAsBillingAddress(false));
           dispatch(setSendtoFriend(false));
-          
+
           // If Outdoor order, show delivery notice modal before navigating
           const isOutdoorOrder = global?.cart?.order_items?.some(item =>
             item?.product?.categories?.some(category => category == '10'),
@@ -297,7 +323,7 @@ const MyCart = () => {
             console.log('✅ Navigating to Thankyou page for COD payment');
             RootNavigation.navigate('Thankyou');
           }
-          
+
         } else {
           const errorMessage = response?.message || 'Unable to complete your order. Please try again.';
           console.log('❌ Order completion failed:', errorMessage);
@@ -379,18 +405,18 @@ const MyCart = () => {
   // Add this function inside the MyCart component
   const getStep2Title = () => {
     const cartItems = global.cart?.order_items || [];
-    
+
     if (cartItems.length === 0) {
       return t('Add Gift Wrapper'); // Default when cart is empty
     }
-    
+
     // Check if all items are outdoor or cakes categories
     const allItemsAreOutdoorOrCakes = cartItems.every(item => {
-      const isOutdoor = item?.product?.categories?.some(cat => cat == '10') || 
-                       item?.product?.category_id == '10';
-      const isCakes = item?.product?.categories?.some(cat => 
-                       ['11', '12', '13', '14'].includes(cat)) || 
-                     ['11', '12', '13', '14'].includes(item?.product?.category_id);
+      const isOutdoor = item?.product?.categories?.some(cat => cat == '10') ||
+        item?.product?.category_id == '10';
+      const isCakes = item?.product?.categories?.some(cat =>
+        ['11', '12', '13', '14'].includes(cat)) ||
+        ['11', '12', '13', '14'].includes(item?.product?.category_id);
       return isOutdoor || isCakes;
     });
 
@@ -435,12 +461,24 @@ const MyCart = () => {
 
   const [items, setItems] = useState(global.cart?.order_items ?? []);
 
-// Add this useEffect to sync items with global cart changes
-useEffect(() => {
-  setItems(global.cart?.order_items ?? []);
-}, [global.cart?.order_items]);
+  // Add this useEffect to sync items with global cart changes
+  useEffect(() => {
+    setItems(global.cart?.order_items ?? []);
+  }, [global.cart?.order_items]);
 
-const handleContinuePress = () => {
+  const handleContinuePress = () => {
+    // 🔒 Prevent proceeding if cart is empty on My Cart step
+    if (
+      step === 1 &&
+      (!global.cart?.order_items || global.cart.order_items.length === 0)
+    ) {
+      Alert.alert(
+        t('error'),
+        t('cartIsEmpty') || 'Your cart is empty. Please add some products before continuing.',
+      );
+      return;
+    }
+
     // Helper to detect Outdoor category (ID '10') in cart items
     const hasOutdoorCategory = () => {
       try {
@@ -451,7 +489,7 @@ const handleContinuePress = () => {
         return false;
       }
     };
-    
+
     // Helper to detect Party category (ID '15') in cart items
     const hasPartyCategory = () => {
       try {
@@ -492,7 +530,7 @@ const handleContinuePress = () => {
         ) {
           console.log('address is same as billing');
           dispatch(setSelectedShippingAddress(global.cart_billing_address));
-          
+
           // Validate cart exists before making API call
           if (!global.cart || !global.cart.id) {
             Alert.alert(
@@ -595,12 +633,12 @@ const handleContinuePress = () => {
     }
   };
   return (
-    <MasterLayout 
-    bgColor={COLORS.bgGray} 
-    scrolling={false} 
-    max={true}
-    statusBarColor={COLORS.white}
-    statusBarStyle='dark-content'
+    <MasterLayout
+      bgColor={COLORS.bgGray}
+      scrolling={false}
+      max={true}
+      statusBarColor={COLORS.white}
+      statusBarStyle='dark-content'
     >
       <View style={globalStyles.whiteBg}>
         {step == 1 ? (
@@ -694,9 +732,9 @@ const handleContinuePress = () => {
             backgroundColor: '#000',
           },
         }}>
-        <TotalWidget 
-          calculations={calculations} 
-          onCheckoutPress={handleContinuePress} 
+        <TotalWidget
+          calculations={calculations}
+          onCheckoutPress={handleContinuePress}
         />
       </RBSheet>
 
@@ -705,7 +743,7 @@ const handleContinuePress = () => {
         closeOnDragDown={true}
         closeOnPressMask={true}
         dragFromTopOnly={true}
-        height={600}
+        height={authSheetHeight}
         minClosingHeight={0}
         customStyles={{
           wrapper: {
@@ -715,7 +753,7 @@ const handleContinuePress = () => {
             backgroundColor: '#000',
           },
           container: {
-            height: authSheetHeight,
+            // height: authSheetHeight,
             paddingHorizontal: SIZES.radius,
           },
         }}>
@@ -742,7 +780,7 @@ const handleContinuePress = () => {
                   }}>
                   <Phrase
                     txt={t('login')}
-                    txtStyle={{color: form == 0 ? COLORS.white : COLORS.black}}
+                    txtStyle={{ color: form == 0 ? COLORS.white : COLORS.black }}
                   />
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -760,7 +798,7 @@ const handleContinuePress = () => {
                   }}>
                   <Phrase
                     txt={t('register')}
-                    txtStyle={{color: form == 1 ? COLORS.white : COLORS.black}}
+                    txtStyle={{ color: form == 1 ? COLORS.white : COLORS.black }}
                   />
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -778,32 +816,46 @@ const handleContinuePress = () => {
                   }}>
                   <Phrase
                     txt={t('guest')}
-                    txtStyle={{color: form == 2 ? COLORS.white : COLORS.black}}
+                    txtStyle={{ color: form == 2 ? COLORS.white : COLORS.black }}
                   />
                 </TouchableOpacity>
               </View>
             </View>
-            {form == 0 && (
-              <LoginForm
-                closeForm={closeAuthSheet}
-                page={false}
-                completeCart={completeCart}
-              />
-            )}
-            {form == 1 && (
-              <RegisterForm
-                closeForm={closeAuthSheet}
-                page={false}
-                completeCart={completeCart}
-              />
-            )}
-            {form == 2 && (
-              <GuestForm 
-                closeForm={closeAuthSheet} 
-                page={true} 
-                completeCart={completeCart} 
-              />
-            )}
+
+
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={{
+                // minHeight: authSheetHeight, // 🔑 KEY TRICK
+                flexGrow: 1,
+                paddingBottom: keyboardHeight > 0 ? keyboardHeight/1.5 : 20,
+                // backgroundColor:"red"
+              }}>
+
+
+              {form == 0 && (
+                <LoginForm
+                  closeForm={closeAuthSheet}
+                  page={false}
+                  completeCart={completeCart}
+                />
+              )}
+              {form == 1 && (
+                <RegisterForm
+                  closeForm={closeAuthSheet}
+                  page={false}
+                  completeCart={completeCart}
+                />
+              )}
+              {form == 2 && (
+                <GuestForm
+                  closeForm={closeAuthSheet}
+                  page={true}
+                  completeCart={completeCart}
+                />
+              )}
+
+            </ScrollView>
           </>
         )}
       </RBSheet>
@@ -830,7 +882,7 @@ const handleContinuePress = () => {
           }}>
             <Image
               source={clock}
-              style={{width: 56, height: 56, marginBottom: SIZES.radius}}
+              style={{ width: 56, height: 56, marginBottom: SIZES.radius }}
             />
             <Heading
               txt={'Delivery Notice'}
@@ -854,7 +906,7 @@ const handleContinuePress = () => {
               txtColor={COLORS.white}
               btnColor={COLORS.secondary}
               borderColor={COLORS.secondary}
-              btnStyle={{width: SIZES.fifty}}
+              btnStyle={{ width: SIZES.fifty }}
               onPress={() => {
                 setOutdoorNoticeVisible(false);
                 closeAuthSheet();

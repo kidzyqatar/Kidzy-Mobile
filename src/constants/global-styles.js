@@ -4,9 +4,14 @@ import {SIZES, COLORS, FONTS} from '@constants/theme';
 export default GlobalStyle = StyleSheet.create({
   textInput: {
     width: SIZES.hundred,
+    // padding:2,
+
     height: 44,
     backgroundColor: COLORS.white,
-    lineHeight: 20,
+    // backgroundColor:"red",
+    // lineHeight:Platform.OS == "android" ? 25 : 20,
+    padding:0,
+    
   },
   textInputOutline: {borderColor: COLORS.grayLight, borderRadius: SIZES.base},
   textInputIcon: {
@@ -14,6 +19,8 @@ export default GlobalStyle = StyleSheet.create({
     height: 15,
     resizeMode: 'contain',
     borderRadius: 0,
+
+    // backgroundColor:"blue"
   },
   label: {
     width: SIZES.hundred,

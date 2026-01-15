@@ -42,12 +42,14 @@ const Orders = () => {
     });
   }, [ordersPending, ordersProcessing, ordersComplete, value]);
 
+  // "status": "PENDING",
   const getOrders = async () => {
     dispatch(setLoader(true));
     callNonTokenApi(config.apiName.getOrders, 'GET')
       .then(res => {
         dispatch(setLoader(false));
         if (res.status == 200) {
+          console.log("response get all order",JSON.stringify(res.data.orders,null,4))
           const filteredPending = res.data.orders.filter(
             task => task.status === 'CART',
           );

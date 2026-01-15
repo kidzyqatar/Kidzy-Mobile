@@ -41,6 +41,7 @@ const Input = ({
   return (
     <React.Fragment>
       {label !== null && <Text style={globalStyles.label}>{label}</Text>}
+    
 
       <TextInput
         style={inputStyle}
@@ -55,6 +56,8 @@ const Input = ({
         onChangeText={handleChangeText}
         onFocus={handleFocus}
         onBlur={handleBlur}
+        
+        scrollEnabled={false}
         // Add these props to improve focus behavior
         blurOnSubmit={false}
         returnKeyType="next"

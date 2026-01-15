@@ -203,6 +203,6 @@ export const FONTS = {
   },
 };
 
-const theme = {COLORS, SIZES, FONTS};
+const theme = {COLORS, SIZES, FONTS ,};
 
 export default theme;

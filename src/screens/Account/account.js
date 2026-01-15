@@ -1,7 +1,7 @@
-import React, {useEffect, useRef, useState} from 'react';
-import {Alert, Image, TouchableOpacity, View} from 'react-native';
-import {Avatar} from 'react-native-paper';
-import {avatar} from '@constants/images';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Image, Keyboard, Platform, ScrollView, TouchableOpacity, View } from 'react-native';
+import { Avatar } from 'react-native-paper';
+import { avatar } from '@constants/images';
 import {
   myOrders,
   myWallet,
@@ -11,34 +11,59 @@ import {
   back,
   logo,
 } from '@constants/icons';
-import {COLORS, SIZES, FONTS} from '@constants/theme';
-import {MasterLayout, Phrase, Spacer, Hr, MyButton} from '@components';
+import { COLORS, SIZES, FONTS } from '@constants/theme';
+import { MasterLayout, Phrase, Spacer, Hr, MyButton } from '@components';
 // import { chevron, , mail, lock, eye, userSimple } from '@constants/icons';
 import globalStyles from '@constants/global-styles';
-import {styles} from './styles';
+import { styles } from './styles';
 import * as RootNavigation from '../../navigators/RootNavigation';
-import {useDispatch, useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import RBSheet from 'react-native-raw-bottom-sheet';
-import {LoginForm, RegisterForm} from '../../components';
+import { LoginForm, RegisterForm } from '../../components';
 import {
   setActiveTab,
   setIsLoggedIn,
   setLoader,
   setUser,
 } from '../../store/reducers/global';
-import {getData, removeData} from '../../helpers/AsyncStorage';
-import {callNonTokenApi} from '../../helpers/ApiRequest';
+import { getData, removeData } from '../../helpers/AsyncStorage';
+import { callNonTokenApi } from '../../helpers/ApiRequest';
 import config from '../../constants/config';
 import ActivityIndicatorOverlay from '../../components/ActivityIndicator/ActivityIndicatorOverlay';
-import {useTranslation} from 'react-i18next';
+import { useTranslation } from 'react-i18next';
 
 export default function Account() {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
   const [profile, setProfile] = useState(global.user);
   const [form, setForm] = useState(0);
   const [authSheetHeight, setAuthSheetHeight] = useState(600);
+
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent =
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+  
+    const showSub = Keyboard.addListener(showEvent, e => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+  
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+  
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+
+
   const authSheet = useRef();
 
   const closeAuthSheet = () => {
@@ -62,7 +87,7 @@ export default function Account() {
     }
   };
 
-  useEffect(() => {}, [profile]);
+  useEffect(() => { }, [profile]);
 
   const logoutUser = async () => {
     const token = await getData('access_token');
@@ -110,13 +135,15 @@ export default function Account() {
         });
     }
   };
+
+  // console.log(">>>>>>>>>",keyboardHeight)
   return (
-    <MasterLayout 
-    bgColor={COLORS.bgGray} 
-    scrolling={false} 
-    max={true}
-     statusBarColor={COLORS.secondaryLite}
-        statusBarStyle="dark-content"
+    <MasterLayout
+      bgColor={COLORS.bgGray}
+      scrolling={false}
+      max={true}
+      statusBarColor={COLORS.secondaryLite}
+      statusBarStyle="dark-content"
     >
       {profile === null ? (
         <>
@@ -147,8 +174,9 @@ export default function Account() {
             closeOnDragDown={true}
             closeOnPressMask={true}
             dragFromTopOnly={true}
-            height={600}
+            height={authSheetHeight}
             minClosingHeight={0}
+            keyboardAvoidingViewEnabled={true}
             customStyles={{
               wrapper: {
                 backgroundColor: COLORS.bottomSheetBackground,
@@ -157,7 +185,8 @@ export default function Account() {
                 backgroundColor: '#000',
               },
               container: {
-                height: authSheetHeight,
+                // flex:1,
+                // height: 600,
                 paddingHorizontal: SIZES.radius,
               },
             }}>
@@ -166,6 +195,7 @@ export default function Account() {
             ) : (
               // <View />
               <>
+
                 <View style={{}}>
                   <Image source={logo} style={styles.logo} />
                   <View style={styles.pillsContainerLogin}>
@@ -211,22 +241,33 @@ export default function Account() {
                     </TouchableOpacity>
                   </View>
                 </View>
-                {form == 0 && (
-                  <LoginForm
-                    closeForm={closeAuthSheetAndError}
-                    toggleForm={toggleForm}
-                    page={false}
-                    completeCart={completeCart}
-                  />
-                )}
-                {form == 1 && (
-                  <RegisterForm
-                    closeForm={closeAuthSheetAndError}
-                    toggleForm={toggleForm}
-                    page={false}
-                    completeCart={completeCart}
-                  />
-                )}
+                <ScrollView
+                  keyboardShouldPersistTaps="handled"
+                  contentContainerStyle={{
+                    // minHeight: authSheetHeight, // 🔑 KEY TRICK
+                    flexGrow:1,
+                    paddingBottom: keyboardHeight > 0 ? keyboardHeight/1.5 : 20,
+                    // backgroundColor:"red"
+                  }}>
+                  {form == 0 && (
+                    <LoginForm
+                      closeForm={closeAuthSheetAndError}
+                      toggleForm={toggleForm}
+                      page={false}
+                      completeCart={completeCart}
+                    />
+                  )}
+                  {form == 1 && (
+                    <RegisterForm
+                      closeForm={closeAuthSheetAndError}
+                      toggleForm={toggleForm}
+                      page={false}
+                      completeCart={completeCart}
+                    />
+                  )}
+
+                </ScrollView>
+
               </>
             )}
           </RBSheet>
@@ -237,7 +278,7 @@ export default function Account() {
             <View style={styles.topRowLeftView}>
               <Avatar.Image
                 size={70}
-                source={{uri: profile?.full_image || ''}}
+                source={{ uri: profile?.full_image || '' }}
                 style={styles.topImg}
               />
             </View>
@@ -252,6 +293,8 @@ export default function Account() {
 
           <Spacer />
           <Spacer />
+
+          <ScrollView style={{marginBottom:10}}>
           <View style={styles.contentContainer}>
             <TouchableOpacity
               style={[globalStyles.rowView, styles.listItem]}
@@ -338,21 +381,21 @@ export default function Account() {
             <TouchableOpacity>
               <Phrase
                 txt={t('aboutTheAppV1.0')}
-                txtStyle={{...FONTS.body4, color: COLORS.txtGray}}
+                txtStyle={{ ...FONTS.body4, color: COLORS.txtGray }}
               />
             </TouchableOpacity>
             <Spacer />
             <TouchableOpacity>
               <Phrase
                 txt={t('privacyPolicy')}
-                txtStyle={{...FONTS.body4, color: COLORS.txtGray}}
+                txtStyle={{ ...FONTS.body4, color: COLORS.txtGray }}
               />
             </TouchableOpacity>
             <Spacer />
             <TouchableOpacity>
               <Phrase
                 txt={t('termsAndConditions')}
-                txtStyle={{...FONTS.body4, color: COLORS.txtGray}}
+                txtStyle={{ ...FONTS.body4, color: COLORS.txtGray }}
               />
             </TouchableOpacity>
             <Spacer />
@@ -365,6 +408,8 @@ export default function Account() {
               onPress={logoutUser}
             />
           </View>
+          </ScrollView>
+        
         </>
       )}
     </MasterLayout>

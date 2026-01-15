@@ -183,11 +183,7 @@ const RegisterForm = ({closeForm, toggleForm, page = true, completeCart}) => {
           styles.contentMiddleView,
           {height: page ? SIZES.seventy : SIZES.hundred},
         ]}>
-        <KeyboardAwareScrollView
-          bounces={true}
-          keyboardShouldPersistTaps={'handled'}
-          extraScrollHeight={70}
-          showsVerticalScrollIndicator={false}>
+        
           <Input
             label={t('fullName')}
             placeholder={t('Adam Jone')}
@@ -260,7 +256,7 @@ const RegisterForm = ({closeForm, toggleForm, page = true, completeCart}) => {
               loginTunnel('google-login');
             }}
           />
-        </KeyboardAwareScrollView>
+       
       </View>
       {page && (
         <View style={styles.contentBottomView}>

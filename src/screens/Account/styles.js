@@ -138,12 +138,16 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
   },
   addressContainer: {
+ 
     width: SIZES.hundred,
     borderWidth: 1,
     borderColor: COLORS.secondaryUltra,
     padding: SIZES.radius,
     borderRadius: SIZES.base,
     backgroundColor: COLORS.white,
+    marginBottom:5
+    // backgroundColor:"red",
+    // height:SIZES.fifteen
   },
   leftView: { width: SIZES.fifteen },
   midView: { width: SIZES.seventyFive },

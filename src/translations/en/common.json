@@ -195,5 +195,6 @@
     "addressBindingError": "Error while binding shipping address. Please try again.",
     "invalidAddress": "Invalid address selected",
     "pleaseAddFriendAddress": "Please add Friend address before continuing",
-    "productAlreadyInCart": "This product is already in your cart"
+    "productAlreadyInCart": "This product is already in your cart",
+    "cartIsEmpty": "Your cart is empty. Please add some products before continuing."
 }

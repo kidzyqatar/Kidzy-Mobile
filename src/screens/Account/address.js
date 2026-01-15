@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Image, TouchableOpacity, View, FlatList, Alert, ScrollView, Text } from 'react-native';
+import { Image, TouchableOpacity, View, FlatList, Alert, ScrollView, Text, Platform, Keyboard } from 'react-native';
 import { Avatar } from 'react-native-paper';
 import { avatar } from '@constants/images';
 import {
@@ -10,7 +10,7 @@ import {
   myUser,
   back,
 } from '@constants/icons';
-import { COLORS, SIZES, FONTS } from '@constants/theme';
+import { COLORS,SIZES, FONTS } from '@constants/theme';
 import {
   MasterLayout,
   Phrase,
@@ -61,6 +61,33 @@ export default function Address() {
   const [city, setCity] = useState('');
   const [province, setProvince] = useState('');
   const [addresses, setAddresses] = useState('');
+
+
+
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent =
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+  
+    const showSub = Keyboard.addListener(showEvent, e => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+  
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+  
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+
+
 
   useEffect(() => {
     getAddresses();
@@ -140,9 +167,11 @@ export default function Address() {
       </View>
       {/* <Spacer /> */}
       <Spacer />
+
       <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
         <FlatList
           data={addresses}
+          style={{maxHeight:SIZES.height - 250}}
           renderItem={({ item }) => (
             <View style={[styles.addressContainer]}>
               <View
@@ -203,7 +232,7 @@ export default function Address() {
         closeOnDragDown={true}
         closeOnPressMask={true}
         dragFromTopOnly={true}
-        // height={740}
+        height={600}
         minClosingHeight={0}
         customStyles={{
           wrapper: {
@@ -217,9 +246,9 @@ export default function Address() {
           <ActivityIndicatorOverlay visible={true} />
         ) : (
           <ScrollView
-            style={[
+            contentContainerStyle={[
               globalStyles.contentContainer,
-              { flex: 1, marginHorizontal: SIZES.radius, },
+              { flexGrow: 1, marginHorizontal: SIZES.radius,paddingBottom: keyboardHeight > 0 ? keyboardHeight/1.5 : 20, },
             ]}>
 
             <Heading

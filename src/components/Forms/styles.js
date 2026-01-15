@@ -2,7 +2,7 @@ import {StyleSheet} from 'react-native';
 import {FONTS, SIZES, COLORS} from '@constants/theme';
 export default styles = StyleSheet.create({
   content: {
-    // flex: 1, 
+    flex: 1, 
     paddingBottom:10,
     // height: SIZES.height
     // backgroundColor:"red"
@@ -14,6 +14,7 @@ export default styles = StyleSheet.create({
   },
   contentMiddleView: {
     // height: SIZES.seventy,
+    flex: 1,    
     paddingHorizontal: SIZES.radius,
     justifyContent: 'flex-start',
   },

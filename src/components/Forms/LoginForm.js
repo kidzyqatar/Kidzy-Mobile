@@ -201,10 +201,7 @@ const LoginForm = ({closeForm, toggleForm, page = true, completeCart}) => {
          
           {height: page ? SIZES.seventy : SIZES.hundred,},
         ]}>
-        <ScrollView
-          // keyboardShouldPersistTaps={'handled'}
-          // extraScrollHeight={70}
-          showsVerticalScrollIndicator={false}>
+       
           <Spacer />
           <Spacer />
           <Input
@@ -261,7 +258,9 @@ const LoginForm = ({closeForm, toggleForm, page = true, completeCart}) => {
               loginTunnel('google-login');
             }}
           />
-        </ScrollView>
+
+          
+       
       </View>
       {page && (
         <View style={styles.contentBottomView}>

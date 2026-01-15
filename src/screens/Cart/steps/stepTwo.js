@@ -17,7 +17,7 @@ const StepTwo = ({items, getCart}) => {
   const excludedCategories = ['13'];
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
+    <ScrollView style={{marginBottom:60}} showsVerticalScrollIndicator={false}>
       {items.map((elem, index) => {
         const hasExcludedCategory = elem?.product?.categories?.some(category =>
           excludedCategories.includes(category),
