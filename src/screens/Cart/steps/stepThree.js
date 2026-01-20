@@ -120,12 +120,12 @@ const SendToFriendAddressInput = React.memo(({
       <ScrollView
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ 
-          flexGrow: 1, 
-          paddingBottom: keyboardHeight > 0 ? keyboardHeight/1.5 : 20,
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: keyboardHeight > 0 ? keyboardHeight / 1.5 : 20,
         }}
-        // nestedScrollEnabled={true}
-        >
+      // nestedScrollEnabled={true}
+      >
         <View
           style={[
             globalStyles.contentContainer,
@@ -988,7 +988,7 @@ const StepThree = ({ incrementBallonQuantity, decrementBallonQuantity }) => {
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 150 }}>
+      contentContainerStyle={{ paddingBottom: 150, }}>
       <Spacer />
       {/* Address Section */}
       <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>
@@ -1268,7 +1268,7 @@ const StepThree = ({ incrementBallonQuantity, decrementBallonQuantity }) => {
         }}>
 
         <ScrollView
-         keyboardShouldPersistTaps="always"
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={[
             {
               flexGrow: 1,
@@ -1276,6 +1276,7 @@ const StepThree = ({ incrementBallonQuantity, decrementBallonQuantity }) => {
               paddingBottom: keyboardHeight > 0 ? keyboardHeight / 1.5 : 20,
             },
           ]}>
+            
           <View
             style={[
               globalStyles.contentContainer,

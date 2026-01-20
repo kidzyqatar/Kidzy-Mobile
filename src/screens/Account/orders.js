@@ -49,7 +49,7 @@ const Orders = () => {
       .then(res => {
         dispatch(setLoader(false));
         if (res.status == 200) {
-          console.log("response get all order",JSON.stringify(res.data.orders,null,4))
+          // console.log("response get all order",JSON.stringify(res.data.orders,null,4))
           const filteredPending = res.data.orders.filter(
             task => task.status === 'CART',
           );
@@ -59,6 +59,10 @@ const Orders = () => {
           const filteredCompleted = res.data.orders.filter(
             task => task.status === 'COMPLETED',
           );
+
+          console.log("response get all order",JSON.stringify(filteredPending,null,4))
+
+
           setOrderPending(filteredPending);
           setOrderProcessing(filteredProcessing);
           setOrderComplete(filteredCompleted);

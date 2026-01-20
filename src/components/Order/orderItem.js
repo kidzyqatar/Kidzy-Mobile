@@ -27,6 +27,7 @@ const OrderItem = ({item}) => {
       // Use default values already set above
       break;
   }
+  
   return (
     <View style={styles.orderItemView}>
       <View style={styles.orderItemTopRow}>

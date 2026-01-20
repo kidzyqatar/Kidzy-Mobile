@@ -47,15 +47,15 @@ export default function Account() {
       Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent =
       Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-  
+
     const showSub = Keyboard.addListener(showEvent, e => {
       setKeyboardHeight(e.endCoordinates.height);
     });
-  
+
     const hideSub = Keyboard.addListener(hideEvent, () => {
       setKeyboardHeight(0);
     });
-  
+
     return () => {
       showSub.remove();
       hideSub.remove();
@@ -245,8 +245,8 @@ export default function Account() {
                   keyboardShouldPersistTaps="handled"
                   contentContainerStyle={{
                     // minHeight: authSheetHeight, // 🔑 KEY TRICK
-                    flexGrow:1,
-                    paddingBottom: keyboardHeight > 0 ? keyboardHeight/1.5 : 20,
+                    flexGrow: 1,
+                    paddingBottom: keyboardHeight > 0 ? keyboardHeight / 1.5 : 20,
                     // backgroundColor:"red"
                   }}>
                   {form == 0 && (
@@ -294,122 +294,122 @@ export default function Account() {
           <Spacer />
           <Spacer />
 
-          <ScrollView style={{marginBottom:10}}>
-          <View style={styles.contentContainer}>
-            <TouchableOpacity
-              style={[globalStyles.rowView, styles.listItem]}
-              onPress={() => {
-                RootNavigation.navigate('Orders');
-              }}>
-              <View style={styles.listItemLeftView}>
-                <Image source={myOrders} style={styles.toolImg} />
-                <Phrase txt={t('myOrders')} txtStyle={styles.toolTxt} />
-              </View>
-              <View style={styles.listItemRightView}>
-                <Image source={back} style={styles.forwardImg} />
-              </View>
-            </TouchableOpacity>
+          <ScrollView style={{ marginBottom: 10 }}>
+            <View style={styles.contentContainer}>
+              <TouchableOpacity
+                style={[globalStyles.rowView, styles.listItem]}
+                onPress={() => {
+                  RootNavigation.navigate('Orders');
+                }}>
+                <View style={styles.listItemLeftView}>
+                  <Image source={myOrders} style={styles.toolImg} />
+                  <Phrase txt={t('myOrders')} txtStyle={styles.toolTxt} />
+                </View>
+                <View style={styles.listItemRightView}>
+                  <Image source={back} style={styles.forwardImg} />
+                </View>
+              </TouchableOpacity>
 
-            <Spacer />
-            <TouchableOpacity
-              style={[globalStyles.rowView, styles.listItem]}
-              onPress={() => {
-                RootNavigation.navigate('Wallet');
-              }}>
-              <View style={styles.listItemLeftView}>
-                <Image source={myWallet} style={styles.toolImg} />
-                <Phrase txt={t('wallet')} txtStyle={styles.toolTxt} />
-              </View>
-              <View style={styles.listItemRightView}>
-                <Image source={back} style={styles.forwardImg} />
-              </View>
-            </TouchableOpacity>
+              <Spacer />
+              <TouchableOpacity
+                style={[globalStyles.rowView, styles.listItem]}
+                onPress={() => {
+                  RootNavigation.navigate('Wallet');
+                }}>
+                <View style={styles.listItemLeftView}>
+                  <Image source={myWallet} style={styles.toolImg} />
+                  <Phrase txt={t('wallet')} txtStyle={styles.toolTxt} />
+                </View>
+                <View style={styles.listItemRightView}>
+                  <Image source={back} style={styles.forwardImg} />
+                </View>
+              </TouchableOpacity>
 
-            <Spacer />
-            <TouchableOpacity
-              style={[globalStyles.rowView, styles.listItem]}
-              onPress={() => {
-                RootNavigation.navigate('PaymentInformation');
-              }}>
-              <View style={styles.listItemLeftView}>
-                <Image source={myPaymentInformation} style={styles.toolImg} />
+              <Spacer />
+              <TouchableOpacity
+                style={[globalStyles.rowView, styles.listItem]}
+                onPress={() => {
+                  RootNavigation.navigate('PaymentInformation');
+                }}>
+                <View style={styles.listItemLeftView}>
+                  <Image source={myPaymentInformation} style={styles.toolImg} />
+                  <Phrase
+                    txt={t('paymentInformation')}
+                    txtStyle={styles.toolTxt}
+                  />
+                </View>
+                <View style={styles.listItemRightView}>
+                  <Image source={back} style={styles.forwardImg} />
+                </View>
+              </TouchableOpacity>
+
+              <Spacer />
+              <TouchableOpacity
+                style={[globalStyles.rowView, styles.listItem]}
+                onPress={() => {
+                  RootNavigation.navigate('Address');
+                }}>
+                <View style={styles.listItemLeftView}>
+                  <Image source={myAddress} style={styles.toolImg} />
+                  <Phrase txt={t('addresses')} txtStyle={styles.toolTxt} />
+                </View>
+                <View style={styles.listItemRightView}>
+                  <Image source={back} style={styles.forwardImg} />
+                </View>
+              </TouchableOpacity>
+
+              <Spacer />
+              <TouchableOpacity
+                style={[globalStyles.rowView, styles.listItem]}
+                onPress={() => {
+                  RootNavigation.navigate('Profile');
+                }}>
+                <View style={styles.listItemLeftView}>
+                  <Image source={myUser} style={styles.toolImg} />
+                  <Phrase
+                    txt={t('accountAndSecurity')}
+                    txtStyle={styles.toolTxt}
+                  />
+                </View>
+                <View style={styles.listItemRightView}>
+                  <Image source={back} style={styles.forwardImg} />
+                </View>
+              </TouchableOpacity>
+
+              <Hr />
+              <Spacer />
+              <TouchableOpacity>
                 <Phrase
-                  txt={t('paymentInformation')}
-                  txtStyle={styles.toolTxt}
+                  txt={t('aboutTheAppV1.0')}
+                  txtStyle={{ ...FONTS.body4, color: COLORS.txtGray }}
                 />
-              </View>
-              <View style={styles.listItemRightView}>
-                <Image source={back} style={styles.forwardImg} />
-              </View>
-            </TouchableOpacity>
-
-            <Spacer />
-            <TouchableOpacity
-              style={[globalStyles.rowView, styles.listItem]}
-              onPress={() => {
-                RootNavigation.navigate('Address');
-              }}>
-              <View style={styles.listItemLeftView}>
-                <Image source={myAddress} style={styles.toolImg} />
-                <Phrase txt={t('addresses')} txtStyle={styles.toolTxt} />
-              </View>
-              <View style={styles.listItemRightView}>
-                <Image source={back} style={styles.forwardImg} />
-              </View>
-            </TouchableOpacity>
-
-            <Spacer />
-            <TouchableOpacity
-              style={[globalStyles.rowView, styles.listItem]}
-              onPress={() => {
-                RootNavigation.navigate('Profile');
-              }}>
-              <View style={styles.listItemLeftView}>
-                <Image source={myUser} style={styles.toolImg} />
+              </TouchableOpacity>
+              <Spacer />
+              <TouchableOpacity>
                 <Phrase
-                  txt={t('accountAndSecurity')}
-                  txtStyle={styles.toolTxt}
+                  txt={t('privacyPolicy')}
+                  txtStyle={{ ...FONTS.body4, color: COLORS.txtGray }}
                 />
-              </View>
-              <View style={styles.listItemRightView}>
-                <Image source={back} style={styles.forwardImg} />
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+              <Spacer />
+              <TouchableOpacity>
+                <Phrase
+                  txt={t('termsAndConditions')}
+                  txtStyle={{ ...FONTS.body4, color: COLORS.txtGray }}
+                />
+              </TouchableOpacity>
+              <Spacer />
 
-            <Hr />
-            <Spacer />
-            <TouchableOpacity>
-              <Phrase
-                txt={t('aboutTheAppV1.0')}
-                txtStyle={{ ...FONTS.body4, color: COLORS.txtGray }}
+              <MyButton
+                label={t('logOut')}
+                txtColor={COLORS.black}
+                btnColor={COLORS.white}
+                borderColor={COLORS.grayLight}
+                onPress={logoutUser}
               />
-            </TouchableOpacity>
-            <Spacer />
-            <TouchableOpacity>
-              <Phrase
-                txt={t('privacyPolicy')}
-                txtStyle={{ ...FONTS.body4, color: COLORS.txtGray }}
-              />
-            </TouchableOpacity>
-            <Spacer />
-            <TouchableOpacity>
-              <Phrase
-                txt={t('termsAndConditions')}
-                txtStyle={{ ...FONTS.body4, color: COLORS.txtGray }}
-              />
-            </TouchableOpacity>
-            <Spacer />
-
-            <MyButton
-              label={t('logOut')}
-              txtColor={COLORS.black}
-              btnColor={COLORS.white}
-              borderColor={COLORS.grayLight}
-              onPress={logoutUser}
-            />
-          </View>
+            </View>
           </ScrollView>
-        
+
         </>
       )}
     </MasterLayout>

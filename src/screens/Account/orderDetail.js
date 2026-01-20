@@ -14,6 +14,7 @@ import globalStyles from '@constants/global-styles';
 import {styles} from './styles';
 import {balloons} from '@constants/icons';
 import {useTranslation} from 'react-i18next';
+import { formatDateTime } from '../../helpers/formatDateTime';
 
 const OrderDetail = ({route}) => {
   const {t} = useTranslation();
@@ -38,6 +39,9 @@ const OrderDetail = ({route}) => {
       // Use default values already set above
       break;
   }
+
+
+
   return (
     <MasterLayout 
     bgColor={COLORS.bgGray} 
@@ -72,11 +76,11 @@ const OrderDetail = ({route}) => {
             txtStyle={styles.smallInfoTxt}
           />
           <Phrase
-            txt={`${t('placedOn')}: ${item.updated_at}`}
+            txt={`${t('placedOn')}: ${formatDateTime(item.updated_at)}`}
             txtStyle={styles.smallInfoTxt}
           />
           <Phrase
-            txt={`${t('paidOn')}: ${item.updated_at}`}
+            txt={`${t('paidOn')}: ${formatDateTime(item.updated_at)}`}
             txtStyle={styles.smallInfoTxt}
           />
         </View>
