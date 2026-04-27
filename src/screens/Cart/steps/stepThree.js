@@ -988,7 +988,7 @@ const StepThree = ({ incrementBallonQuantity, decrementBallonQuantity }) => {
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 150, }}>
+      contentContainerStyle={{ paddingBottom: 90, }}>
       <Spacer />
       {/* Address Section */}
       <View style={[globalStyles.whiteBg, globalStyles.contentContainer]}>

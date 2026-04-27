@@ -153,7 +153,7 @@ const Orders = () => {
         {value == 0 && (
           ordersPending.length > 0 ? (
             <ScrollView
-              style={{marginBottom: 100, paddingHorizontal: SIZES.base}}
+              style={{ paddingHorizontal: SIZES.base}}
               scrollEnabled={true}
               showsVerticalScrollIndicator={false}>
               {ordersPending.map((item, index) => {

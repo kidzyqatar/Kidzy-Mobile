@@ -15,7 +15,7 @@ export default function Categories() {
   }, []);
   return (
     <MasterLayout bgColor={COLORS.bgGray}>
-      <CartBar title={t('categories')} />
+      <CartBar title={t('categories')} showBack={false} />
      
       <Spacer />
 

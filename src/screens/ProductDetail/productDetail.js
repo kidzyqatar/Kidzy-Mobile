@@ -22,6 +22,52 @@ import {setCart, setLoader} from '../../store/reducers/global';
 import * as RootNavigation from '@navigators/RootNavigation';
 import {useTranslation} from 'react-i18next';
 
+const decodeHtmlEntities = input => {
+  if (input == null) return '';
+  const str = String(input);
+  return str
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_, code) => {
+      const n = Number(code);
+      return Number.isFinite(n) ? String.fromCharCode(n) : _;
+    })
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => {
+      const n = parseInt(hex, 16);
+      return Number.isFinite(n) ? String.fromCharCode(n) : _;
+    });
+};
+
+const htmlToPlainText = input => {
+  if (input == null) return '';
+  let s = String(input);
+
+  // API sometimes sends literal "\n" sequences.
+  s = s.replace(/\\n/g, '\n');
+
+  // Convert common HTML line breaks/blocks into newlines before stripping tags.
+  s = s
+    .replace(/<\s*br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/\s*p\s*>/gi, '\n')
+    .replace(/<\/\s*div\s*>/gi, '\n')
+    .replace(/<\/\s*li\s*>/gi, '\n');
+
+  // Strip remaining tags.
+  s = s.replace(/<[^>]*>/g, '');
+
+  // Decode entities and normalize whitespace.
+  s = decodeHtmlEntities(s)
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return s;
+};
+
 const ProductDetail = ({route}) => {
   const {t} = useTranslation();
   const global = useSelector(state => state.global);
@@ -113,12 +159,12 @@ const ProductDetail = ({route}) => {
   return (
     <MasterLayout bgColor={COLORS.bgGray} scrolling={true} max={true}>
       <View style={globalStyles.whiteBg}>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           onPress={() => {
             RootNavigation.back();
           }}>
           <Image source={back} style={styles.backImg} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <Spacer />
         <CartBar title={t('productDetails')} />
       </View>
@@ -170,7 +216,7 @@ const ProductDetail = ({route}) => {
         </View>
         <Spacer />
         <Phrase txt={t('description')} txtStyle={styles.descHeading} />
-        <Phrase txt={item.description} txtStyle={styles.descTxt} />
+        <Phrase txt={htmlToPlainText(item.description)} txtStyle={styles.descTxt} />
 
         <MyButton
           label={<Text style={styles.productBtn}>{t('addToCart')}</Text>}

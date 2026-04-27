@@ -1,12 +1,11 @@
 import {Image, Pressable, StyleSheet, Text, View} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {createStackNavigator} from '@react-navigation/stack';
 import {
   Home,
   Categories,
   Brands,
   Account,
-  ProductListing,
-  ProductDetail,
   Orders,
   OrderDetail,
   Wallet,
@@ -27,7 +26,14 @@ import {Phrase} from '../components';
 import {useDispatch, useSelector} from 'react-redux';
 import {setActiveTab} from '../store/reducers/global';
 const Tab = createBottomTabNavigator();
+const CStack = createStackNavigator();
 import {useTranslation} from 'react-i18next';
+
+const CategoriesNavigator = () => (
+  <CStack.Navigator screenOptions={{headerShown: false}}>
+    <CStack.Screen name="CategoriesRoot" component={Categories} />
+  </CStack.Navigator>
+);
 
 const Tabs = () => {
   const dispatch = useDispatch();
@@ -157,21 +163,11 @@ const Tabs = () => {
           return <TabBar />;
         }}>
         <Tab.Screen name="Home" component={Home} />
-        <Tab.Screen name="Categories" component={Categories} />
+        <Tab.Screen name="Categories" component={CategoriesNavigator} />
         <Tab.Screen name="Brands" component={Brands} />
         <Tab.Screen
           name="Account"
           component={Account}
-          options={{unmountOnBlur: true}}
-        />
-        <Tab.Screen
-          name="ProductListing"
-          component={ProductListing}
-          options={{unmountOnBlur: true}}
-        />
-        <Tab.Screen
-          name="ProductDetail"
-          component={ProductDetail}
           options={{unmountOnBlur: true}}
         />
         <Tab.Screen

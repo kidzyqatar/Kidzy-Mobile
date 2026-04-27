@@ -2,12 +2,12 @@ import React, {useEffect, useState} from 'react';
 import {Image, Text, View, StyleSheet, Alert} from 'react-native';
 import {FONTS, COLORS, SIZES} from '@constants/theme';
 import {Heading, Phrase, MasterLayout} from '@components';
-import {cart} from '@constants/icons';
+import {back, cart} from '@constants/icons';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import {useSelector} from 'react-redux';
 import * as RootNavigation from '@navigators/RootNavigation';
 
-const CartBar = ({title, showCart = true}) => {
+const CartBar = ({title, showCart = true, showBack = true}) => {
   const global = useSelector(state => state.global);
   const [cartCount, setCartCount] = useState(0);
 
@@ -21,7 +21,16 @@ const CartBar = ({title, showCart = true}) => {
 
   return (
     <View style={styles.mainView}>
-      <Heading txt={title} txtStyle={styles.heading} />
+      <View style={styles.leftView}>
+        {showBack && (
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => RootNavigation.back()}>
+            <Image source={back} style={styles.backImg} />
+          </TouchableOpacity>
+        )}
+        <Heading txt={title} txtStyle={styles.heading} />
+      </View>
       {showCart && (
         <TouchableOpacity
           style={styles.cartView}
@@ -45,6 +54,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  leftView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  backBtn: {
+    width: 34,
+    height: 34,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SIZES.base,
+  },
+  backImg: {
+    width: 18,
+    height: 18,
+    resizeMode: 'contain',
+    tintColor: COLORS.primary,
   },
   heading: {...FONTS.rocherSmallTitle, color: COLORS.primary},
   cartView: {
