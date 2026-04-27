@@ -72,6 +72,7 @@ const MyCart = () => {
   const [userCart, setUserCart] = useState(global.cart);
   const refRBSheet = useRef();
   const authSheet = useRef();
+  const prevCheckoutStepRef = useRef(step);
   const [expandDiscount, setExpandDiscount] = useState(false);
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('My Cart');
@@ -178,6 +179,15 @@ const MyCart = () => {
         setApiFailModal(true);
       });
   };
+
+  // When returning from Address & Delivery to gift options, reload cart so wrapper/card session matches the server
+  useEffect(() => {
+    const prev = prevCheckoutStepRef.current;
+    prevCheckoutStepRef.current = step;
+    if (step === 2 && prev === 3 && global.cart_session_id) {
+      getCart();
+    }
+  }, [step, global.cart_session_id]);
 
   const completeCart = async () => {
     try {
@@ -402,28 +412,7 @@ const MyCart = () => {
     });
   };
 
-  // Add this function inside the MyCart component
-  const getStep2Title = () => {
-    const cartItems = global.cart?.order_items || [];
-
-    if (cartItems.length === 0) {
-      return t('Add Gift Wrapper'); // Default when cart is empty
-    }
-
-    // Check if all items are outdoor or cakes categories
-    const allItemsAreOutdoorOrCakes = cartItems.every(item => {
-      const isOutdoor = item?.product?.categories?.some(cat => cat == '10') ||
-        item?.product?.category_id == '10';
-      const isCakes = item?.product?.categories?.some(cat =>
-        ['11', '12', '13', '14'].includes(cat)) ||
-        ['11', '12', '13', '14'].includes(item?.product?.category_id);
-      return isOutdoor || isCakes;
-    });
-
-    // Return 'Add Gift Card' only when ALL items are outdoor/cakes
-    // Otherwise return 'Add Gift Wrapper' (default for mixed carts or other products)
-    return allItemsAreOutdoorOrCakes ? t('Add Gift Card') : t('Add Gift Wrapper');
-  };
+  const getStep2Title = () => t('giftWrapperAndCardTitle');
 
   useEffect(() => {
     switch (step) {
