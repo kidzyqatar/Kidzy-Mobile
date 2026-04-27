@@ -58,7 +58,7 @@ const StepTwo = ({items, getCart}) => {
         );
         if (!hasExcludedCategory) {
           return (
-            <React.Fragment key={String(elem.id ?? index)}>
+            <React.Fragment key={index.toString()}>
               <Spacer />
               <WrapperItem item={elem} getCart={getCart} />
             </React.Fragment>

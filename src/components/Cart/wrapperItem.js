@@ -472,7 +472,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import React, {useState, useEffect, useMemo} from 'react';
+import React, {useState} from 'react';
 import globalStyles from '@constants/global-styles';
 import {COLORS, SIZES, FONTS} from '@constants/theme';
 import {Phrase, Hr, Spacer, Input, MyButton} from '@components';
@@ -501,82 +501,44 @@ const WrapperItem = ({item, getCart}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [whichImage, setWhichImage] = useState(null);
 
-  const shouldHideGiftWrapper = useMemo(() => {
-    const hasOutdoor = (() => {
-      if (item?.product?.categories && item?.product?.categories.length > 0) {
-        return item.product.categories.some(category => category == '10');
-      }
-      return item?.product?.category_id == '10';
-    })();
-    const hasCakes = (() => {
-      if (item?.product?.categories && item?.product?.categories.length > 0) {
-        return item.product.categories.some(category =>
-          ['11', '12', '13', '14'].includes(category),
-        );
-      }
-      return ['11', '12', '13', '14'].includes(item?.product?.category_id);
-    })();
-    return hasOutdoor || hasCakes;
-  }, [item?.product?.categories, item?.product?.category_id]);
+  const hasOutdoorCategory = () => {
+    // Handle both categories array and category_id fallback
+    if (item?.product?.categories && item?.product?.categories.length > 0) {
+      return item.product.categories.some(category => category == '10');
+    }
+    return item?.product?.category_id == '10';
+  };
+
+  const hasPartyCategory = () => {
+    if (item?.product?.categories && item?.product?.categories.length > 0) {
+      return item.product.categories.some(category => category == '15');
+    }
+    return item?.product?.category_id == '15';
+  };
+
+  const hasCakesCategory = () => {
+    if (item?.product?.categories && item?.product?.categories.length > 0) {
+      return item.product.categories.some(category => 
+        ['11', '12', '13', '14'].includes(category)
+      );
+    }
+    return ['11', '12', '13', '14'].includes(item?.product?.category_id);
+  };
+
+  // Updated logic: Hide gift wrapper only for outdoor and cakes categories
+  const shouldHideGiftWrapper = hasOutdoorCategory() || hasCakesCategory();
+
+  // Debug logging
+  console.log('Product categories:', item?.product?.categories);
+  console.log('Product category_id:', item?.product?.category_id);
+  console.log('Has outdoor:', hasOutdoorCategory());
+  console.log('Has cakes:', hasCakesCategory());
+  console.log('Should hide wrapper:', shouldHideGiftWrapper);
   const toggleModal = () => setModalVisible(!modalVisible);
   const toggleWrapperSwitch = () => setWrapperSwitch(!wrapperSwitch);
   const toggleCardSwitch = () => setCardSwitch(!cardSwitch);
 
   const wrappers = global.allWrappers;
-
-  // Keep UI in sync with cart session (order line `details` from API) when returning from later steps
-  useEffect(() => {
-    const d = item?.details;
-    if (!d) {
-      return;
-    }
-
-    if (d.gift_card) {
-      setCardSwitch(true);
-      setFrom(String(d.gift_card.from ?? ''));
-      setTo(String(d.gift_card.to ?? ''));
-      setMsg(String(d.gift_card.message ?? ''));
-    }
-
-    if (shouldHideGiftWrapper) {
-      return;
-    }
-
-    const hasWrapperId = d.wrapper_id != null && d.wrapper_id !== '';
-    const hasCustomImage = d.full_image != null && d.full_image !== '';
-
-    if (hasWrapperId || hasCustomImage) {
-      setWrapperSwitch(true);
-    } else {
-      setWrapperSwitch(false);
-      setSelectedWrapper(null);
-      setSelectedCImage(null);
-      return;
-    }
-
-    if (hasWrapperId) {
-      const w = global.allWrappers?.find(
-        x => String(x.id) === String(d.wrapper_id),
-      );
-      setSelectedWrapper(w?.full_image ?? null);
-    } else {
-      setSelectedWrapper(null);
-    }
-
-    if (hasCustomImage) {
-      setSelectedCImage(d.full_image);
-    } else {
-      setSelectedCImage(null);
-    }
-  }, [
-    item?.id,
-    item?.details?.wrapper_id,
-    item?.details?.full_image,
-    item?.details?.gift_card,
-    shouldHideGiftWrapper,
-    global.allWrappers,
-  ]);
-
 
   const addMessage = async () => {
     if (!to || !from || !msg) return;
@@ -648,6 +610,12 @@ const WrapperItem = ({item, getCart}) => {
   };
 
   const BottomSheetModal = ({visible, onClose}) => {
+    if (item.details?.gift_card) {
+      setFrom(item.details.gift_card.from);
+      setTo(item.details.gift_card.to);
+      setMsg(item.details.gift_card.message);
+    }
+
     return (
       <Modal
         animationType="slide"
