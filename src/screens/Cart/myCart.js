@@ -65,6 +65,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as RootNavigation from '@navigators/RootNavigation';
 import { useTranslation } from 'react-i18next';
 
+/** QAR per cart line that has a gift wrapper (not multiplied by product quantity). */
+const GIFT_WRAPPER_PRICE_QAR = 10;
+
+/** Estimated shipping shown in totals and sent on checkout — fixed QAR (not from cart API). */
+const ESTIMATED_SHIPPING_QAR = 20;
+
+/** Steps >= this include gift wrapper + custom print fees in totals (step 2 = Add Gift Wrapper). */
+const GIFT_WRAPPER_SCREEN_STEP = 2;
+
+/** Steps >= this index include Address & Delivery fees (shipping, balloons, special delivery) in totals. */
+const ADDRESS_DELIVERY_STEP = 3;
+/**
+ * If `details` has `full_image` (custom print) but the API omits `custom_image_price` / `custom_image_cost`,
+ * set this to a positive QAR per unit to include in the gift-wrapper total.
+ */
+const CUSTOM_WRAPPER_UPLOAD_PRICE_QAR = 10;
+
 const MyCart = () => {
   const { t } = useTranslation();
   const global = useSelector(state => state.global);
@@ -192,44 +209,61 @@ const MyCart = () => {
       if (global.payment_method === 'online') {
         console.log('✅ Completing cart first for online payment...');
 
-        // Step 1: Complete cart with all order details (like web version)
-        const completeCartPayload = {
+        const gtNum = Number(calculations.grandTotal);
+        const grandTotalStr = Number.isFinite(gtNum)
+          ? gtNum.toFixed(2)
+          : String(calculations.grandTotal ?? '0.00');
+
+        /** Same breakdown as complete-cart — dibsy/initiate must receive this too or the gateway
+         *  often rebuilds amount from DB and drops client-only lines (e.g. wrapper_cost). */
+        const onlineOrderPricingPayload = {
           guest_session_id: global.cart_session_id,
-          status: "PENDING",
           order_id: global.cart.id,
           subtotal: calculations.subtotal,
           discount: calculations.discount,
           shipping_cost: calculations.shipping,
           tax: (global.tax || 0).toString(),
-          grand_total: calculations.grandTotal,
+          grand_total: grandTotalStr,
           special_delivery_cost: calculations.specialDelivery,
           balloon_cost: calculations.balloons,
           wrapper_cost: calculations.wrapper,
           delivery_date: global.cart_delivery_date,
           character_id: global.cart_character?.id || null,
-          payment_method: "DIBSY",
           source: 'mobile_app',
+        };
+
+        const completeCartPayload = {
+          ...onlineOrderPricingPayload,
+          status: 'PENDING',
+          payment_method: 'DIBSY',
         };
 
         console.log('🔍 Complete Cart Payload:', JSON.stringify(completeCartPayload, null, 2));
 
-        // Call complete-cart API
-        const completeResponse = await callNonTokenApi(config.apiName.completeCart, 'POST', completeCartPayload);
+        const completeResponse = await callNonTokenApi(
+          config.apiName.completeCart,
+          'POST',
+          completeCartPayload,
+        );
 
         console.log('🔍 Complete Cart Response:', completeResponse);
 
         if (completeResponse && completeResponse.status === 200) {
           console.log('✅ Cart completed successfully, now initiating Dibsy payment...');
 
-          // Step 2: Call dibsy/initiate to get payment URL (send order_id and grand_total)
           const dibsyPayload = {
-            order_id: global.cart.id,
-            grand_total: Number(calculations.grandTotal).toFixed(2), // Add the payment amount
+            ...onlineOrderPricingPayload,
+            amount: grandTotalStr,
+            payment_amount: grandTotalStr,
           };
 
           console.log('🔍 Dibsy Payload:', JSON.stringify(dibsyPayload, null, 2));
 
-          const paymentResponse = await callNonTokenApi(config.apiName.onlinePayment, 'POST', dibsyPayload);
+          const paymentResponse = await callNonTokenApi(
+            config.apiName.onlinePayment,
+            'POST',
+            dibsyPayload,
+          );
 
           console.log('🔍 Dibsy Payment Response:', paymentResponse);
           console.log('🔍 Payment URL:', paymentResponse?.payment_url);
@@ -352,10 +386,19 @@ const MyCart = () => {
   }, [global.cart_ballons_count]);
   useEffect(() => {
     calculateTotal(0);
-  }, [global.cart_ballons_count]);
+  }, [global.balloon_charges]);
   useEffect(() => {
     calculateTotal(0);
   }, [global.cart_character]);
+  useEffect(() => {
+    calculateTotal(0);
+  }, [global.orderItemCustomImageSuppressed]);
+  useEffect(() => {
+    calculateTotal(0);
+  }, [global.orderItemGiftWrapperMode]);
+  useEffect(() => {
+    calculateTotal(0);
+  }, [step]);
 
   const calculateTotal = (ballons = 0) => {
     // Add this check to prevent calculations on empty cart
@@ -382,13 +425,98 @@ const MyCart = () => {
 
     global.cart?.order_items?.forEach(item => {
       subtotal += parseFloat(item.total_price || 0);
-      wrapper += parseFloat(item.wrapper_price || 0);
+
+      const gwMode = global.orderItemGiftWrapperMode?.[String(item.id)];
+      const wrapperAttached =
+        item.details?.wrapper_id != null &&
+        item.details?.wrapper_id !== '' &&
+        gwMode !== 'off' &&
+        gwMode !== 'cleared';
+
+      let lineWrapper = 0;
+      if (wrapperAttached) {
+        lineWrapper = GIFT_WRAPPER_PRICE_QAR;
+      } else {
+        lineWrapper = parseFloat(
+          item.wrapper_price ??
+            item.wrapper_cost ??
+            item.details?.wrapper_price ??
+            item.details?.wrapper_cost ??
+            0,
+        );
+      }
+
+      wrapper += lineWrapper;
+
+      const customImageSuppressed =
+        global.orderItemCustomImageSuppressed?.[String(item.id)];
+      const hasCustomImage =
+        !customImageSuppressed &&
+        item.details?.full_image != null &&
+        String(item.details.full_image).trim() !== '';
+      if (hasCustomImage) {
+        const q = Math.max(1, parseInt(String(item.quantity ?? 1), 10) || 1);
+        const fromApi = parseFloat(
+          item.details?.custom_image_price ??
+            item.details?.custom_image_cost ??
+            item.details?.custom_print_price ??
+            0,
+        );
+        const customUploadLine =
+          fromApi > 0 ? fromApi : CUSTOM_WRAPPER_UPLOAD_PRICE_QAR * q;
+        wrapper += customUploadLine;
+      }
+
       specialDelivery += parseFloat(item.special_delivery_price || 0);
     });
 
-    ballonCharges = (global.cart_ballons_count || 0) * 5;
-    shipping = parseFloat(global.cart?.shipping_charges || 0);
-    discount = parseFloat(global.cart?.discount_amount || 0);
+    if (step < GIFT_WRAPPER_SCREEN_STEP) {
+      wrapper = 0;
+    }
+
+    if (
+      specialDelivery <= 0 &&
+      global.cart_character != null
+    ) {
+      specialDelivery =
+        parseFloat(global.cart_character.price ?? 0) || 0;
+    }
+
+    const perBalloon = parseFloat(global.balloon_charges);
+    const balloonUnit =
+      Number.isFinite(perBalloon) && perBalloon > 0 ? perBalloon : 10;
+    const balloonQty = Math.max(
+      0,
+      Math.floor(Number(global.cart_ballons_count) || 0),
+    );
+    ballonCharges = balloonQty * balloonUnit;
+    shipping = ESTIMATED_SHIPPING_QAR;
+
+    let discountFromCart = parseFloat(
+      global.cart?.discount_amount ?? global.cart?.discount ?? 0,
+    );
+    if (!Number.isFinite(discountFromCart)) {
+      discountFromCart = 0;
+    }
+    const coupon = global.cart?.coupon;
+    if (discountFromCart <= 0 && coupon) {
+      const pct = parseFloat(coupon.percentage);
+      const fixedAmt = parseFloat(coupon.amount);
+      if (Number.isFinite(pct) && pct > 0) {
+        discountFromCart = (subtotal * pct) / 100;
+      } else if (Number.isFinite(fixedAmt) && fixedAmt > 0) {
+        discountFromCart = fixedAmt;
+      }
+    }
+    discount = Math.round(discountFromCart * 100) / 100;
+
+    const onAddressDeliveryOrLater = step >= ADDRESS_DELIVERY_STEP;
+    if (!onAddressDeliveryOrLater) {
+      specialDelivery = 0;
+      ballonCharges = 0;
+      shipping = 0;
+    }
+
     grandTotal = subtotal + wrapper + specialDelivery + ballonCharges + shipping - discount;
 
     setCalculations({

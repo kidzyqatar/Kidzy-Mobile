@@ -357,6 +357,10 @@ const StepThree = ({ incrementBallonQuantity, decrementBallonQuantity }) => {
   const [addresses, setAddresses] = useState(null);
   const [quantityBalloon, setQuantityBalloon] = useState(0);
 
+  useEffect(() => {
+    setQuantityBalloon(global.cart_ballons_count ?? 0);
+  }, [global.cart_ballons_count]);
+
   const [deliveryTimes, setDeliveryTimes] = useState([]);
   // Add initialization useEffect to sync local state with global state
   useEffect(() => {
@@ -846,17 +850,18 @@ const StepThree = ({ incrementBallonQuantity, decrementBallonQuantity }) => {
   };
 
   const incrementQuantity = () => {
-    setQuantityBalloon(quantityBalloon + 1);
-    dispatch(setBallonsCount(quantityBalloon + 1));
-
-    incrementBallonQuantity(quantityBalloon + 1);
+    const next = quantityBalloon + 1;
+    setQuantityBalloon(next);
+    dispatch(setBallonsCount(next));
+    incrementBallonQuantity(next);
   };
 
   const decrementQuantity = () => {
     if (quantityBalloon > 0) {
-      setQuantityBalloon(quantityBalloon - 1);
-      dispatch(setBallonsCount(quantityBalloon - 1));
-      decrementBallonQuantity(quantityBalloon + 1);
+      const next = quantityBalloon - 1;
+      setQuantityBalloon(next);
+      dispatch(setBallonsCount(next));
+      decrementBallonQuantity(next);
     } else {
       refRBSheetBalloon.current.open();
     }

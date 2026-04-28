@@ -36,6 +36,14 @@ const initialState = {
   // Add guest information
   guest_email: '',
   guest_mobile: '',
+
+  /** `order_item_id` → true when user removed custom wrapper image locally (no delete API). */
+  orderItemCustomImageSuppressed: {},
+  /**
+   * `order_item_id` → `'off'` (toggle off: hide wrapper UI + no charge) or `'cleared'` (trash / reopen toggle:
+   * show grid, ignore server wrapper for charge until user attaches again).
+   */
+  orderItemGiftWrapperMode: {},
 };
 const globalSlice = createSlice({
   name: 'global',
@@ -54,7 +62,26 @@ const globalSlice = createSlice({
       return {...state, reload: action.payload};
     },
     setCart: (state, action) => {
-      return {...state, cart: action.payload};
+      const nextCart = action.payload || {};
+      const items = nextCart.order_items || [];
+      const validIds = new Set(items.map(oi => String(oi.id)));
+      const pruneIds = obj => {
+        const next = {...(obj ?? {})};
+        Object.keys(next).forEach(k => {
+          if (!validIds.has(k)) {
+            delete next[k];
+          }
+        });
+        return next;
+      };
+      return {
+        ...state,
+        cart: action.payload,
+        orderItemCustomImageSuppressed: pruneIds(
+          state.orderItemCustomImageSuppressed,
+        ),
+        orderItemGiftWrapperMode: pruneIds(state.orderItemGiftWrapperMode),
+      };
     },
     setAllCategories: (state, action) => {
       return {...state, allCategories: action.payload};
@@ -143,6 +170,41 @@ const globalSlice = createSlice({
     clearGuestInfo: (state) => {
       return {...state, guest_email: '', guest_mobile: ''};
     },
+
+    suppressOrderItemCustomImage: (state, action) => {
+      const id = String(action.payload);
+      return {
+        ...state,
+        orderItemCustomImageSuppressed: {
+          ...state.orderItemCustomImageSuppressed,
+          [id]: true,
+        },
+      };
+    },
+
+    clearOrderItemCustomImageSuppressed: (state, action) => {
+      const id = String(action.payload);
+      const next = {...state.orderItemCustomImageSuppressed};
+      delete next[id];
+      return {...state, orderItemCustomImageSuppressed: next};
+    },
+
+    clearAllOrderItemCustomImageSuppressed: state => ({
+      ...state,
+      orderItemCustomImageSuppressed: {},
+    }),
+
+    setOrderItemGiftWrapperMode: (state, action) => {
+      const id = String(action.payload.orderItemId);
+      const mode = action.payload.mode;
+      const next = {...(state.orderItemGiftWrapperMode ?? {})};
+      if (mode === undefined || mode === null) {
+        delete next[id];
+      } else {
+        next[id] = mode;
+      }
+      return {...state, orderItemGiftWrapperMode: next};
+    },
 },
 });
 
@@ -178,5 +240,9 @@ export const {
   setGuestEmail,
   setGuestMobile,
   clearGuestInfo,
+  suppressOrderItemCustomImage,
+  clearOrderItemCustomImageSuppressed,
+  clearAllOrderItemCustomImageSuppressed,
+  setOrderItemGiftWrapperMode,
 } = globalSlice.actions;
 export default globalSlice.reducer;

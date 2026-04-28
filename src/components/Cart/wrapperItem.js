@@ -472,7 +472,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import globalStyles from '@constants/global-styles';
 import {COLORS, SIZES, FONTS} from '@constants/theme';
 import {Phrase, Hr, Spacer, Input, MyButton} from '@components';
@@ -482,12 +482,42 @@ import {useDispatch, useSelector} from 'react-redux';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {callNonTokenApi, callNonTokenApiMP} from '../../helpers/ApiRequest';
 import config from '../../constants/config';
-import {setLoader} from '../../store/reducers/global';
+import {
+  setLoader,
+  suppressOrderItemCustomImage,
+  clearOrderItemCustomImageSuppressed,
+  setOrderItemGiftWrapperMode,
+} from '../../store/reducers/global';
 import {useTranslation} from 'react-i18next';
+
+/** Restore wrapper preview URL from cart `wrapper_id` + catalog, or API fields on `details`. */
+function resolveWrapperImageUri(orderItem, allWrappers) {
+  const rawId = orderItem?.details?.wrapper_id;
+  if (rawId === undefined || rawId === null || rawId === '') {
+    return null;
+  }
+  const list = Array.isArray(allWrappers) ? allWrappers : [];
+  const found = list.find(w => String(w.id) === String(rawId));
+  if (found?.full_image) {
+    return found.full_image;
+  }
+  return (
+    orderItem?.details?.wrapper_image ??
+    orderItem?.details?.wrapper_full_image ??
+    null
+  );
+}
 
 const WrapperItem = ({item, getCart}) => {
   const {t} = useTranslation();
   const global = useSelector(state => state.global);
+  const allWrappers = global.allWrappers;
+  const customImageSuppressed = useSelector(
+    s => s.global.orderItemCustomImageSuppressed?.[String(item.id)],
+  );
+  const giftWrapperMode = useSelector(
+    s => s.global.orderItemGiftWrapperMode?.[String(item.id)],
+  );
   const dispatch = useDispatch();
   const [wrapperSwitch, setWrapperSwitch] = useState(false);
   const [cardSwitch, setCardSwitch] = useState(false);
@@ -500,6 +530,48 @@ const WrapperItem = ({item, getCart}) => {
   const [copy, setCopy] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [whichImage, setWhichImage] = useState(null);
+
+  useEffect(() => {
+    const wId = item?.details?.wrapper_id;
+    const hasServerWrapper =
+      wId !== undefined && wId !== null && wId !== '';
+
+    if (giftWrapperMode === 'off') {
+      setWrapperSwitch(false);
+      setSelectedWrapper(null);
+    } else if (giftWrapperMode === 'cleared') {
+      setWrapperSwitch(true);
+      setSelectedWrapper(null);
+    } else {
+      setWrapperSwitch(!!hasServerWrapper);
+      setSelectedWrapper(resolveWrapperImageUri(item, allWrappers));
+    }
+
+    setSelectedCImage(
+      customImageSuppressed
+        ? null
+        : (item?.details?.full_image ?? null),
+    );
+
+    if (item.details?.gift_card) {
+      setFrom(item.details.gift_card.from ?? '');
+      setTo(item.details.gift_card.to ?? '');
+      setMsg(item.details.gift_card.message ?? '');
+      setCardSwitch(true);
+    } else {
+      setCardSwitch(false);
+    }
+  }, [
+    item.id,
+    item.details?.wrapper_id,
+    item.details?.full_image,
+    item.details?.gift_card?.from,
+    item.details?.gift_card?.to,
+    item.details?.gift_card?.message,
+    allWrappers,
+    customImageSuppressed,
+    giftWrapperMode,
+  ]);
 
   const hasOutdoorCategory = () => {
     // Handle both categories array and category_id fallback
@@ -535,10 +607,30 @@ const WrapperItem = ({item, getCart}) => {
   console.log('Has cakes:', hasCakesCategory());
   console.log('Should hide wrapper:', shouldHideGiftWrapper);
   const toggleModal = () => setModalVisible(!modalVisible);
-  const toggleWrapperSwitch = () => setWrapperSwitch(!wrapperSwitch);
-  const toggleCardSwitch = () => setCardSwitch(!cardSwitch);
 
-  const wrappers = global.allWrappers;
+  const onGiftWrapperToggle = value => {
+    if (!value) {
+      dispatch(setOrderItemGiftWrapperMode({orderItemId: item.id, mode: 'off'}));
+      setWrapperSwitch(false);
+      setSelectedWrapper(null);
+    } else {
+      dispatch(
+        setOrderItemGiftWrapperMode({orderItemId: item.id, mode: 'cleared'}),
+      );
+      setWrapperSwitch(true);
+      setSelectedWrapper(null);
+    }
+  };
+
+  const removeGiftWrapperSelection = () => {
+    dispatch(
+      setOrderItemGiftWrapperMode({orderItemId: item.id, mode: 'cleared'}),
+    );
+    setSelectedWrapper(null);
+    setWrapperSwitch(true);
+  };
+
+  const toggleCardSwitch = () => setCardSwitch(!cardSwitch);
 
   const addMessage = async () => {
     if (!to || !from || !msg) return;
@@ -595,6 +687,7 @@ const WrapperItem = ({item, getCart}) => {
         .then(res => {
           dispatch(setLoader(false));
           if (res.status == 200) {
+            dispatch(clearOrderItemCustomImageSuppressed(item.id));
             getCart();
           } else {
             setSelectedCImage(null);
@@ -609,13 +702,13 @@ const WrapperItem = ({item, getCart}) => {
     });
   };
 
-  const BottomSheetModal = ({visible, onClose}) => {
-    if (item.details?.gift_card) {
-      setFrom(item.details.gift_card.from);
-      setTo(item.details.gift_card.to);
-      setMsg(item.details.gift_card.message);
-    }
+  /** No delete API: hide the image in UI and exclude it from local totals until a new image is attached. */
+  const removeCustomImage = () => {
+    dispatch(suppressOrderItemCustomImage(item.id));
+    setSelectedCImage(null);
+  };
 
+  const BottomSheetModal = ({visible, onClose}) => {
     return (
       <Modal
         animationType="slide"
@@ -666,7 +759,7 @@ const WrapperItem = ({item, getCart}) => {
             <Phrase txt={t('Add Gift Wrapper')} />
             <Switch
               value={wrapperSwitch}
-              onValueChange={toggleWrapperSwitch}
+              onValueChange={onGiftWrapperToggle}
               color={COLORS.info}
             />
           </View>
@@ -675,7 +768,7 @@ const WrapperItem = ({item, getCart}) => {
               {selectedWrapper == null ? (
                 <FlatList
                   horizontal
-                  data={wrappers}
+                  data={allWrappers}
                   renderItem={({item}) => (
                     <TouchableOpacity
                       key={item.id}
@@ -692,6 +785,12 @@ const WrapperItem = ({item, getCart}) => {
                           .then(res => {
                             dispatch(setLoader(false));
                             if (res.status == 200) {
+                              dispatch(
+                                setOrderItemGiftWrapperMode({
+                                  orderItemId: orderItemID,
+                                  mode: null,
+                                }),
+                              );
                               setSelectedWrapper(item.full_image);
                               getCart();
                             } else {
@@ -726,7 +825,7 @@ const WrapperItem = ({item, getCart}) => {
                       }}>
                       <Image source={eye} style={styles.optionImgView} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setSelectedWrapper(null)}>
+                    <TouchableOpacity onPress={removeGiftWrapperSelection}>
                       <Image source={bin} style={styles.optionImg} />
                     </TouchableOpacity>
                   </View>
@@ -777,7 +876,7 @@ const WrapperItem = ({item, getCart}) => {
                       }}>
                       <Image source={eye} style={styles.optionImgView} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setSelectedCImage(null)}>
+                    <TouchableOpacity onPress={removeCustomImage}>
                       <Image source={bin} style={styles.optionImg} />
                     </TouchableOpacity>
                   </View>

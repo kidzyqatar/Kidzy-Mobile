@@ -1,5 +1,5 @@
 import {StyleSheet, Image, View, TouchableOpacity} from 'react-native';
-import React, {useState} from 'react';
+import React from 'react';
 import {
   MasterLayout,
   BackBar,
@@ -14,9 +14,21 @@ import {COLORS, SIZES, FONTS} from '@constants/theme';
 import globalStyles from '@constants/global-styles';
 import {edit} from '@constants/icons';
 import {useTranslation} from 'react-i18next';
+import {useSelector} from 'react-redux';
 
 const CartConfirmItem = ({item, onPress = () => {}}) => {
   const {t} = useTranslation();
+  const customImageSuppressed = useSelector(
+    s => s.global.orderItemCustomImageSuppressed?.[String(item?.id)],
+  );
+  const giftWrapperMode = useSelector(
+    s => s.global.orderItemGiftWrapperMode?.[String(item?.id)],
+  );
+  const showGiftWrapperChip =
+    item.details?.wrapper_id != null &&
+    giftWrapperMode !== 'off' &&
+    giftWrapperMode !== 'cleared';
+
   return (
     <View>
       <View style={[globalStyles.rowView, styles.tileHeight]}>
@@ -43,7 +55,7 @@ const CartConfirmItem = ({item, onPress = () => {}}) => {
       </View>
       <Spacer />
 
-      {item.details?.wrapper_id == null ? null : (
+      {!showGiftWrapperChip ? null : (
         <TouchableOpacity style={globalStyles.row} onPress={onPress}>
           <Phrase txt={t(`giftWrapper`)} txtStyle={styles.infoTxt} />
           <Chip
@@ -57,7 +69,7 @@ const CartConfirmItem = ({item, onPress = () => {}}) => {
       )}
 
       <Spacer />
-      {item.details?.full_image == null ? null : (
+      {item.details?.full_image == null || customImageSuppressed ? null : (
         <TouchableOpacity style={globalStyles.row} onPress={onPress}>
           <Phrase txt={t(`customImage`)} txtStyle={styles.infoTxt} />
           <Chip
