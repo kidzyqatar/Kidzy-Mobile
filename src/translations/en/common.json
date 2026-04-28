@@ -34,6 +34,7 @@
     "total": "Total",
     "cartSubtotal": "Cart Subtotal",
     "giftWrapper": "Gift Wrapper",
+    "selectNoneWrapperToClear": "No free wrapper option was found in the catalog. Please choose the NONE wrapper on the list to remove gift wrap.",
     "specialDelivery": "Special Delivery",
     "balloons": "Balloons",
     "estimatedShipping": "Estimated Shipping",

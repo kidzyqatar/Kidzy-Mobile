@@ -34,6 +34,7 @@
   "total": "المجموع",
   "cartSubtotal": "المجموع الفرعي لسلة التسوق",
   "giftWrapper": "غلاف هدية",
+  "selectNoneWrapperToClear": "لم يُعثر على خيار غلاف مجاني. يُرجى اختيار خيار «بدون غلاف» من القائمة لإزالة غلاف الهدية.",
   "specialDelivery": "توصيل خاص",
   "balloons": "بالونات",
   "estimatedShipping": "الشحن المقدر",

@@ -65,6 +65,123 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as RootNavigation from '@navigators/RootNavigation';
 import { useTranslation } from 'react-i18next';
 
+/**
+ * Only charge for gift wrap when an order line actually has a wrapper attached
+ * (`details.wrapper_id` is what the rest of the app uses — see cartConfirmItem).
+ * Do not use line-level `wrapper_cost` / `wrapper_price` without that id, or stale
+ * values add QAR (e.g. 10) while the UI shows no wrapper.
+ *
+ * Prefer API line amounts when attached; fall back to utils `allWrappers` price.
+ * "NONE" / zero-price catalog rows bill as 0.
+ */
+function resolveOrderItemWrapperPrice(orderItem, allWrappers = []) {
+  const wrapperIdRaw =
+    orderItem.details?.wrapper_id ?? orderItem.wrapper_id ?? null;
+  if (
+    wrapperIdRaw == null ||
+    wrapperIdRaw === '' ||
+    Number(wrapperIdRaw) === 0
+  ) {
+    return 0;
+  }
+
+  const catalogRow = Array.isArray(allWrappers)
+    ? allWrappers.find(x => String(x.id) === String(wrapperIdRaw))
+    : null;
+
+  if (catalogRow) {
+    const label = `${catalogRow.name ?? catalogRow.title ?? catalogRow.label ?? ''}`.trim();
+    const imageHint = `${catalogRow.full_image ?? ''}`.toLowerCase();
+    if (
+      /^none$/i.test(label) ||
+      /\bnone\b/i.test(label) ||
+      imageHint.includes('none')
+    ) {
+      return 0;
+    }
+    const catalogZero = parseFloat(
+      catalogRow.price ??
+        catalogRow.amount ??
+        catalogRow.wrapper_price ??
+        catalogRow.cost ??
+        NaN,
+    );
+    if (!Number.isNaN(catalogZero) && catalogZero === 0) {
+      return 0;
+    }
+  }
+
+  const candidates = [
+    orderItem.details?.wrapper_price,
+    orderItem.details?.wrapper_cost,
+    orderItem.wrapper_price,
+    orderItem.wrapper_cost,
+  ];
+  for (const v of candidates) {
+    if (v != null && v !== '') {
+      const n = parseFloat(v);
+      if (!Number.isNaN(n)) {
+        return n;
+      }
+    }
+  }
+
+  if (catalogRow) {
+    const n = parseFloat(
+      catalogRow.price ??
+        catalogRow.amount ??
+        catalogRow.wrapper_price ??
+        catalogRow.cost ??
+        0,
+    );
+    return Number.isNaN(n) ? 0 : n;
+  }
+
+  return 0;
+}
+
+/**
+ * Cart often sends shipping_charges: 0 as a placeholder until address/shipping is finalized.
+ * Treat only positive amounts as final cart shipping; otherwise use get-utils default
+ * (`global.shipping_charges`) so Estimated Shipping matches the web cart summary.
+ */
+function coerceShippingNumber(v) {
+  if (v == null || v === '') {
+    return NaN;
+  }
+  if (typeof v === 'object') {
+    const inner =
+      v.amount ?? v.value ?? v.cost ?? v.total ?? v.price ?? null;
+    if (inner == null || inner === '') {
+      return NaN;
+    }
+    return parseFloat(String(inner));
+  }
+  return parseFloat(String(v));
+}
+
+function resolveEstimatedShippingAmount(global) {
+  const c = global.cart || {};
+  const keys = [
+    'shipping_charges',
+    'shipping_cost',
+    'estimated_shipping',
+    'estimated_shipping_cost',
+  ];
+  for (const key of keys) {
+    const v = c[key];
+    if (v == null || v === '') {
+      continue;
+    }
+    const n = coerceShippingNumber(v);
+    if (!Number.isNaN(n) && n > 0) {
+      return n;
+    }
+  }
+  const fallback = coerceShippingNumber(global.shipping_charges);
+  return Number.isNaN(fallback) ? 0 : fallback;
+}
+
 const MyCart = () => {
   const { t } = useTranslation();
   const global = useSelector(state => state.global);
@@ -72,6 +189,10 @@ const MyCart = () => {
   const [userCart, setUserCart] = useState(global.cart);
   const refRBSheet = useRef();
   const authSheet = useRef();
+  /** Step 2 from cart: wrapper $ only after user selects a design. */
+  const [giftWrapTotalsCommitted, setGiftWrapTotalsCommitted] = useState(false);
+  const [stepTwoResumeFromCheckout, setStepTwoResumeFromCheckout] =
+    useState(false);
   const [expandDiscount, setExpandDiscount] = useState(false);
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState('My Cart');
@@ -116,45 +237,91 @@ const MyCart = () => {
     discount: 0,
     grandTotal: 0,
   });
+  const calculationsRef = useRef(calculations);
+  useEffect(() => {
+    calculationsRef.current = calculations;
+  }, [calculations]);
   const handleDiscountExtend = () => setExpandDiscount(!expandDiscount);
-  const applyCoupon = async coupon => {
+
+  const cartFromResponse = res => res?.data?.cart ?? res?.cart ?? null;
+
+  const applyCoupon = async couponRaw => {
+    const code = typeof couponRaw === 'string' ? couponRaw.trim() : '';
+    if (!code) {
+      Alert.alert('', 'Please enter a coupon code.');
+      return;
+    }
+    if (!global.cart?.id) {
+      Alert.alert('Error!', 'Cart is not ready.');
+      return;
+    }
     dispatch(setLoader(true));
-    callNonTokenApi(config.apiName.applyCoupon, 'POST', {
-      coupon: coupon,
-      order_id: global.cart.id,
-    })
-      .then(res => {
-        dispatch(setLoader(false));
-        if (res.status == 200) {
-          console.log('coupon', res);
-          getCart();
-        } else {
-          Alert.alert('Error!', res.message);
-        }
-      })
-      .catch(err => {
-        dispatch(setLoader(false));
-        console.log('error', err);
+    try {
+      const res = await callNonTokenApi(config.apiName.applyCoupon, 'POST', {
+        coupon: code,
+        order_id: global.cart.id,
       });
+      dispatch(setLoader(false));
+      const updated = cartFromResponse(res);
+      if (updated) {
+        dispatch(setCart(updated));
+        return;
+      }
+      const ok =
+        res &&
+        !res.error &&
+        (res.status == 200 ||
+          res.status === '200' ||
+          res.success === true);
+      if (ok) {
+        getCart();
+        return;
+      }
+      Alert.alert(
+        'Error!',
+        res?.message || 'Coupon could not be applied.',
+      );
+    } catch (err) {
+      dispatch(setLoader(false));
+      console.log('applyCoupon error', err);
+      Alert.alert('Error!', 'Something went wrong. Please try again.');
+    }
   };
+
   const removeCoupon = async () => {
+    if (!global.cart?.id) {
+      return;
+    }
     dispatch(setLoader(true));
-    console.log('I am called');
-    callNonTokenApi(config.apiName.removeCoupon, 'POST', {
-      order_id: global.cart.id,
-    })
-      .then(res => {
-        dispatch(setLoader(false));
-        if (res.status == 200) {
-          getCart();
-        } else {
-          Alert.alert('Error!', res.message);
-        }
-      })
-      .catch(err => {
-        dispatch(setLoader(false));
-        console.log('error', err);
+    try {
+      const res = await callNonTokenApi(config.apiName.removeCoupon, 'POST', {
+        order_id: global.cart.id,
       });
+      dispatch(setLoader(false));
+      const updated = cartFromResponse(res);
+      if (updated) {
+        dispatch(setCart(updated));
+        return;
+      }
+      const ok =
+        res &&
+        !res.error &&
+        (res.status == 200 ||
+          res.status === '200' ||
+          res.success === true);
+      if (ok) {
+        getCart();
+        return;
+      }
+      Alert.alert(
+        'Error!',
+        res?.message || 'Could not remove coupon.',
+      );
+    } catch (err) {
+      dispatch(setLoader(false));
+      console.log('removeCoupon error', err);
+      Alert.alert('Error!', 'Something went wrong. Please try again.');
+    }
   };
 
   const getCart = () => {
@@ -165,11 +332,19 @@ const MyCart = () => {
     )
       .then(res => {
         dispatch(setLoader(false));
-        if (res.status == 200) {
-          console.log(res.data.cart?.order_items?.length);
-          dispatch(setCart(res.data.cart));
+        const cartPayload = cartFromResponse(res);
+        if (cartPayload) {
+          dispatch(setCart(cartPayload));
+          return;
+        }
+        if (res?.status == 200 || res?.status === '200') {
+          if (res?.data?.cart) {
+            dispatch(setCart(res.data.cart));
+          } else {
+            Alert.alert('Error!', res?.message || 'Cart could not be loaded.');
+          }
         } else {
-          Alert.alert('Error!', res.message);
+          Alert.alert('Error!', res?.message || 'Cart could not be loaded.');
         }
       })
       .catch(error => {
@@ -182,6 +357,8 @@ const MyCart = () => {
   const completeCart = async () => {
     try {
       dispatch(setLoader(true));
+
+      const calc = calculationsRef.current;
 
       console.log('🚀 Starting cart completion...');
       console.log('🔍 Current global.payment_method:', global.payment_method);
@@ -197,14 +374,14 @@ const MyCart = () => {
           guest_session_id: global.cart_session_id,
           status: "PENDING",
           order_id: global.cart.id,
-          subtotal: calculations.subtotal,
-          discount: calculations.discount,
-          shipping_cost: calculations.shipping,
+          subtotal: calc.subtotal,
+          discount: calc.discount,
+          shipping_cost: calc.shipping,
           tax: (global.tax || 0).toString(),
-          grand_total: calculations.grandTotal,
-          special_delivery_cost: calculations.specialDelivery,
-          balloon_cost: calculations.balloons,
-          wrapper_cost: calculations.wrapper,
+          grand_total: calc.grandTotal,
+          special_delivery_cost: calc.specialDelivery,
+          balloon_cost: calc.balloons,
+          wrapper_cost: calc.wrapper,
           delivery_date: global.cart_delivery_date,
           character_id: global.cart_character?.id || null,
           payment_method: "DIBSY",
@@ -221,10 +398,29 @@ const MyCart = () => {
         if (completeResponse && completeResponse.status === 200) {
           console.log('✅ Cart completed successfully, now initiating Dibsy payment...');
 
-          // Step 2: Call dibsy/initiate to get payment URL (send order_id and grand_total)
+          // Always use the same grand total as complete-cart and the checkout UI.
+          // The complete-cart API may return a different `grand_total` (e.g. missing
+          // estimated shipping); using that for Dibsy would under-charge vs the app (e.g. 429 vs 439).
+          const grandForPayment = Number(calc.grandTotal).toFixed(2);
+
+          // Step 2: dibsy/initiate — send full breakdown so the API can align Dibsy with the app total.
+          // If only order_id is used server-side and DB omits shipping (~10 QAR), the payscreen shows too low (e.g. 239 vs 249).
           const dibsyPayload = {
             order_id: global.cart.id,
-            grand_total: Number(calculations.grandTotal).toFixed(2), // Add the payment amount
+            guest_session_id: global.cart_session_id,
+            grand_total: grandForPayment,
+            grandTotal: grandForPayment,
+            amount: Number(grandForPayment),
+            subtotal: calc.subtotal,
+            discount: calc.discount,
+            shipping_cost: calc.shipping,
+            tax: String(global.tax ?? 0),
+            wrapper_cost: calc.wrapper,
+            balloon_cost: calc.balloons,
+            special_delivery_cost: calc.specialDelivery,
+            delivery_date: global.cart_delivery_date,
+            character_id: global.cart_character?.id ?? null,
+            source: 'mobile_app',
           };
 
           console.log('🔍 Dibsy Payload:', JSON.stringify(dibsyPayload, null, 2));
@@ -245,14 +441,14 @@ const MyCart = () => {
               cartSessionId: global.cart_session_id,
               orderId: global.cart.id,
               calculations: {
-                subtotal: calculations.subtotal,
-                discount: calculations.discount,
-                shipping: calculations.shipping,
+                subtotal: calc.subtotal,
+                discount: calc.discount,
+                shipping: calc.shipping,
                 tax: global.tax || 0,
-                grandTotal: calculations.grandTotal,
-                specialDelivery: calculations.specialDelivery,
-                balloons: calculations.balloons,
-                wrapper: calculations.wrapper,
+                grandTotal: grandForPayment,
+                specialDelivery: calc.specialDelivery,
+                balloons: calc.balloons,
+                wrapper: calc.wrapper,
                 delivery_date: global.cart_delivery_date,
                 character_id: global.cart_character?.id || null,
               }
@@ -280,14 +476,14 @@ const MyCart = () => {
           order_id: global.cart.id,
           source: 'mobile_app',
           // Fix: Use calculations values directly since they're already formatted strings
-          subtotal: calculations.subtotal,
-          discount: calculations.discount,
-          shipping_cost: calculations.shipping,
+          subtotal: calc.subtotal,
+          discount: calc.discount,
+          shipping_cost: calc.shipping,
           tax: (global.tax || 0).toString(),
-          grand_total: calculations.grandTotal,
-          special_delivery_cost: calculations.specialDelivery,
-          balloon_cost: calculations.balloons,
-          wrapper_cost: calculations.wrapper,
+          grand_total: calc.grandTotal,
+          special_delivery_cost: calc.specialDelivery,
+          balloon_cost: calc.balloons,
+          wrapper_cost: calc.wrapper,
           delivery_date: global.cart_delivery_date,
           character_id: global.cart_character?.id || null,
         });
@@ -340,22 +536,10 @@ const MyCart = () => {
 
   const closeAuthSheet = () => {
     authSheet.current.close();
+    setStepTwoResumeFromCheckout(false);
     // After guest login, navigate to step 2 (gift wrapper)
     setStep(2);
   };
-
-  useEffect(() => {
-    calculateTotal(0);
-  }, [global.cart]);
-  useEffect(() => {
-    calculateTotal(0);
-  }, [global.cart_ballons_count]);
-  useEffect(() => {
-    calculateTotal(0);
-  }, [global.cart_ballons_count]);
-  useEffect(() => {
-    calculateTotal(0);
-  }, [global.cart_character]);
 
   const calculateTotal = (ballons = 0) => {
     // Add this check to prevent calculations on empty cart
@@ -382,18 +566,55 @@ const MyCart = () => {
 
     global.cart?.order_items?.forEach(item => {
       subtotal += parseFloat(item.total_price || 0);
-      wrapper += parseFloat(item.wrapper_price || 0);
+      wrapper += resolveOrderItemWrapperPrice(item, global.allWrappers);
       specialDelivery += parseFloat(item.special_delivery_price || 0);
     });
 
-    ballonCharges = (global.cart_ballons_count || 0) * 5;
-    shipping = parseFloat(global.cart?.shipping_charges || 0);
-    discount = parseFloat(global.cart?.discount_amount || 0);
-    grandTotal = subtotal + wrapper + specialDelivery + ballonCharges + shipping - discount;
+    if (
+      specialDelivery <= 0 &&
+      global.cart_character &&
+      step >= 3
+    ) {
+      const cp = parseFloat(
+        global.cart_character.price ??
+          global.cart_character.amount ??
+          global.cart_character.special_delivery_price ??
+          0,
+      );
+      if (!Number.isNaN(cp) && cp > 0) {
+        specialDelivery = cp;
+      }
+    }
+
+    const balloonUnit = parseFloat(String(global.balloon_charges ?? 0));
+    const perBalloon =
+      Number.isNaN(balloonUnit) || balloonUnit < 0 ? 0 : balloonUnit;
+    ballonCharges = (global.cart_ballons_count || 0) * perBalloon;
+    shipping = resolveEstimatedShippingAmount(global);
+    const discountRaw =
+      global.cart?.discount_amount ??
+      global.cart?.discount ??
+      global.cart?.total_discount;
+    discount = parseFloat(discountRaw ?? 0);
+    if (Number.isNaN(discount)) {
+      discount = 0;
+    }
+    // Step 1 (My Cart): never include gift-wrapper in the bar — only product + other fees on this screen.
+    // Step 2: wrapper $ only after user picks/clears (giftWrapTotalsCommitted). Steps 3+: full cart.
+    const applyGiftWrapperCharge =
+      step !== 1 && !(step === 2 && !giftWrapTotalsCommitted);
+    const wrapperForTotals = applyGiftWrapperCharge ? wrapper : 0;
+    grandTotal =
+      subtotal +
+      wrapperForTotals +
+      specialDelivery +
+      ballonCharges +
+      shipping -
+      discount;
 
     setCalculations({
       subtotal: subtotal.toFixed(2),
-      wrapper: wrapper.toFixed(2),
+      wrapper: wrapperForTotals.toFixed(2),
       specialDelivery: specialDelivery.toFixed(2),
       balloons: ballonCharges.toFixed(2),
       shipping: shipping.toFixed(2),
@@ -401,6 +622,34 @@ const MyCart = () => {
       grandTotal: grandTotal.toFixed(2),
     });
   };
+
+  useEffect(() => {
+    calculateTotal(0);
+  }, [
+    global.cart,
+    global.allWrappers,
+    global.shipping_charges,
+    global.balloon_charges,
+    step,
+    giftWrapTotalsCommitted,
+  ]);
+
+  useEffect(() => {
+    if (step !== 2) {
+      return;
+    }
+    if (stepTwoResumeFromCheckout) {
+      setGiftWrapTotalsCommitted(true);
+    } else {
+      setGiftWrapTotalsCommitted(false);
+    }
+  }, [step, stepTwoResumeFromCheckout]);
+  useEffect(() => {
+    calculateTotal(0);
+  }, [global.cart_ballons_count, global.balloon_charges]);
+  useEffect(() => {
+    calculateTotal(0);
+  }, [global.cart_character]);
 
   // Add this function inside the MyCart component
   const getStep2Title = () => {
@@ -505,15 +754,17 @@ const MyCart = () => {
       case 1:
         // If Outdoor category, skip login/register/guest requirement
         if (hasOutdoorCategory()) {
+          setStepTwoResumeFromCheckout(false);
           setStep(2);
         } else if (global?.isLoggedIn) {
+          setStepTwoResumeFromCheckout(false);
           setStep(2);
         } else {
           // Check if guest has provided email and mobile
           if (!global.guest_email || !global.guest_mobile) {
             authSheet.current.open();
           } else {
-            // Guest info already provided, proceed to next step
+            setStepTwoResumeFromCheckout(false);
             setStep(2);
           }
         }
@@ -618,8 +869,10 @@ const MyCart = () => {
     switch (step) {
       case 2:
         setStep(1);
+        getCart();
         break;
       case 3:
+        setStepTwoResumeFromCheckout(true);
         setStep(2);
         break;
       case 4:
@@ -674,7 +927,14 @@ const MyCart = () => {
           getCart={getCart}
         />
       )}
-      {step == 2 && <StepTwo items={items} getCart={getCart} />}
+      {step == 2 && (
+        <StepTwo
+          items={items}
+          getCart={getCart}
+          resumeGiftWrapUi={stepTwoResumeFromCheckout}
+          onGiftWrapAttached={() => setGiftWrapTotalsCommitted(true)}
+        />
+      )}
       {step == 3 && (
         <StepThree
           incrementBallonQuantity={incrementBallonQuantity}

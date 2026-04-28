@@ -42,42 +42,56 @@ const Orders = () => {
     });
   }, [ordersPending, ordersProcessing, ordersComplete, value]);
 
-  // "status": "PENDING",
+  // Pending tab: orders awaiting payment / confirmation (API may use PENDING, CART, etc.)
   const getOrders = async () => {
     dispatch(setLoader(true));
     callNonTokenApi(config.apiName.getOrders, 'GET')
       .then(res => {
         dispatch(setLoader(false));
-        if (res.status == 200) {
-          // console.log("response get all order",JSON.stringify(res.data.orders,null,4))
-          const filteredPending = res.data.orders.filter(
-            task => task.status === 'CART',
+
+        // console.log('[My Orders] getOrders — full raw API response:', JSON.stringify(res, null, 2));
+
+        if (res && res.status == 200 && Array.isArray(res.data?.orders)) {
+          const allOrders = res.data.orders;
+          const statuses = [...new Set(allOrders.map(o => o?.status).filter(Boolean))];
+          // console.log('[My Orders] order count:', JSON.stringify(allOrders, null, 2));
+          // console.log('[My Orders] distinct status values from API:', statuses);
+
+          const filteredPending = allOrders.filter(task =>
+            task.status === 'PENDING' ||
+            // task.status === 'CART' ||
+            task.status === 'PENDING_PAYMENT',
           );
-          const filteredProcessing = res.data.orders.filter(
+          const filteredProcessing = allOrders.filter(
             task => task.status === 'PROCESSING',
           );
-          const filteredCompleted = res.data.orders.filter(
+          const filteredCompleted = allOrders.filter(
             task => task.status === 'COMPLETED',
           );
 
-          console.log("response get all order",JSON.stringify(filteredPending,null,4))
-
+          // console.log(
+          //   '[My Orders] filtered pending (PENDING | CART | PENDING_PAYMENT):',
+          //   JSON.stringify(filteredPending, null, 2),
+          // );
+          // console.log('[My Orders] filtered processing:', filteredProcessing.length);
+          // console.log('[My Orders] filtered completed:', filteredCompleted.length);
 
           setOrderPending(filteredPending);
           setOrderProcessing(filteredProcessing);
           setOrderComplete(filteredCompleted);
-          if (res.data.orders.length > 0) {
-            console.log(res.data.orders.length);
+          if (allOrders.length > 0) {
             setNoOrder(false);
           } else {
             setNoOrder(true);
           }
         } else {
-          Alert.alert(t('error'), res.message);
+          console.warn('[My Orders] unexpected response shape or status:', res);
+          Alert.alert(t('error'), res?.message ?? 'Could not load orders.');
         }
       })
       .catch(err => {
         dispatch(setLoader(false));
+        console.log('[My Orders] getOrders error:', err);
       });
   };
 

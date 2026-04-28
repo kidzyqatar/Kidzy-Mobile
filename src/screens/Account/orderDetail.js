@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, Image, ScrollView} from 'react-native';
+import {View, TouchableOpacity, Image, ScrollView} from 'react-native';
 import {
   MasterLayout,
   BackBar,
@@ -14,82 +14,148 @@ import globalStyles from '@constants/global-styles';
 import {styles} from './styles';
 import {balloons} from '@constants/icons';
 import {useTranslation} from 'react-i18next';
-import { formatDateTime } from '../../helpers/formatDateTime';
+import {formatDateTime} from '../../helpers/formatDateTime';
+
+function formatMoney(v) {
+  const n = parseFloat(String(v ?? '').replace(/,/g, ''));
+  return Number.isFinite(n) ? n.toFixed(2) : '0.00';
+}
+
+function pickSpecialDeliveryCost(item) {
+  const raw =
+    item?.special_delivery_cost ??
+    item?.special_delivery_price ??
+    item?.special_delivery ??
+    0;
+  return formatMoney(raw);
+}
+
+function resolveDiscount(item) {
+  const raw =
+    item?.discount ??
+    item?.discount_amount ??
+    item?.total_discount ??
+    0;
+  return formatMoney(raw);
+}
+
+function resolveShipping(item) {
+  const raw =
+    item?.shipping_cost ?? item?.shipping_charges ?? item?.estimated_shipping ?? 0;
+  return formatMoney(raw);
+}
+
+/** API returns uppercase (PENDING); chip colors previously only matched Title Case. */
+function statusForChipColors(status) {
+  return String(status ?? '').toUpperCase();
+}
+
+function statusDisplayLabel(status) {
+  const u = String(status ?? '').toUpperCase();
+  const map = {
+    PENDING: 'Pending',
+    CART: 'Cart',
+    PROCESSING: 'Processing',
+    COMPLETED: 'Complete',
+    COMPLETE: 'Complete',
+    CANCELLED: 'Cancelled',
+    CANCELED: 'Cancelled',
+  };
+  return map[u] ?? status ?? '';
+}
 
 const OrderDetail = ({route}) => {
   const {t} = useTranslation();
   const {item} = route.params;
+
+  const statusU = statusForChipColors(item?.status);
   let chipBgColor = COLORS.grayLight + '1A';
   let chipTxtColor = COLORS.gray;
-  switch (item?.status) {
-    case 'Pending':
+  switch (statusU) {
+    case 'PENDING':
+    case 'CART':
       chipBgColor = COLORS.danger + '1A';
       chipTxtColor = COLORS.danger;
       break;
-    case 'Processing':
+    case 'PROCESSING':
       chipBgColor = COLORS.info + '1A';
       chipTxtColor = COLORS.info;
       break;
-    case 'Complete':
+    case 'COMPLETED':
+    case 'COMPLETE':
       chipBgColor = COLORS.success + '1A';
       chipTxtColor = COLORS.success;
       break;
-
     default:
-      // Use default values already set above
       break;
   }
 
+  const placedAt =
+    item?.created_at ?? item?.createdAt ?? item?.updated_at ?? null;
+  const paidAt =
+    item?.paid_at ??
+    item?.paidAt ??
+    item?.payment_completed_at ??
+    item?.paid_on ??
+    null;
 
+  const specialDeliveryAmount = pickSpecialDeliveryCost(item);
+  const balloonAmount = formatMoney(item?.balloon_cost);
 
   return (
-    <MasterLayout 
-    bgColor={COLORS.bgGray} 
-    scrolling={false} 
-    max={true}
-    statusBarColor={COLORS.white}
-    statusBarStyle="dark-content"
-    
-    >
+    <MasterLayout
+      bgColor={COLORS.bgGray}
+      scrolling={false}
+      max={true}
+      statusBarColor={COLORS.white}
+      statusBarStyle="dark-content">
       <View style={globalStyles.whiteBg}>
         <BackBar title={t('orderDetails')} navigateTo={'Orders'} />
       </View>
       <Spacer />
       <ScrollView scrollEnabled={true} showsVerticalScrollIndicator={false}>
-        <View style={{...globalStyles.whiteBg,paddingBottom:0}}>
+        <View style={{...globalStyles.whiteBg, paddingBottom: 0}}>
           <View style={{...globalStyles.rowView}}>
             <Phrase txt={t('orderStatus')} txtStyle={styles.smallHeading} />
             <Chip
-              status={item?.status}
+              status={statusDisplayLabel(item?.status)}
               bgColor={chipBgColor}
               txtColor={chipTxtColor}
             />
           </View>
-          <View style={{borderWidth:0.5,borderColor:"black",marginVertical:10}}/>
+          <View
+            style={{borderWidth: 0.5, borderColor: 'black', marginVertical: 10}}
+          />
         </View>
-        {/* <Spacer /> */}
 
-        <View style={{...globalStyles.whiteBg,}}>
+        <View style={{...globalStyles.whiteBg}}>
           <Phrase txt={t('orderInfo')} txtStyle={styles.smallHeading} />
           <Phrase
             txt={`${t('orderId')}: ${item.id}`}
             txtStyle={styles.smallInfoTxt}
           />
           <Phrase
-            txt={`${t('placedOn')}: ${formatDateTime(item.updated_at)}`}
+            txt={`${t('placedOn')}: ${placedAt ? formatDateTime(placedAt) : '—'}`}
             txtStyle={styles.smallInfoTxt}
           />
-          <Phrase
-            txt={`${t('paidOn')}: ${formatDateTime(item.updated_at)}`}
-            txtStyle={styles.smallInfoTxt}
-          />
+          {paidAt ? (
+            <Phrase
+              txt={`${t('paidOn')}: ${formatDateTime(paidAt)}`}
+              txtStyle={styles.smallInfoTxt}
+            />
+          ) : statusU !== 'PENDING' && statusU !== 'CART' ? (
+            <Phrase
+              txt={`${t('paidOn')}: ${formatDateTime(item.updated_at)}`}
+              txtStyle={styles.smallInfoTxt}
+            />
+          ) : null}
         </View>
 
         <Spacer />
         <View style={globalStyles.whiteBg}>
           <Phrase txt={t('items')} txtStyle={styles.smallHeading} />
 
-          {item?.order_items.map((elem, index) => {
+          {item?.order_items?.map((elem, index) => {
             return (
               <React.Fragment key={index.toString()}>
                 <Spacer />
@@ -100,13 +166,17 @@ const OrderDetail = ({route}) => {
           })}
         </View>
         <Spacer />
-        {/* Special Widget */}
+
         {item.character?.full_image ? (
           <View style={globalStyles.whiteBg}>
             <View style={globalStyles.rowView}>
               <Phrase
                 txt={t('specialDelivery')}
                 txtStyle={styles.smallHeading}
+              />
+              <Phrase
+                txt={`QAR ${specialDeliveryAmount}`}
+                txtStyle={styles.totalTxt}
               />
             </View>
             <Spacer />
@@ -126,12 +196,7 @@ const OrderDetail = ({route}) => {
           </View>
         ) : null}
 
-        {/* Special Widget */}
-
-        {/* <Spacer /> */}
-
-        {/* Balloon Widget */}
-        {item.balloon_cost > 0 ? (
+        {parseFloat(balloonAmount) > 0 ? (
           <View style={globalStyles.whiteBg}>
             <View style={globalStyles.rowView}>
               <Phrase txt={t('balloons')} txtStyle={styles.smallHeading} />
@@ -140,16 +205,16 @@ const OrderDetail = ({route}) => {
             <View
               style={[globalStyles.rowView, {justifyContent: 'flex-start'}]}>
               <Image source={balloons} style={styles.balloons} />
-              <Phrase txt={`QAR: ${item.balloon_cost}`} txtStyle={styles.qty} />
+              <Phrase txt={`QAR ${balloonAmount}`} txtStyle={styles.qty} />
             </View>
           </View>
         ) : null}
-        {/* <Spacer /> */}
+
         <View style={globalStyles.whiteBg}>
           <View style={globalStyles.rowView}>
             <Phrase txt={t('total')} txtStyle={styles.smallInfoTxt} />
             <Phrase
-              txt={`QAR ${item.grand_total}`}
+              txt={`QAR ${formatMoney(item.grand_total)}`}
               txtStyle={styles.totalTxt}
             />
           </View>
@@ -158,20 +223,36 @@ const OrderDetail = ({route}) => {
           <View style={styles.moreInfo}>
             <View style={[globalStyles.rowView, styles.smallGap]}>
               <Phrase txt={t('cartSubtotal')} txtStyle={styles.smallInfoTxt} />
-              <Phrase txt={`QAR ${item.subtotal}`} txtStyle={styles.totalTxt} />
-            </View>
-            <Hr type={'small'} />
-            <View style={[globalStyles.rowView, styles.smallGap]}>
-              <Phrase txt={t('giftWrapper')} txtStyle={styles.smallInfoTxt} />
               <Phrase
-                txt={`QAR ${item.wrapper_cost}`}
+                txt={`QAR ${formatMoney(item.subtotal)}`}
                 txtStyle={styles.totalTxt}
               />
             </View>
             <Hr type={'small'} />
             <View style={[globalStyles.rowView, styles.smallGap]}>
+              <Phrase txt={t('giftWrapper')} txtStyle={styles.smallInfoTxt} />
+              <Phrase
+                txt={`QAR ${formatMoney(item.wrapper_cost)}`}
+                txtStyle={styles.totalTxt}
+              />
+            </View>
+            <Hr type={'small'} />
+            <View style={[globalStyles.rowView, styles.smallGap]}>
+              <Phrase
+                txt={t('specialDelivery')}
+                txtStyle={styles.smallInfoTxt}
+              />
+              <Phrase txt={`QAR ${specialDeliveryAmount}`} txtStyle={styles.totalTxt} />
+            </View>
+            <Hr type={'small'} />
+            <View style={[globalStyles.rowView, styles.smallGap]}>
+              <Phrase txt={t('balloons')} txtStyle={styles.smallInfoTxt} />
+              <Phrase txt={`QAR ${balloonAmount}`} txtStyle={styles.totalTxt} />
+            </View>
+            <Hr type={'small'} />
+            <View style={[globalStyles.rowView, styles.smallGap]}>
               <Phrase txt={t('tax')} txtStyle={styles.smallInfoTxt} />
-              <Phrase txt={`QAR ${item.tax}`} txtStyle={styles.totalTxt} />
+              <Phrase txt={`QAR ${formatMoney(item.tax)}`} txtStyle={styles.totalTxt} />
             </View>
             <Hr type={'small'} />
             <View style={[globalStyles.rowView, styles.smallGap]}>
@@ -180,14 +261,14 @@ const OrderDetail = ({route}) => {
                 txtStyle={styles.smallInfoTxt}
               />
               <Phrase
-                txt={`QAR ${item.shipping_cost}`}
+                txt={`QAR ${resolveShipping(item)}`}
                 txtStyle={styles.totalTxt}
               />
             </View>
             <Hr type={'small'} />
             <View style={[globalStyles.rowView, styles.smallGap]}>
               <Phrase txt={t('discount')} txtStyle={styles.smallInfoTxt} />
-              <Phrase txt={`QAR ${item.discount}`} txtStyle={styles.totalTxt} />
+              <Phrase txt={`QAR ${resolveDiscount(item)}`} txtStyle={styles.totalTxt} />
             </View>
           </View>
         </View>

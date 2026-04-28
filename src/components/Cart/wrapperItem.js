@@ -472,7 +472,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import globalStyles from '@constants/global-styles';
 import {COLORS, SIZES, FONTS} from '@constants/theme';
 import {Phrase, Hr, Spacer, Input, MyButton} from '@components';
@@ -485,7 +485,58 @@ import config from '../../constants/config';
 import {setLoader} from '../../store/reducers/global';
 import {useTranslation} from 'react-i18next';
 
-const WrapperItem = ({item, getCart}) => {
+/** True when this catalog id is NONE / zero-price (no paid wrap). */
+function isWrapperFreeByCatalog(wrapperId, wrappers) {
+  if (wrapperId == null || wrapperId === '') {
+    return true;
+  }
+  const row = wrappers?.find(w => String(w.id) === String(wrapperId));
+  if (!row) {
+    return false;
+  }
+  const label = `${row.name ?? row.title ?? row.label ?? ''}`.trim();
+  const img = `${row.full_image ?? ''}`.toLowerCase();
+  if (/^none$/i.test(label) || /\bnone\b/i.test(label) || img.includes('none')) {
+    return true;
+  }
+  const p = parseFloat(
+    row.price ?? row.amount ?? row.wrapper_price ?? row.cost ?? NaN,
+  );
+  return !Number.isNaN(p) && p === 0;
+}
+
+/** Catalog row that means “no paid wrap” — attach when user turns wrapper off or clears selection. */
+function findNoCostWrapperOption(wrappers) {
+  if (!Array.isArray(wrappers) || wrappers.length === 0) {
+    return null;
+  }
+  const byLabel = wrappers.find(w => {
+    const label = `${w.name ?? w.title ?? w.label ?? ''}`.trim();
+    if (/^none$/i.test(label) || /\bnone\b/i.test(label)) {
+      return true;
+    }
+    const img = `${w.full_image ?? ''}`.toLowerCase();
+    return img.includes('none');
+  });
+  if (byLabel) {
+    return byLabel;
+  }
+  return (
+    wrappers.find(w => {
+      const p = parseFloat(
+        w.price ?? w.amount ?? w.wrapper_price ?? w.cost ?? NaN,
+      );
+      return !Number.isNaN(p) && p === 0;
+    }) || null
+  );
+}
+
+const WrapperItem = ({
+  item,
+  getCart,
+  resumeGiftWrapUi = false,
+  onGiftWrapAttached,
+}) => {
   const {t} = useTranslation();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
@@ -535,10 +586,122 @@ const WrapperItem = ({item, getCart}) => {
   console.log('Has cakes:', hasCakesCategory());
   console.log('Should hide wrapper:', shouldHideGiftWrapper);
   const toggleModal = () => setModalVisible(!modalVisible);
-  const toggleWrapperSwitch = () => setWrapperSwitch(!wrapperSwitch);
-  const toggleCardSwitch = () => setCardSwitch(!cardSwitch);
+  const handleCardSwitch = next => {
+    setCardSwitch(next);
+    if (next) {
+      setFrom('');
+      setTo('');
+      setMsg('');
+      setCopy(false);
+    }
+  };
 
   const wrappers = global.allWrappers;
+
+  useEffect(() => {
+    if (!resumeGiftWrapUi) {
+      return;
+    }
+    const wid = item.details?.wrapper_id;
+    const hasAttached =
+      wid != null && wid !== '' && String(wid) !== '0' && Number(wid) !== 0;
+
+    if (!hasAttached) {
+      setSelectedWrapper(null);
+      return;
+    }
+
+    const freeWrapper = isWrapperFreeByCatalog(wid, wrappers);
+    setWrapperSwitch(!freeWrapper);
+
+    const fromApi =
+      item.details?.wrapper_image ??
+      item.details?.wrapper_full_image ??
+      item.details?.wrapper_uri;
+    if (fromApi) {
+      setSelectedWrapper(fromApi);
+      return;
+    }
+    const row = wrappers?.find(w => String(w.id) === String(wid));
+    if (row?.full_image) {
+      setSelectedWrapper(row.full_image);
+    }
+  }, [
+    resumeGiftWrapUi,
+    item.details?.wrapper_id,
+    item.details?.wrapper_image,
+    item.details?.wrapper_full_image,
+    item.id,
+    wrappers,
+  ]);
+
+  useEffect(() => {
+    if (item.details?.full_image) {
+      setSelectedCImage(item.details.full_image);
+    }
+  }, [item.details?.full_image]);
+
+  useEffect(() => {
+    if (!resumeGiftWrapUi || !item.details?.gift_card) {
+      return;
+    }
+    const gc = item.details.gift_card;
+    setFrom(gc.from != null ? String(gc.from) : '');
+    setTo(gc.to != null ? String(gc.to) : '');
+    setMsg(gc.message != null ? String(gc.message) : '');
+    setCopy(!!gc.copy);
+    setCardSwitch(true);
+  }, [resumeGiftWrapUi, item.id, item.details?.gift_card]);
+
+  const attachWrapperByCatalogRow = useCallback(
+    (row, onFailure, resetPickerAfterSuccess = false) => {
+      if (!row) {
+        return;
+      }
+      const formData = new FormData();
+      formData.append('wrapper_id', row.id);
+      formData.append('order_item_id', orderItemID);
+      dispatch(setLoader(true));
+      callNonTokenApiMP(config.apiName.attachWrapper, 'POST', formData)
+        .then(res => {
+          dispatch(setLoader(false));
+          if (res.status == 200) {
+            // After delete/clear we attach NONE server-side but show the horizontal picker again.
+            setSelectedWrapper(resetPickerAfterSuccess ? null : row.full_image ?? null);
+            onGiftWrapAttached?.();
+            getCart();
+          } else {
+            Alert.alert('Error!', res.message);
+            onFailure?.();
+          }
+        })
+        .catch(() => {
+          dispatch(setLoader(false));
+          Alert.alert(t('serverError'));
+          onFailure?.();
+        });
+    },
+    [dispatch, getCart, onGiftWrapAttached, orderItemID, t],
+  );
+
+  const clearWrapperOnServer = useCallback(() => {
+    const noneRow = findNoCostWrapperOption(wrappers);
+    if (noneRow) {
+      attachWrapperByCatalogRow(noneRow, () => setWrapperSwitch(true), true);
+      return;
+    }
+    Alert.alert(t('error'), t('selectNoneWrapperToClear'));
+    setWrapperSwitch(true);
+  }, [attachWrapperByCatalogRow, t, wrappers]);
+
+  const handleWrapperSwitch = next => {
+    if (next) {
+      setWrapperSwitch(true);
+      return;
+    }
+    setWrapperSwitch(false);
+    clearWrapperOnServer();
+  };
 
   const addMessage = async () => {
     if (!to || !from || !msg) return;
@@ -610,12 +773,6 @@ const WrapperItem = ({item, getCart}) => {
   };
 
   const BottomSheetModal = ({visible, onClose}) => {
-    if (item.details?.gift_card) {
-      setFrom(item.details.gift_card.from);
-      setTo(item.details.gift_card.to);
-      setMsg(item.details.gift_card.message);
-    }
-
     return (
       <Modal
         animationType="slide"
@@ -666,7 +823,7 @@ const WrapperItem = ({item, getCart}) => {
             <Phrase txt={t('Add Gift Wrapper')} />
             <Switch
               value={wrapperSwitch}
-              onValueChange={toggleWrapperSwitch}
+              onValueChange={handleWrapperSwitch}
               color={COLORS.info}
             />
           </View>
@@ -676,40 +833,17 @@ const WrapperItem = ({item, getCart}) => {
                 <FlatList
                   horizontal
                   data={wrappers}
-                  renderItem={({item}) => (
+                  renderItem={({item: wrapperRow}) => (
                     <TouchableOpacity
-                      key={item.id}
-                      onPress={() => {
-                        const formData = new FormData();
-                        formData.append('wrapper_id', item.id);
-                        formData.append('order_item_id', orderItemID);
-                        dispatch(setLoader(true));
-                        callNonTokenApiMP(
-                          config.apiName.attachWrapper,
-                          'POST',
-                          formData,
-                        )
-                          .then(res => {
-                            dispatch(setLoader(false));
-                            if (res.status == 200) {
-                              setSelectedWrapper(item.full_image);
-                              getCart();
-                            } else {
-                              Alert.alert('Error!', res.message);
-                            }
-                          })
-                          .catch(() => {
-                            dispatch(setLoader(false));
-                            Alert.alert(t('serverError'));
-                          });
-                      }}>
+                      key={wrapperRow.id}
+                      onPress={() => attachWrapperByCatalogRow(wrapperRow)}>
                       <Image
-                        source={{uri: item.full_image}}
+                        source={{uri: wrapperRow.full_image}}
                         style={styles.wrapperImg}
                       />
                     </TouchableOpacity>
                   )}
-                  keyExtractor={item => item.id}
+                  keyExtractor={wrapperRow => String(wrapperRow.id)}
                 />
               ) : (
                 <View style={globalStyles.rowView}>
@@ -726,7 +860,7 @@ const WrapperItem = ({item, getCart}) => {
                       }}>
                       <Image source={eye} style={styles.optionImgView} />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setSelectedWrapper(null)}>
+                    <TouchableOpacity onPress={clearWrapperOnServer}>
                       <Image source={bin} style={styles.optionImg} />
                     </TouchableOpacity>
                   </View>
@@ -793,7 +927,7 @@ const WrapperItem = ({item, getCart}) => {
         <Phrase txt={t('addGiftCard')} />
         <Switch
           value={cardSwitch}
-          onValueChange={toggleCardSwitch}
+          onValueChange={handleCardSwitch}
           color={COLORS.info}
         />
       </View>

@@ -1,5 +1,5 @@
 import {View, Text, Image, StyleSheet, Pressable} from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {List} from 'react-native-paper';
 import {discount, chevron, bin} from '@constants/icons';
 import {COLORS, SIZES, FONTS} from '@constants/theme';
@@ -16,7 +16,14 @@ const DiscountWidget = ({
   removeCoupon,
 }) => {
   const {t} = useTranslation();
-  const [couponText, setCouponText] = useState(null);
+  const [couponText, setCouponText] = useState('');
+
+  useEffect(() => {
+    if (coupon != null) {
+      setCouponText('');
+    }
+  }, [coupon]);
+
   return (
     <List.Section title="" style={styles.discountContainer}>
       <List.Accordion
@@ -69,7 +76,7 @@ const DiscountWidget = ({
                 <Input
                   placeholder={t('enterYourCoupon')}
                   isSecure={false}
-                  // value={}
+                  value={couponText}
                   setValue={setCouponText}
                 />
               </View>

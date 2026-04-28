@@ -12,7 +12,12 @@ import {
 import {COLORS, SIZES, FONTS} from '@constants/theme';
 import globalStyles from '@constants/global-styles';
 
-const StepTwo = ({items, getCart}) => {
+const StepTwo = ({
+  items,
+  getCart,
+  resumeGiftWrapUi = false,
+  onGiftWrapAttached,
+}) => {
   console.log(items, 'items');
   const excludedCategories = ['13'];
 
@@ -60,7 +65,12 @@ const StepTwo = ({items, getCart}) => {
           return (
             <React.Fragment key={index.toString()}>
               <Spacer />
-              <WrapperItem item={elem} getCart={getCart} />
+              <WrapperItem
+                item={elem}
+                getCart={getCart}
+                resumeGiftWrapUi={resumeGiftWrapUi}
+                onGiftWrapAttached={onGiftWrapAttached}
+              />
             </React.Fragment>
           );
         }
