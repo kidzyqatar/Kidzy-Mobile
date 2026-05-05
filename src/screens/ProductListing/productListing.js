@@ -6,7 +6,7 @@ import {
   Image,
   Pressable,
 } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import {
   MasterLayout,
   CartBar,
@@ -29,11 +29,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { MyButton, SearchTextField } from '../../components';
 import { setLoader } from '../../store/reducers/global';
 import { useTranslation } from 'react-i18next';
+import { LanguageContext } from '../../store/LanguageContext';
+import { getLocalizedName } from '../../helpers/localizedEntity';
 
 const ProductListing = ({ route }) => {
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  const { language } = useContext(LanguageContext);
   const { namE, slug, type } = route.params;
   const [searchText, setSearchText] = useState('');
 
@@ -373,7 +376,7 @@ const ProductListing = ({ route }) => {
                               handleCheckboxChange('categories', index);
                             }}>
                             <Phrase
-                              txt={`Category: ${item.name}`}
+                              txt={`Category: ${getLocalizedName(item, language)}`}
                               txtStyle={styles.filterItemTxt}
                             />
 
@@ -392,7 +395,7 @@ const ProductListing = ({ route }) => {
                               handleCheckboxChange('brand', index);
                             }}>
                             <Phrase
-                              txt={`Brand: ${item.name}`}
+                              txt={`Brand: ${getLocalizedName(item, language)}`}
                               txtStyle={styles.filterItemTxt}
                             />
 
@@ -468,7 +471,10 @@ const ProductListing = ({ route }) => {
                     source={filter.checked ? checked : unchecked}
                     style={styles.checkboxImg}
                   />
-                  <Phrase txt={filter.name} txtStyle={styles.checkboxTxt} />
+                  <Phrase
+                    txt={getLocalizedName(filter, language)}
+                    txtStyle={styles.checkboxTxt}
+                  />
                 </TouchableOpacity>
               );
             })}
@@ -491,7 +497,10 @@ const ProductListing = ({ route }) => {
                     source={filter.checked ? checked : unchecked}
                     style={styles.checkboxImg}
                   />
-                  <Phrase txt={filter.name} txtStyle={styles.checkboxTxt} />
+                  <Phrase
+                    txt={getLocalizedName(filter, language)}
+                    txtStyle={styles.checkboxTxt}
+                  />
                 </TouchableOpacity>
               );
             })}

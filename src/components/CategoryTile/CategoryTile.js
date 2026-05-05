@@ -1,25 +1,29 @@
 import {View, Text, Image, StyleSheet, Pressable} from 'react-native';
-import React from 'react';
+import React, {useContext} from 'react';
 import {SIZES, FONTS, COLORS} from '@constants/theme';
 import {Phrase} from '@components';
 import {category} from '@constants/images';
 import {forwardArrow} from '@constants/icons';
 import * as RootNavigation from '@navigators/RootNavigation';
+import {LanguageContext} from '../../store/LanguageContext';
+import {getLocalizedName} from '../../helpers/localizedEntity';
 
 const CategoryTile = ({item}) => {
+  const {language} = useContext(LanguageContext);
+  const label = getLocalizedName(item, language);
   return (
     <Pressable
       style={styles.container}
       onPress={() => {
         RootNavigation.navigate('ProductListing', {
-          namE: item.name,
+          namE: label,
           slug: item.slug,
           type: 'category',
         });
       }}>
       <View style={styles.innerContainer}>
         <View style={styles.leftView}>
-          <Phrase txt={item.name} txtStyle={styles.txt}
+          <Phrase txt={label} txtStyle={styles.txt}
           //  numberOfLine={2}
             />
           <Image source={forwardArrow} style={styles.img} />

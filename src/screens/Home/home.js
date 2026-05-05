@@ -10,6 +10,7 @@ import {
   Alert,
   Switch,
   StatusBar,
+  Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { COLORS, SIZES } from '@constants/theme';
@@ -68,6 +69,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getData } from '../../helpers/AsyncStorage';
 import { LanguageContext } from '../../store/LanguageContext';
 import { useTranslation } from 'react-i18next';
+import { getLocalizedName } from '../../helpers/localizedEntity';
 
 export default function Home() {
   const { t } = useTranslation();
@@ -331,11 +333,14 @@ export default function Home() {
               <View style={styles.languageSwitch}>
                 <Text style={{marginLeft:5,paddingRight:language==='EN' ? 0 : 3}}>{language}</Text>
                 <Switch
-                  onValueChange={lang => {
+                  onValueChange={wantArabic => {
+                    if (wantArabic === (language === 'AR')) {
+                      return;
+                    }
                     dispatch(setLoader(true));
-                    toggleLanguage(lang);
+                    toggleLanguage();
                   }}
-                  value={language === 'EN'}
+                  value={language === 'AR'}
                   style={{transform: [{scaleX: 0.7}, {scaleY: 0.7}]}}
                 // thumbColor={'#f5dd4b'}
                 />
@@ -378,15 +383,15 @@ export default function Home() {
           </View>
           <View style={{...styles.headingView,}}>
             <CategoryWidget
-              name={t('shopFor') + topCategories[0].name}
+              name={t('shopFor') + getLocalizedName(topCategories[0], language)}
               img={topCategories[0].full_image}
               slug={topCategories[0].slug}
               bgColor={COLORS.secondary}
             />
             <CategoryWidget
-              name={t('shopFor') + topCategories[1].name}
+              name={t('shopFor') + getLocalizedName(topCategories[1], language)}
               img={topCategories[1].full_image}
-              slug={topCategories[0].slug}
+              slug={topCategories[1].slug}
               bgColor={COLORS.girls}
             />
           </View>

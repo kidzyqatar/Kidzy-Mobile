@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useContext} from 'react';
 import {
   Alert,
   Image,
@@ -18,9 +18,13 @@ import {useDispatch, useSelector} from 'react-redux';
 import {setCartSessionID, setCart} from '../../store/reducers/global';
 import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {LanguageContext} from '../../store/LanguageContext';
+import {getLocalizedName} from '../../helpers/localizedEntity';
 
 const ProductWidget = ({item}) => {
   const {t} = useTranslation();
+  const {language} = useContext(LanguageContext);
+  const displayName = getLocalizedName(item, language);
   const {width: screenWidth} = useWindowDimensions();
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
@@ -152,11 +156,11 @@ const ProductWidget = ({item}) => {
         <Image 
           source={imageSource} 
           style={styles.productImg}
-          onError={(e) => console.log('Image load error:', item.name, e.nativeEvent.error)}
+          onError={(e) => console.log('Image load error:', displayName, e.nativeEvent.error)}
         />
         <View style={styles.contentContainer}>
           <Phrase
-            txt={item.name}
+            txt={displayName}
             txtStyle={styles.productTitle}
             numberOfLines={2}
           />

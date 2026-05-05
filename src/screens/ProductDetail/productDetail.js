@@ -1,5 +1,5 @@
 import {View, Text, Image, FlatList, Pressable, Alert} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import {
   MasterLayout,
   CartBar,
@@ -21,6 +21,8 @@ import {useDispatch, useSelector} from 'react-redux';
 import {setCart, setLoader} from '../../store/reducers/global';
 import * as RootNavigation from '@navigators/RootNavigation';
 import {useTranslation} from 'react-i18next';
+import {LanguageContext} from '../../store/LanguageContext';
+import {getLocalizedName, getLocalizedDescription} from '../../helpers/localizedEntity';
 
 const decodeHtmlEntities = input => {
   if (input == null) return '';
@@ -70,6 +72,7 @@ const htmlToPlainText = input => {
 
 const ProductDetail = ({route}) => {
   const {t} = useTranslation();
+  const {language} = useContext(LanguageContext);
   const global = useSelector(state => state.global);
   const dispatch = useDispatch();
   const {item} = route.params;
@@ -156,6 +159,10 @@ const ProductDetail = ({route}) => {
     setBigImage(temp);
   };
 
+  const product = item1;
+  const title = getLocalizedName(product, language);
+  const descSource = getLocalizedDescription(product, language);
+
   return (
     <MasterLayout bgColor={COLORS.bgGray} scrolling={true} max={true}>
       <View style={globalStyles.whiteBg}>
@@ -195,8 +202,8 @@ const ProductDetail = ({route}) => {
       <View style={styles.content}>
         <View style={[globalStyles.rowView]}>
           <View style={styles.headingView}>
-            <Phrase txt={item.name} txtStyle={styles.heading} />
-            <Phrase txt={`QAR ${item.price}`} txtStyle={styles.price} />
+            <Phrase txt={title} txtStyle={styles.heading} />
+            <Phrase txt={`QAR ${product.price}`} txtStyle={styles.price} />
           </View>
           <View style={styles.calcView}>
             <TouchableOpacity
@@ -216,7 +223,7 @@ const ProductDetail = ({route}) => {
         </View>
         <Spacer />
         <Phrase txt={t('description')} txtStyle={styles.descHeading} />
-        <Phrase txt={htmlToPlainText(item.description)} txtStyle={styles.descTxt} />
+        <Phrase txt={htmlToPlainText(descSource)} txtStyle={styles.descTxt} />
 
         <MyButton
           label={<Text style={styles.productBtn}>{t('addToCart')}</Text>}

@@ -1,18 +1,21 @@
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
-import React from 'react';
+import React, { useContext } from 'react';
 import { SIZES, FONTS, COLORS } from '@constants/theme';
 import { Phrase } from '@components';
 import { category } from '@constants/images';
 import { forwardArrow } from '@constants/icons';
 import * as RootNavigation from '@navigators/RootNavigation';
+import { LanguageContext } from '../../store/LanguageContext';
+import { getLocalizedName } from '../../helpers/localizedEntity';
 
 const BrandTile = ({ item }) => {
-  // console.log('item', JSON.stringify(item,null,4));
+  const { language } = useContext(LanguageContext);
+  const label = getLocalizedName(item, language);
   return (
     <TouchableOpacity
       style={styles.container}
       onPress={() => {
-        RootNavigation.navigate('ProductListing', { namE: item.name, slug: item.slug, type: 'brand' });
+        RootNavigation.navigate('ProductListing', { namE: label, slug: item.slug, type: 'brand' });
       }}>
       <Image source={{ uri: item.full_image }} style={styles.img} />
     </TouchableOpacity>

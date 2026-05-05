@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useContext} from 'react';
 import {
   View,
   TextInput,
@@ -16,9 +16,12 @@ import globalStyles from '../../constants/global-styles';
 import {ScrollView} from 'react-native-gesture-handler';
 import * as RootNavigation from '@navigators/RootNavigation';
 import {useTranslation} from 'react-i18next';
+import {LanguageContext} from '../../store/LanguageContext';
+import {getLocalizedName} from '../../helpers/localizedEntity';
 
 const SearchTextField = () => {
   const {t} = useTranslation();
+  const {language} = useContext(LanguageContext);
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState();
   const [dropdown, setDropdown] = useState(false);
@@ -114,7 +117,7 @@ const SearchTextField = () => {
                           marginRight: 12,
                           color: 'black',
                         }}>
-                        {item.name}
+                        {getLocalizedName(item, language)}
                       </Text>
                     </View>
                   </TouchableOpacity>
